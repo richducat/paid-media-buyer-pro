@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getEnv } from '@/lib/env';
 import { getStripe } from '@/lib/stripe';
 
 export default async function SuccessPage({
@@ -20,16 +21,21 @@ export default async function SuccessPage({
     );
   }
 
-  let paid = false;
+  const env = getEnv();
+  const demoMode = env.DEMO_MODE === 'true';
+
+  let paid = demoMode;
   let idForDisplay = session_id;
 
-  try {
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    paid = session.payment_status === 'paid';
-    idForDisplay = session.id;
-  } catch {
-    // If Stripe env vars are missing in build/preview, render a helpful page.
+  if (!demoMode && session_id !== 'demo') {
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      paid = session.payment_status === 'paid';
+      idForDisplay = session.id;
+    } catch {
+      // If Stripe env vars are missing in build/preview, render a helpful page.
+    }
   }
 
   return (

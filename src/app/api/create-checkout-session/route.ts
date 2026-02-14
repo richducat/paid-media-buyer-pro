@@ -15,7 +15,17 @@ export async function POST(req: Request) {
   }
 
   const env = getEnv();
+  if (env.DEMO_MODE === 'true') {
+    return NextResponse.json({
+      url: `/success?session_id=demo`,
+      demo: true,
+    });
+  }
+
   const priceId = env.STRIPE_ACTIVE_PRICE === '29' ? env.STRIPE_PRICE_ID_29 : env.STRIPE_PRICE_ID_49;
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID_29 || !env.STRIPE_PRICE_ID_49) {
+    return NextResponse.json({ error: 'Stripe env vars not set' }, { status: 500 });
+  }
 
   const stripe = getStripe();
 

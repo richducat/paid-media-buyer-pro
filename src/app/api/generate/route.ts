@@ -19,15 +19,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  // Gate by paid Stripe session
-  const stripe = getStripe();
-  const session = await stripe.checkout.sessions.retrieve(parsed.data.sessionId);
-  if (session.payment_status !== 'paid') {
-    return NextResponse.json({ error: 'Payment required' }, { status: 402 });
+  const demoMode = process.env.DEMO_MODE === 'true';
+
+  if (!demoMode) {
+    // Gate by paid Stripe session
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(parsed.data.sessionId);
+    if (session.payment_status !== 'paid') {
+      return NextResponse.json({ error: 'Payment required' }, { status: 402 });
+    }
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    if (demoMode) {
+      const demoContent = `# Demo Creative Pack\n\n## 1) 50 Hooks\n1) ${parsed.data.productName}: the one change that made ${parsed.data.audience} finally stick with it\n2) If you're ${parsed.data.audience}, stop doing this before you waste another month\n3) The "3-second" test for whether ${parsed.data.offer} will work for you\n\n## 2) 20 UGC Scripts\n### Script 1 — "Before/After"\n- 15s: Quick problem → quick proof → CTA\n- 30s: Add objection handling + proof\n- 45s: Add story + specificity\n- On-screen text: "I tried everything until this…"\n\n## 3) 10 Primary Texts\n- ${parsed.data.offer} without the usual headaches.\n\n## 4) 10 Headlines\n- The fastest way to get ${parsed.data.offer}\n\n## 5) 10 Thumbnail/Overlay ideas\n- "This fixed it"\n\n## 6) 10 Next Tests\n- Test 3 angles: proof, contrarian, objection-buster\n\n(Enable OPENAI_API_KEY to generate the full pack.)`;
+      return NextResponse.json({ content: demoContent, demo: true });
+    }
     return NextResponse.json(
       {
         error:
