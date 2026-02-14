@@ -129,16 +129,16 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1]">
-            Stop staring at a blank page.
+            Tell us what your business does.
             <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-              Generate ad-ready Creative Packs in minutes.
+              We’ll write your ads and a simple launch plan.
             </span>
           </h1>
 
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Enter your offer + audience once. Get hooks, UGC scripts, and copy variants you can test today.
-            Built for Meta + TikTok direct response.
+            Answer a few questions and get an ad starter kit: attention-grabbing first lines, short video scripts (what to say on camera), ad text, and a step-by-step setup plan.
+            No ad experience needed.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -161,7 +161,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Chip icon={<Zap className="w-4 h-4" />} label="Instant delivery" />
               <Chip icon={<ShieldCheck className="w-4 h-4" />} label="One-time purchase" />
-              <Chip icon={<Sparkles className="w-4 h-4" />} label="Built for DR ads" />
+              <Chip icon={<Sparkles className="w-4 h-4" />} label="Beginner-friendly" />
             </div>
             {canceled ? <div className="text-red-300">Checkout canceled.</div> : null}
           </div>
@@ -196,15 +196,15 @@ export default function Home() {
               <ul className="mt-6 grid gap-2 text-sm text-slate-300">
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  Multiple angles: problem/solution, proof, objection handling, contrarian, urgency
+                  Written in plain English (no marketing jargon)
                 </li>
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  Designed to hand off to editors + UGC creators immediately
+                  Copy/paste ad text + short video scripts (what to say on camera)
                 </li>
                 <li className="flex gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-400" />
-                  Output is copy/paste ready and structured so it’s usable
+                  Simple launch plan (what to set up first + what to test next)
                 </li>
               </ul>
             </div>
@@ -217,24 +217,24 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">How it works</h2>
-            <p className="text-slate-400">Three steps. No fluff.</p>
+            <p className="text-slate-400">You don’t need to be an ads expert.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <Card
               icon={<Target className="w-8 h-8 text-emerald-400" />}
-              title="1) Describe the offer"
-              desc="Drop in your product name, offer, audience, and any proof. That’s it."
+              title="1) Tell us about your business"
+              desc="Paste your website and answer a few questions (who you help, what you sell, where you serve)."
             />
             <Card
               icon={<FileText className="w-8 h-8 text-blue-400" />}
-              title="2) Generate a pack"
-              desc="Get hooks, UGC scripts, headlines, overlays, and next tests in one output."
+              title="2) Get your ad starter kit"
+              desc="We generate your ad text + video scripts + a simple setup plan."
             />
             <Card
               icon={<Sparkles className="w-8 h-8 text-purple-400" />}
-              title="3) Launch tests"
-              desc="Paste into your briefs, creators, and ads manager. Start testing variations today."
+              title="3) Review & launch"
+              desc="You approve everything first. Then you launch and start getting calls/leads/sales."
             />
           </div>
         </div>
@@ -249,10 +249,10 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Included title="50 hooks" desc="Scroll-stoppers to test angles fast." />
-            <Included title="20 UGC scripts" desc="15s/30s/45s versions + on-screen text." />
-            <Included title="Ad copy set" desc="Primary text + headlines + overlays." />
-            <Included title="Next tests" desc="A concrete plan for the next 10 experiments." />
+            <Included title="Attention-grabbing first lines" desc="Multiple opening lines to stop the scroll." />
+            <Included title="Short video scripts" desc="What to say on camera + on-screen text." />
+            <Included title="Ad text variations" desc="Ready to copy/paste into Meta or Google." />
+            <Included title="Simple launch plan" desc="What to set up first + what to test next." />
           </div>
 
           <div className="mt-14 text-center">

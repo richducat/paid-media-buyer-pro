@@ -40,18 +40,34 @@ export default async function SuccessPage({
 
   return (
     <main className="mx-auto max-w-3xl p-8">
-      <h1 className="text-3xl font-semibold">Payment {paid ? 'confirmed' : 'pending'}</h1>
+      <h1 className="text-3xl font-semibold">{paid ? "You're in" : 'Almost there'}</h1>
       <p className="mt-2 text-sm text-neutral-600">Session: {idForDisplay}</p>
 
       {paid ? (
-        <div className="mt-6">
-          <p className="mb-4">You’re in. Generate your Creative Pack now.</p>
+        <div className="mt-6 space-y-4">
+          <p>
+            Next step: answer a few prompts and we’ll generate your ad starter kit (ad text + video scripts + a simple
+            launch plan).
+          </p>
+          <div className="rounded-xl border border-neutral-200 p-4">
+            <div className="font-semibold">What happens next</div>
+            <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 space-y-1">
+              <li>You review everything first (nothing publishes without approval).</li>
+              <li>You get copy/paste-ready ads and a simple setup checklist.</li>
+              <li>In demo mode, this shows the full flow even without payments enabled.</li>
+            </ul>
+          </div>
           <Link
-            className="rounded-md bg-black px-4 py-2 text-white"
+            className="inline-block rounded-md bg-black px-4 py-2 text-white"
             href={`/generate?session_id=${encodeURIComponent(idForDisplay)}`}
           >
-            Go to generator
+            Generate my ad kit
           </Link>
+          <div>
+            <Link className="underline text-sm" href="/wizard">
+              Back to Wizard
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="mt-6">
