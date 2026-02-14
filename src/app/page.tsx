@@ -150,10 +150,10 @@ export default function Home() {
               {loading ? 'Redirecting…' : 'Get Instant Access'} <ArrowRight className="w-5 h-5" />
             </button>
             <a
-              href="#included"
+              href="/wizard"
               className="w-full sm:w-auto bg-slate-900 border border-slate-700 hover:border-slate-600 text-white px-8 py-4 rounded-full font-medium transition-all flex items-center justify-center gap-2"
             >
-              See what you get
+              Launch Ads Wizard
             </a>
           </div>
 
