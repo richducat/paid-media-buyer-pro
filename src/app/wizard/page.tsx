@@ -50,6 +50,9 @@ const DEFAULTS: WizardState = {
 export default function WizardPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [state, setState] = useState<WizardState>(DEFAULTS);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const plan = useMemo(() => {
     if (state.template !== 'local-service') return '';
@@ -148,6 +151,39 @@ Hours: ${s.hours || '[Hours]'}`,
 
   async function copy(text: string) {
     await navigator.clipboard.writeText(text);
+  }
+
+  async function submitLead() {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const payload = {
+        template: state.template,
+        businessName: state.localService.businessName,
+        website: state.localService.website,
+        city: state.localService.primaryCity,
+        radiusMiles: state.localService.serviceRadiusMiles,
+        phone: state.localService.phone,
+        services: state.localService.services,
+        hours: state.localService.hours,
+        promos: state.localService.promos,
+        email: leadEmail,
+      };
+
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error ?? 'Lead capture failed');
+
+      window.location.href = '/success?session_id=demo';
+    } catch (e: any) {
+      setSubmitError(e?.message ?? 'Lead capture failed');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -278,12 +314,23 @@ Hours: ${s.hours || '[Hours]'}`,
                 <button onClick={back} className="rounded-md border border-slate-700 px-4 py-2 text-sm">
                   Back
                 </button>
-                <a
-                  href="/success?session_id=demo"
-                  className="rounded-md bg-emerald-500 hover:bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 inline-flex items-center gap-2"
-                >
-                  Approve (demo) <CheckCircle2 className="h-4 w-4" />
-                </a>
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-medium text-slate-200">Email (required — we’ll send updates)</div>
+                  <input
+                    className="w-full rounded-md border border-slate-700 bg-slate-950/60 p-2 text-slate-50 placeholder:text-slate-600"
+                    value={leadEmail}
+                    onChange={(e) => setLeadEmail(e.target.value)}
+                    placeholder="you@company.com"
+                  />
+                  {submitError ? <div className="text-sm text-red-300">{submitError}</div> : null}
+                  <button
+                    onClick={() => void submitLead()}
+                    disabled={submitting || !leadEmail}
+                    className="rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 px-4 py-2 text-sm font-bold text-slate-950 inline-flex items-center justify-center gap-2"
+                  >
+                    {submitting ? 'Submitting…' : 'Approve (demo)'} <CheckCircle2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
