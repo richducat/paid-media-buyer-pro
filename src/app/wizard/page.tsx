@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   ArrowLeft,
   ArrowRight,
@@ -232,7 +233,8 @@ export default function WizardPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const payload: any = { template: state.template, email: leadEmail };
+      if (!state.template) throw new Error('Missing template');
+      const payload: Record<string, unknown> = { template: state.template, email: leadEmail };
       if (state.template === 'local-service') {
         payload.businessName = state.localService.businessName;
         payload.website = state.localService.website;
@@ -263,8 +265,9 @@ export default function WizardPage() {
       if (!res.ok) throw new Error(json?.error ?? 'Lead capture failed');
 
       window.location.href = '/success?session_id=demo';
-    } catch (e: any) {
-      setSubmitError(e?.message ?? 'Lead capture failed');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Lead capture failed';
+      setSubmitError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -274,9 +277,9 @@ export default function WizardPage() {
     <div className="min-h-screen bg-slate-950 text-slate-50">
       <div className="container mx-auto px-4 md:px-6 py-10">
         <div className="mb-8">
-          <a href="/" className="text-sm text-slate-400 hover:text-slate-200 inline-flex items-center gap-2">
+          <Link href="/" className="text-sm text-slate-400 hover:text-slate-200 inline-flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" /> Back to home
-          </a>
+          </Link>
           <h1 className="mt-4 text-3xl md:text-5xl font-bold tracking-tight">Launch Ads Wizard</h1>
           <p className="mt-2 text-slate-400 max-w-2xl">
             Pick your business type, answer a few questions, then review and approve a ready-to-use launch plan.
