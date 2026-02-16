@@ -6,7 +6,8 @@ export default function GeneratePage() {
   const sessionId = useMemo(() => {
     if (typeof window === 'undefined') return '';
     const url = new URL(window.location.href);
-    return url.searchParams.get('session_id') ?? '';
+    // Allow demo/testing flows even if session_id is missing from the URL.
+    return url.searchParams.get('session_id') ?? 'demo';
   }, []);
 
   const [loading, setLoading] = useState(false);

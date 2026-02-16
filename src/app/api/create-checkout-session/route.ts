@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { headers } from 'next/headers';
 import { getStripe } from '@/lib/stripe';
 import { getEnv } from '@/lib/env';
 
@@ -14,16 +15,37 @@ export async function POST(req: Request) {
   }
 
   const env = getEnv();
+  if (env.DEMO_MODE === 'true') {
+    return NextResponse.json({
+      url: `/success?session_id=demo`,
+      demo: true,
+    });
+  }
+
   const priceId = env.STRIPE_ACTIVE_PRICE === '29' ? env.STRIPE_PRICE_ID_29 : env.STRIPE_PRICE_ID_49;
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID_29 || !env.STRIPE_PRICE_ID_49) {
+    return NextResponse.json({ error: 'Stripe env vars not set' }, { status: 500 });
+  }
 
   const stripe = getStripe();
+
+  const h = await headers();
+  const origin = h.get('origin');
+  const xfProto = h.get('x-forwarded-proto');
+  const xfHost = h.get('x-forwarded-host');
+  const derivedBaseUrl = origin || (xfProto && xfHost ? `${xfProto}://${xfHost}` : null);
+  const baseUrl = env.APP_URL || derivedBaseUrl;
+  if (!baseUrl) {
+    return NextResponse.json({ error: 'Unable to determine APP_URL (missing APP_URL and request origin)' }, { status: 500 });
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: [{ price: priceId, quantity: 1 }],
     customer_email: parsed.data.email,
     allow_promotion_codes: true,
-    success_url: `${env.APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${env.APP_URL}/?canceled=1`,
+    success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/?canceled=1`,
   });
 
   return NextResponse.json({ url: session.url });
