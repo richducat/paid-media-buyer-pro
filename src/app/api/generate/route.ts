@@ -33,49 +33,66 @@ export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     if (demoMode) {
-      const demoContent = `# Demo Creative Pack\n\n## 1) 50 Hooks\n1) ${parsed.data.productName}: the one change that made ${parsed.data.audience} finally stick with it\n2) If you're ${parsed.data.audience}, stop doing this before you waste another month\n3) The "3-second" test for whether ${parsed.data.offer} will work for you\n\n## 2) 20 UGC Scripts\n### Script 1 — "Before/After"\n- 15s: Quick problem → quick proof → CTA\n- 30s: Add objection handling + proof\n- 45s: Add story + specificity\n- On-screen text: "I tried everything until this…"\n\n## 3) 10 Primary Texts\n- ${parsed.data.offer} without the usual headaches.\n\n## 4) 10 Headlines\n- The fastest way to get ${parsed.data.offer}\n\n## 5) 10 Thumbnail/Overlay ideas\n- "This fixed it"\n\n## 6) 10 Next Tests\n- Test 3 angles: proof, contrarian, objection-buster\n\n(Enable OPENAI_API_KEY to generate the full pack.)`;
+      const demoContent = `# Masterclass Expert Strategy — DEMO MODE\n\n## 1) High-Intent Keywords\n- ${parsed.data.productName} near me [Exact]\n- Best ${parsed.data.productName} for ${parsed.data.audience} [Phrase]\n\n## 2) The Negative Keyword Shield\n- free, jobs, manual, pdf, cheap, discount\n\n## 3) 50 Scroll-Stopper Hooks\n1) The one thing ${parsed.data.audience} get wrong about ${parsed.data.productName}...\n\n(Enable OPENAI_API_KEY for the full Masterclass pack.)`;
       return NextResponse.json({ content: demoContent, demo: true });
     }
     return NextResponse.json(
-      {
-        error:
-          'OPENAI_API_KEY not set. Add it to your environment to enable generation (or wire in another model provider).',
-      },
+      { error: 'OPENAI_API_KEY not set.' },
       { status: 500 },
     );
   }
 
   const openai = new OpenAI({ apiKey });
 
-  const prompt = `You are a senior paid media buyer and creative strategist.
-
-Generate a “Creative Pack” for Meta/TikTok.
+  const prompt = `You are a World-Class Paid Media Buyer and Creative Strategist with "Masterclass" level skills.
+Your task is to generate a comprehensive "Expert Ad Buying Strategy & Creative Pack" that allows someone with zero experience to launch like a pro.
 
 Inputs:
-- Product name: ${parsed.data.productName}
-- Offer: ${parsed.data.offer}
-- Audience: ${parsed.data.audience}
-- Proof / credibility: ${parsed.data.proof ?? 'N/A'}
+- Business/Product Name: ${parsed.data.productName}
+- Main Offer: ${parsed.data.offer}
+- Target Audience: ${parsed.data.audience}
+- Proof / Credibility: ${parsed.data.proof ?? 'N/A'}
 - Constraints: ${parsed.data.constraints ?? 'N/A'}
-- CTA: ${parsed.data.cta ?? 'N/A'}
+- Call to Action (CTA): ${parsed.data.cta ?? 'N/A'}
 
-Output MUST be in markdown with these sections:
-1) 50 Hooks (numbered)
-2) 20 UGC Scripts (each: Title, 15s version, 30s version, 45s version, On-screen text)
-3) 10 Primary Texts
-4) 10 Headlines
-5) 10 Thumbnail/Overlay Text ideas
-6) 10 Next Tests (audience/angle/creative format ideas)
+Strategy & Creative Output Requirements (Markdown format):
 
-Make it punchy, varied, and practical for direct response.`;
+# 1. THE "MASTERCLASS" STRATEGY
+### A. The Launch Structure
+Describe the specific campaign structure (e.g., CBO vs ABO, Broad vs Interested) optimal for this business.
+### B. High-Intent Keywords (Google Search)
+Provide 20+ expert-level keywords with match type recommendations (e.g., "Service + City [Exact]", "How to fix [Problem] [Phrase]").
+### C. The Negative Keyword Shield
+List 30+ keywords to exclude immediately to prevent wasted spend (e.g., "free", "jobs", "manual").
+### D. Ad Extensions Strategy
+Define Sitelinks, Callouts, and Structured Snippets that will increase CTR.
+
+# 2. THE CREATIVE PACK (META/TIKTOK/GOOGLE)
+### A. 50 "Scroll-Stopper" Hooks
+Numbered list. Focus on varied angles: Contrarian, Curiosity, Proof-heavy, Problem-first (PAS), and Result-first.
+### B. 10 UGC Expert Scripts
+For each script provide:
+- **Hook (0-3s)**: High-energy opening.
+- **Body (PAS Framework)**: Define the Problem, Agitate it, then show the Solution.
+- **CTA**: Direct and urgent.
+- **On-Screen Text**: Specific captions to overlay.
+### C. 10 High-Conversion Primary Texts
+Vary between short punchy copy and long-form story-driven copy using the AIDA framework.
+### D. 10 "Click-Magnet" Headlines
+Optimized for high CTR.
+
+# 3. THE "PRO" TEST PLAN
+Outline the first 4 weeks of testing: what creative angles to test, which audiences to pivot to, and how to scale winning ads.
+
+Tone: Professional, authoritative, yet simple to follow. Deliver ONLY the highest quality, conversion-focused content.`;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: 'gpt-4o',
     messages: [
-      { role: 'system', content: 'You write direct-response ad creative that converts.' },
+      { role: 'system', content: 'You are a senior media buyer. You write high-converting, expert-level ad strategy and copy.' },
       { role: 'user', content: prompt },
     ],
-    temperature: 0.8,
+    temperature: 0.7,
   });
 
   const content = completion.choices[0]?.message?.content ?? '';
