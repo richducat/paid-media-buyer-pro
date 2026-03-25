@@ -178,39 +178,45 @@ export default function WizardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-emerald-500/30">
-      <div className="container mx-auto px-4 md:px-6 py-10 max-w-6xl">
+    <div className="min-h-screen bg-[#030712] text-slate-50 selection:bg-cyan-500/30 overflow-x-hidden relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[50rem] max-w-7xl pointer-events-none -z-10">
+          <div className="absolute top-0 left-0 md:left-20 w-[60rem] h-[30rem] bg-cyan-500/5 rounded-full blur-[150px] mix-blend-screen" />
+          <div className="absolute top-40 right-0 md:right-20 w-[40rem] h-[40rem] bg-violet-600/10 rounded-full blur-[150px] mix-blend-screen" />
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 py-10 max-w-6xl relative z-10">
         <div className="mb-12">
-          <Link href="/" className="group text-sm text-slate-400 hover:text-white inline-flex items-center gap-2 transition-colors">
+          <Link href="/" className="group text-sm font-semibold text-slate-400 hover:text-white inline-flex items-center gap-2 transition-colors bg-white/5 px-4 py-2 rounded-full backdrop-blur-md border border-white/5 hover:border-white/10">
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to home
           </Link>
-          <div className="mt-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="mt-8 flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                Ad Campaign Wizard
+              <h1 className="text-5xl md:text-6xl font-black tracking-tighter premium-text-gradient drop-shadow-lg pb-1">
+                Ads Generator
               </h1>
-              <p className="mt-3 text-lg text-slate-400 max-w-2xl">
-                The fastest way to professional ads. Paste your URL and we'll do the heavy lifting.
+              <p className="mt-3 text-lg font-medium text-slate-400 max-w-2xl">
+                The fastest way to professional ads. Paste your URL and let the AI do the heavy lifting.
               </p>
             </div>
 
             {/* Auto-Intake Quick Bar */}
-            <div className={`relative flex items-center p-1 rounded-full border transition-all duration-300 w-full md:w-[400px] ${websiteUrl ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-800 bg-slate-900/40'
+            <div className={`relative flex items-center p-1 rounded-full border transition-all duration-500 w-full md:w-[450px] shadow-2xl ${
+              websiteUrl ? 'border-cyan-500/50 bg-cyan-950/30' : 'border-white/10 glass-card'
               }`}>
-              <Search className="absolute left-4 h-4 w-4 text-slate-500" />
+              <Search className={`absolute left-5 h-5 w-5 transition-colors ${websiteUrl ? 'text-cyan-400' : 'text-slate-500'}`} />
               <input
                 type="url"
                 placeholder="Scale with your URL..."
-                className="w-full bg-transparent border-none focus:ring-0 pl-11 pr-3 py-2 text-sm text-white placeholder:text-slate-600"
+                className="w-full bg-transparent border-none focus:ring-0 pl-14 pr-3 py-3 text-sm text-white placeholder:text-slate-600 outline-none"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
               />
               <button
                 onClick={handleAutoIntake}
                 disabled={isScraping || !websiteUrl}
-                className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 px-4 py-2 rounded-full text-xs font-bold transition-all"
+                className="flex items-center gap-2 premium-gradient hover-glow border border-white/20 disabled:opacity-50 text-white px-5 py-3 rounded-full text-sm font-bold transition-all shadow-lg shadow-cyan-900/40"
               >
-                {isScraping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {isScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Auto-Fill
               </button>
             </div>
@@ -220,16 +226,18 @@ export default function WizardPage() {
         <Stepper step={step} />
 
         {step === 1 ? (
-          <div className="mt-12">
-            <div className="mb-8 text-center md:text-left">
-              <h2 className="text-xl font-bold flex items-center gap-2 justify-center md:justify-start">
-                <Sparkles className="h-5 w-5 text-emerald-400" />
+          <div className="mt-14 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="mb-10 text-center md:text-left">
+              <h2 className="text-2xl font-black flex items-center gap-3 justify-center md:justify-start">
+                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                  <Sparkles className="h-6 w-6 text-cyan-400" />
+                </div>
                 Step 1: Choose Your Objective
               </h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <TemplateCard
-                icon={<PhoneCall className="h-6 w-6" />}
+                icon={<PhoneCall className="h-7 w-7" />}
                 title="Local Service"
                 subtitle="Google Search — calls + form leads"
                 bullets={['Plumbers, HVAC, Legal', 'High-intent location traffic', 'Direct call tracking']}
@@ -237,7 +245,7 @@ export default function WizardPage() {
                 highlight={state.template === 'local-service'}
               />
               <TemplateCard
-                icon={<ShoppingCart className="h-6 w-6" />}
+                icon={<ShoppingCart className="h-7 w-7" />}
                 title="Online Store"
                 subtitle="Meta Ads — sales & ROAS"
                 bullets={['Product prospecting', 'Visual UGC strategies', 'Conversion pixel tracking']}
@@ -245,7 +253,7 @@ export default function WizardPage() {
                 highlight={state.template === 'ecommerce'}
               />
               <TemplateCard
-                icon={<BriefcaseBusiness className="h-6 w-6" />}
+                icon={<BriefcaseBusiness className="h-7 w-7" />}
                 title="B2B / SaaS"
                 subtitle="Google Search — demo calls"
                 bullets={['High-ticket lead gen', 'Intent-based keyword sets', 'Demo booking focus']}
@@ -257,16 +265,16 @@ export default function WizardPage() {
         ) : null}
 
         {step === 2 ? (
-          <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-              <div className="glass-card rounded-3xl p-8 border border-white/10 shadow-emerald-950/20">
-                <div className="flex items-center justify-between mb-8">
+          <div className="mt-14 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="grid lg:grid-cols-[1fr_420px] gap-8">
+              <div className="glass-card rounded-3xl p-8 md:p-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-white/5">
                   <div>
-                    <h2 className="text-2xl font-bold">Campaign Details</h2>
-                    <p className="text-sm text-slate-400 mt-1">Refine what the AI extracted or fill manually.</p>
+                    <h2 className="text-3xl font-black text-white">Campaign Details</h2>
+                    <p className="text-slate-400 mt-2 font-medium">Refine what the AI extracted or fill manually.</p>
                   </div>
-                  <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest flex items-center gap-1.5 border border-emerald-500/20 uppercase">
-                    <Sparkles className="h-3 w-3" /> Expert Mode: {state.template?.replace('-', ' ')}
+                  <div className="bg-violet-500/10 text-violet-400 px-4 py-2 rounded-full text-xs font-bold tracking-widest flex items-center gap-2 border border-violet-500/20 uppercase shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                    <Sparkles className="h-4 w-4" /> Expert Mode: {state.template?.replace('-', ' ')}
                   </div>
                 </div>
 
@@ -287,9 +295,8 @@ export default function WizardPage() {
                     </>
                   ) : null}
 
-                  {/* ... other template cases similar structure with premium fields */}
                   {state.template === 'ecommerce' && (
-                    <div className="grid gap-4">
+                    <div className="grid gap-6">
                       <Field label="Brand Name" value={state.ecommerce.brandName} onChange={(v) => setState((p) => ({ ...p, ecommerce: { ...p.ecommerce, brandName: v } }))} placeholder="GlowSkin" hint="Your public-facing brand" />
                       <Field label="Hero Product" value={state.ecommerce.heroProduct} onChange={(v) => setState((p) => ({ ...p, ecommerce: { ...p.ecommerce, heroProduct: v } }))} placeholder="Vitamin C Serum" hint="The product we'll build the campaign around" />
                       <TextArea label="Offer / Hook" value={state.ecommerce.offer} onChange={(v) => setState((p) => ({ ...p, ecommerce: { ...p.ecommerce, offer: v } }))} placeholder="Free shipping • 20% off" />
@@ -298,7 +305,7 @@ export default function WizardPage() {
                   )}
 
                   {state.template === 'b2b-high-ticket' && (
-                    <div className="grid gap-4">
+                    <div className="grid gap-6">
                       <Field label="Company Name" value={state.b2b.companyName} onChange={(v) => setState((p) => ({ ...p, b2b: { ...p.b2b, companyName: v } }))} placeholder="Acme Growth" hint="Formal company name" />
                       <Field label="What do you sell?" value={state.b2b.service} onChange={(v) => setState((p) => ({ ...p, b2b: { ...p.b2b, service: v } }))} placeholder="Google Ads management" hint="Describe your core B2B service" />
                       <TextArea label="Target Outcome" value={state.b2b.proof} onChange={(v) => setState((p) => ({ ...p, b2b: { ...p.b2b, proof: v } }))} placeholder="Reduced CPA from $120 → $65" />
@@ -306,28 +313,30 @@ export default function WizardPage() {
                   )}
                 </div>
 
-                <div className="mt-10 flex gap-4 pt-6 border-t border-white/5">
-                  <button onClick={back} className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-medium hover:bg-white/5 transition-colors">
+                <div className="mt-10 flex gap-4 pt-8 border-t border-white/5">
+                  <button onClick={back} className="rounded-xl border border-white/10 px-6 py-4 text-sm font-bold hover:bg-white/5 transition-colors">
                     Back
                   </button>
                   <button
                     onClick={next}
-                    className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-6 py-3 text-sm font-bold text-slate-950 inline-flex items-center justify-center gap-2 transform active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
+                    className="flex-1 rounded-xl premium-gradient text-white px-6 py-4 text-base font-extrabold inline-flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-95 transition-all shadow-xl shadow-cyan-900/30 hover-glow border border-white/20"
                   >
-                    Build Expert Plan <ArrowRight className="h-4 w-4" />
+                    Build Expert Plan <ArrowRight className="h-5 w-5 animate-pulse-slow" />
                   </button>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="glass-card rounded-3xl p-6 border border-white/10">
-                  <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                    <Search className="h-4 w-4 text-emerald-400" />
+                <div className="glass-card rounded-3xl p-8 h-full flex flex-col">
+                  <h3 className="text-xl font-black flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                      <Search className="h-5 w-5 text-cyan-400" />
+                    </div>
                     Draft Outcome
                   </h3>
-                  <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    <pre className="relative h-[480px] w-full bg-slate-950/80 rounded-xl border border-white/5 p-4 font-mono text-[10px] leading-relaxed overflow-auto scrollbar-hide text-emerald-50/70">
+                  <div className="relative group flex-1 flex flex-col">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <pre className="relative flex-1 bg-[#02040A] rounded-2xl border border-white/10 p-6 font-mono text-xs leading-loose overflow-auto text-cyan-50/70 shadow-inner">
                       {plan}
                     </pre>
                   </div>
@@ -338,49 +347,49 @@ export default function WizardPage() {
         ) : null}
 
         {step === 3 ? (
-          <div className="mt-12 lg:grid lg:grid-cols-[1fr_380px] gap-8">
-            <div className="glass-card rounded-3xl p-8 border border-white/10">
-              <div className="flex items-center justify-between mb-8">
+          <div className="mt-14 lg:grid lg:grid-cols-[1fr_400px] gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="glass-card rounded-3xl p-8 md:p-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/5">
                 <div>
-                  <h2 className="text-2xl font-bold">Expert Strategy Pack</h2>
-                  <p className="text-sm text-slate-400 mt-1">Ready for copy/paste or direct launch.</p>
+                  <h2 className="text-3xl font-black text-white">Expert Strategy Pack</h2>
+                  <p className="text-base font-medium text-slate-400 mt-2">Ready for copy/paste or direct launch.</p>
                 </div>
                 <button
                   onClick={() => void copy(plan)}
-                  className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-bold inline-flex items-center gap-2 hover:bg-white/5 transition-colors"
+                  className="rounded-xl glass-card border border-white/10 px-5 py-3 text-sm font-bold inline-flex items-center gap-2 hover:bg-white/10 transition-colors shadow-sm"
                 >
-                  <Clipboard className="h-3.5 w-3.5" /> Copy Plan
+                  <Clipboard className="h-4 w-4 text-cyan-400" /> Copy Plan
                 </button>
               </div>
 
-              <div className="bg-slate-950/50 rounded-2xl border border-white/5 p-6 font-mono text-xs leading-relaxed text-slate-300">
+              <div className="bg-[#02040A] rounded-2xl border border-white/5 p-8 font-mono text-sm leading-loose text-slate-300 shadow-inner">
                 {plan.split('\n').map((line, i) => (
-                  <div key={i} className={`${line.startsWith('-') ? 'text-emerald-400' : line.startsWith('TEMPLATE') ? 'text-white font-bold text-sm mb-4' : 'text-slate-400'}`}>
+                  <div key={i} className={`${line.startsWith('-') ? 'text-cyan-400 font-medium' : line.startsWith('MASTERCLASS') ? 'text-white font-black text-base mb-6 tracking-wide' : 'text-slate-400'}`}>
                     {line}
                   </div>
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-col md:flex-row gap-4">
-                <button onClick={back} className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-medium hover:bg-white/5 transition-colors">
+              <div className="mt-10 flex flex-col md:flex-row gap-4 pt-8 border-t border-white/5">
+                <button onClick={back} className="rounded-xl border border-white/10 px-6 py-4 text-sm font-bold hover:bg-white/5 transition-colors">
                   Edit Details
                 </button>
-                <div className="flex-1 flex flex-col gap-3">
+                <div className="flex-1 flex flex-col gap-4">
                   <div className="relative">
                     <input
-                      className="w-full glass-input rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:ring-1 focus:ring-emerald-500 transition-all"
+                      className="w-full glass-input rounded-xl px-5 py-4 text-sm text-white placeholder:text-slate-500 focus:ring-1 focus:ring-cyan-500 transition-all font-medium"
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
-                      placeholder="Expert results sent to..."
+                      placeholder="Send expert results to..."
                     />
                   </div>
-                  {submitError ? <div className="text-xs text-red-400">{submitError}</div> : null}
+                  {submitError ? <div className="text-xs font-bold text-rose-400 px-2">{submitError}</div> : null}
                   <button
                     onClick={() => void submitLead()}
                     disabled={submitting || !leadEmail}
-                    className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 px-6 py-4 text-sm font-bold text-slate-950 inline-flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 transform active:scale-[0.98] transition-all"
+                    className="w-full rounded-xl premium-gradient disabled:opacity-50 px-6 py-5 text-base font-extrabold text-white inline-flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover-glow border border-white/20 transform hover:-translate-y-1 active:scale-[0.98] transition-all"
                   >
-                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
                     {submitting ? 'Preparing Campaign...' : 'Finalize & Access'}
                   </button>
                 </div>
@@ -388,34 +397,36 @@ export default function WizardPage() {
             </div>
 
             <div className="mt-8 lg:mt-0 space-y-6">
-              <div className="glass-card rounded-3xl p-6 border border-white/10 bg-gradient-to-br from-slate-900/60 to-emerald-950/20">
-                <h3 className="text-lg font-bold mb-4">Expert Bonus</h3>
-                <ul className="space-y-4">
-                  <li className="flex gap-3 items-start">
-                    <div className="h-5 w-5 rounded bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+              <div className="glass-card rounded-3xl p-8 border border-white/10 bg-gradient-to-br from-[#0A0F1E] to-cyan-950/20 shadow-2xl">
+                <h3 className="text-xl font-black mb-8 flex items-center gap-3 text-white">
+                  <Sparkles className="h-5 w-5 text-orange-400" /> Expert Bonus
+                </h3>
+                <ul className="space-y-6">
+                  <li className="flex gap-4 items-start">
+                    <div className="h-8 w-8 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-cyan-400" />
                     </div>
-                    <div className="text-xs text-slate-300">
-                      <span className="font-bold text-white block">Negative Keyword List</span>
-                      Automatically filtered to save you 30%+ on wasted spend.
-                    </div>
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <div className="h-5 w-5 rounded bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
-                    </div>
-                    <div className="text-xs text-slate-300">
-                      <span className="font-bold text-white block">Expert Ad Schedulilng</span>
-                      Match your traffic to when your business is actually open.
+                    <div>
+                      <span className="font-extrabold text-white block text-sm mb-1">Negative Keyword List</span>
+                      <span className="text-xs font-medium text-slate-400 leading-relaxed block">Automatically filtered to save you 30%+ on wasted spend immediately.</span>
                     </div>
                   </li>
-                  <li className="flex gap-3 items-start">
-                    <div className="h-5 w-5 rounded bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-purple-400" />
+                  <li className="flex gap-4 items-start">
+                    <div className="h-8 w-8 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-violet-400" />
                     </div>
-                    <div className="text-xs text-slate-300">
-                      <span className="font-bold text-white block">Masterclass Guide</span>
-                      The exact settings to toggle in Google Ads for max ROI.
+                    <div>
+                      <span className="font-extrabold text-white block text-sm mb-1">Expert Ad Scheduling</span>
+                      <span className="text-xs font-medium text-slate-400 leading-relaxed block">Match your traffic to when your business is actually open and converting.</span>
+                    </div>
+                  </li>
+                  <li className="flex gap-4 items-start">
+                    <div className="h-8 w-8 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-white block text-sm mb-1">Masterclass Guide</span>
+                      <span className="text-xs font-medium text-slate-400 leading-relaxed block">The exact hidden settings to toggle in Google Ads for max ROI.</span>
                     </div>
                   </li>
                 </ul>
@@ -430,29 +441,33 @@ export default function WizardPage() {
 
 function Stepper({ step }: { step: 1 | 2 | 3 }) {
   const steps = [
-    { n: 1, label: 'Objective', icon: <Sparkles className="h-4 w-4" /> },
-    { n: 2, label: 'Intake', icon: <Search className="h-4 w-4" /> },
-    { n: 3, label: 'Strategy', icon: <BriefcaseBusiness className="h-4 w-4" /> },
+    { n: 1, label: 'Objective', icon: <Sparkles className="h-5 w-5" /> },
+    { n: 2, label: 'Intake', icon: <Search className="h-5 w-5" /> },
+    { n: 3, label: 'Strategy', icon: <BriefcaseBusiness className="h-5 w-5" /> },
   ] as const;
 
   return (
-    <div className="flex gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-4 mb-12 overflow-x-auto pb-4 scrollbar-hide py-2">
       {steps.map((s) => {
         const active = s.n === step;
         const past = s.n < step;
         return (
           <div
             key={s.n}
-            className={`flex-1 min-w-[140px] rounded-2xl border px-5 py-4 transition-all duration-300 ${active ? 'border-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/5' : past ? 'border-slate-700 bg-slate-900/40 opacity-70' : 'border-slate-800 bg-slate-900/20'
-              }`}
+            className={`flex-1 min-w-[160px] rounded-3xl border px-6 py-5 transition-all duration-500 relative overflow-hidden group ${
+              active ? 'border-cyan-500/50 bg-cyan-950/20 shadow-[0_0_20px_rgba(6,182,212,0.15)] transform scale-[1.02]' 
+              : past ? 'border-white/10 glass-card opacity-80' 
+              : 'border-white/5 bg-[#030712]/50'
+            }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? 'text-emerald-400' : 'text-slate-500'}`}>0{s.n}</span>
-              {active && <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+            {active && <div className="absolute top-0 left-0 w-full h-1 premium-gradient" />}
+            <div className="flex items-center justify-between mb-3">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-cyan-400' : 'text-slate-500'}`}>0{s.n}</span>
+              {active && <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,1)] animate-pulse" />}
             </div>
-            <div className="flex items-center gap-3">
-              <div className={`${active ? 'text-emerald-400' : 'text-slate-500'}`}>{s.icon}</div>
-              <div className={`font-bold text-sm ${active ? 'text-white' : 'text-slate-400'}`}>{s.label}</div>
+            <div className="flex items-center gap-4">
+              <div className={`p-2 rounded-xl transition-colors ${active ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-500 bg-white/5 border border-white/5'}`}>{s.icon}</div>
+              <div className={`font-extrabold text-base tracking-tight ${active ? 'text-white' : 'text-slate-400'}`}>{s.label}</div>
             </div>
           </div>
         );
@@ -480,31 +495,31 @@ function TemplateCard({
     <button
       onClick={onClick}
       className={`text-left rounded-3xl border p-8 transition-all duration-300 group ${highlight
-        ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/20'
-        : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10'
+        ? 'border-cyan-500/50 bg-cyan-950/20 ring-1 ring-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.15)] scale-[1.02]'
+        : 'border-white/10 glass-card hover:bg-white/5 hover:border-white/20'
         }`}
     >
-      <div className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-110 ${highlight ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-emerald-400'
+      <div className={`h-16 w-16 rounded-2xl flex items-center justify-center mb-8 transition-all duration-300 group-hover:scale-110 shadow-lg ${highlight ? 'premium-gradient text-white shadow-cyan-900/40' : 'bg-[#030712] text-cyan-400 border border-white/10'
         }`}>
         {icon}
       </div>
 
-      <div className="mb-4">
-        <h3 className="text-xl font-bold mb-1">{title}</h3>
-        <p className="text-xs text-slate-500 font-medium">{subtitle}</p>
+      <div className="mb-6">
+        <h3 className="text-2xl font-black mb-2 text-white">{title}</h3>
+        <p className="text-xs text-slate-400 font-semibold tracking-wide uppercase">{subtitle}</p>
       </div>
 
-      <ul className="space-y-3 mb-8">
+      <ul className="space-y-4 mb-10">
         {bullets.map((b) => (
-          <li key={b} className="flex gap-2 text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-400/60 shrink-0" /> {b}
+          <li key={b} className="flex gap-3 text-sm font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
+            <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 transition-colors ${highlight ? 'text-cyan-400' : 'text-slate-600'}`} /> {b}
           </li>
         ))}
       </ul>
 
-      <div className={`inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full transition-all ${highlight ? 'bg-white text-slate-950 translate-x-1' : 'bg-white/5 text-slate-300 group-hover:bg-white/10'
+      <div className={`inline-flex items-center justify-center w-full gap-2 text-sm font-bold px-6 py-4 rounded-xl transition-all ${highlight ? 'bg-white text-slate-950 shadow-md' : 'glass-card border border-white/10 text-white group-hover:bg-white/10'
         }`}>
-        Select Format <ArrowRight className="h-3 w-3" />
+        Select Format <ArrowRight className="h-4 w-4" />
       </div>
     </button>
   );
@@ -512,13 +527,13 @@ function TemplateCard({
 
 function Field({ label, value, onChange, placeholder, hint }: { label: React.ReactNode; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string; }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</label>
-        {hint && <span className="text-[10px] text-emerald-500/60 font-medium italic">{hint}</span>}
+        <label className="text-xs font-bold text-slate-300 uppercase tracking-widest">{label}</label>
+        {hint && <span className="text-[10px] text-cyan-400 font-bold italic">{hint}</span>}
       </div>
       <input
-        className="glass-input w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-700"
+        className="glass-input w-full rounded-xl px-5 py-4 text-sm text-white placeholder:text-slate-600 font-medium"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -529,11 +544,11 @@ function Field({ label, value, onChange, placeholder, hint }: { label: React.Rea
 
 function NumberField({ label, value, onChange }: { label: React.ReactNode; value: number; onChange: (v: number) => void; }) {
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</label>
+    <div className="space-y-3">
+      <label className="text-xs font-bold text-slate-300 uppercase tracking-widest">{label}</label>
       <input
         type="number"
-        className="glass-input w-full rounded-xl px-4 py-3 text-sm text-white"
+        className="glass-input w-full rounded-xl px-5 py-4 text-sm text-white font-medium"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
@@ -543,10 +558,10 @@ function NumberField({ label, value, onChange }: { label: React.ReactNode; value
 
 function TextArea({ label, value, onChange, placeholder }: { label: React.ReactNode; value: string; onChange: (v: string) => void; placeholder?: string; }) {
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</label>
+    <div className="space-y-3">
+      <label className="text-xs font-bold text-slate-300 uppercase tracking-widest">{label}</label>
       <textarea
-        className="glass-input w-full min-h-[100px] rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-700 leading-relaxed"
+        className="glass-input w-full min-h-[120px] rounded-xl px-5 py-4 text-sm text-white placeholder:text-slate-600 leading-relaxed font-medium resize-y"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
