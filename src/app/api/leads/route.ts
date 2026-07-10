@@ -23,6 +23,9 @@ export async function POST(req: Request) {
       services,
       hours,
       promos,
+      proof,
+      geo,
+      bookingLink,
       email,
     } = body ?? {};
 
@@ -39,6 +42,9 @@ export async function POST(req: Request) {
       services: String(services ?? ''),
       hours: String(hours ?? ''),
       promos: String(promos ?? ''),
+      proof: String(proof ?? ''),
+      geo: String(geo ?? ''),
+      booking_link: String(bookingLink ?? ''),
       email: String(email ?? ''),
     };
 
