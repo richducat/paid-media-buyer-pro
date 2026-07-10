@@ -1,0 +1,73 @@
+name: Deploy to Namecheap hosting
+
+# Builds the app in CI (shared hosting doesn't have enough memory to run
+# `next build`) and uploads the self-contained standalone bundle over FTP.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   NC_FTP_SERVER    e.g. premium123.web-hosting.com (cPanel → FTP Accounts)
+#   NC_FTP_USERNAME  the FTP account username
+#   NC_FTP_PASSWORD  the FTP account password
+#   NC_SERVER_DIR    upload path ending in a slash, e.g. /paidmediapro/
+#
+# See DEPLOY-NAMECHEAP.md for the full setup walkthrough.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-namecheap
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (standalone)
+        run: pnpm build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Assemble deploy bundle
+        run: |
+          mkdir -p bundle/.next bundle/tmp
+          cp -r .next/standalone/. bundle/
+          cp -r .next/static bundle/.next/static
+          cp -r public bundle/public
+          # Passenger restarts the app when tmp/restart.txt changes
+          date > bundle/tmp/restart.txt
+
+      - name: Check FTP secrets
+        id: creds
+        run: |
+          if [ -z "${{ secrets.NC_FTP_SERVER }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NC_FTP_* secrets not set — build succeeded but skipping upload. See DEPLOY-NAMECHEAP.md"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload via FTP
+        if: steps.creds.outputs.configured == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.NC_FTP_SERVER }}
+          username: ${{ secrets.NC_FTP_USERNAME }}
+          password: ${{ secrets.NC_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: bundle/
+          server-dir: ${{ secrets.NC_SERVER_DIR }}
+          timeout: 600000
