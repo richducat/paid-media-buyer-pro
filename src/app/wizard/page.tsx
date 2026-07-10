@@ -5,14 +5,10 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   ArrowRight,
-  BadgePercent,
   BriefcaseBusiness,
   CheckCircle2,
   Clipboard,
-  Clock,
-  Globe,
   Loader2,
-  MapPin,
   PhoneCall,
   Search,
   ShoppingCart,
@@ -50,6 +46,7 @@ export default function WizardPage() {
         `BUSINESS: ${s.businessName || '[Business]'}`,
         `TARGET AREA: ${s.primaryCity || '[City]'} (+${s.serviceRadiusMiles}mi)`,
         `\n${structureLine}`,
+        launchStrategy,
         `1. ALPHA CAMPAIGN (Exact Match): Focus on high-intent "${service0}" terms.`,
         `2. BETA CAMPAIGN (Phrase Match): Capture long-tail "near me" and "emergency" searches.`,
         `\nEXPERT KEYWORDS:`,
@@ -162,17 +159,64 @@ export default function WizardPage() {
     setSubmitError(null);
     try {
       if (!state.template) throw new Error('Missing template');
+
       const payload: Record<string, unknown> = { template: state.template, email: leadEmail };
       if (state.template === 'local-service') {
-        payload.businessName = state.localService.businessName;
-        // ... rest of payload mapping
+        const s = state.localService;
+        Object.assign(payload, {
+          businessName: s.businessName,
+          website: s.website,
+          phone: s.phone,
+          city: s.primaryCity,
+          radiusMiles: s.serviceRadiusMiles,
+          services: s.services,
+          hours: s.hours,
+          promos: s.promos,
+        });
+      } else if (state.template === 'ecommerce') {
+        const s = state.ecommerce;
+        Object.assign(payload, {
+          businessName: s.brandName,
+          website: s.website,
+          services: s.heroProduct,
+          promos: s.offer,
+          proof: s.proof,
+          geo: s.geo,
+        });
+      } else {
+        const s = state.b2b;
+        Object.assign(payload, {
+          businessName: s.companyName,
+          website: s.website,
+          services: s.service,
+          proof: s.proof,
+          geo: s.geo,
+          bookingLink: s.bookingLink,
+        });
       }
-      // ... fetch call
-      window.location.href = '/success?session_id=demo';
+
+      // Best-effort lead capture — an unconfigured backend shouldn't block checkout.
+      try {
+        await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        // ignore — checkout is the priority
+      }
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: leadEmail || undefined }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? 'Checkout failed');
+      window.location.href = json.url;
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Lead capture failed';
+      const msg = e instanceof Error ? e.message : 'Something went wrong — please try again';
       setSubmitError(msg);
-    } finally {
       setSubmitting(false);
     }
   }
@@ -206,7 +250,7 @@ export default function WizardPage() {
               <Search className={`absolute left-5 h-5 w-5 transition-colors ${websiteUrl ? 'text-cyan-400' : 'text-slate-500'}`} />
               <input
                 type="url"
-                placeholder="Scale with your URL..."
+                placeholder="Paste your website URL to auto-fill..."
                 className="w-full bg-transparent border-none focus:ring-0 pl-14 pr-3 py-3 text-sm text-white placeholder:text-slate-600 outline-none"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
@@ -390,8 +434,11 @@ export default function WizardPage() {
                     className="w-full rounded-xl premium-gradient disabled:opacity-50 px-6 py-5 text-base font-extrabold text-white inline-flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover-glow border border-white/20 transform hover:-translate-y-1 active:scale-[0.98] transition-all"
                   >
                     {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
-                    {submitting ? 'Preparing Campaign...' : 'Finalize & Access'}
+                    {submitting ? 'Preparing Campaign...' : 'Unlock Full Creative Pack'}
                   </button>
+                  <p className="text-[11px] text-slate-500 font-medium text-center">
+                    One-time purchase · Instant access · Secure Stripe checkout
+                  </p>
                 </div>
               </div>
             </div>

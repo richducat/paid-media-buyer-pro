@@ -13,6 +13,7 @@ const EnvSchema = z.object({
   // Optional: if not set, we derive from request origin (works on Vercel previews/prod).
   APP_URL: z.string().url().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().optional(),
 });
 
 export function getEnv() {
@@ -27,5 +28,6 @@ export function getEnv() {
 
     APP_URL: process.env.APP_URL || undefined,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_MODEL: process.env.OPENAI_MODEL,
   });
 }

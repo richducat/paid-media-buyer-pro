@@ -13,12 +13,14 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { SiteFooter } from '@/components/SiteFooter';
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [buyError, setBuyError] = useState<string | null>(null);
 
   const canceled = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -36,6 +38,7 @@ export default function Home() {
 
   async function onBuy() {
     setLoading(true);
+    setBuyError(null);
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -45,7 +48,8 @@ export default function Home() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? 'Checkout failed');
       window.location.href = json.url;
-    } finally {
+    } catch (e: unknown) {
+      setBuyError(e instanceof Error ? e.message : 'Checkout failed — please try again');
       setLoading(false);
     }
   }
@@ -164,7 +168,8 @@ export default function Home() {
               <Chip icon={<ShieldCheck className="w-4 h-4" />} label="One-time purchase" />
               <Chip icon={<Sparkles className="w-4 h-4" />} label="Beginner-friendly" />
             </div>
-            {canceled ? <div className="text-rose-400 font-bold mt-2">Checkout canceled.</div> : null}
+            {canceled ? <div className="text-rose-400 font-bold mt-2">Checkout canceled — you can pick up where you left off anytime.</div> : null}
+            {buyError ? <div className="text-rose-400 font-bold mt-2">{buyError}</div> : null}
           </div>
 
           {/* Purchase card */}
@@ -311,18 +316,7 @@ export default function Home() {
         </div>
       </section>
       
-      <footer className="py-10 bg-[#030712] text-center border-t border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-center items-center gap-2 mb-6 opacity-50 block">
-            <TrendingUp className="w-5 h-5 text-cyan-400" />
-            <span className="font-bold text-xl tracking-tighter">MediaBuyer<span className="text-cyan-400">Pro</span></span>
-          </div>
-          <p className="text-xs text-slate-500 font-medium max-w-lg mx-auto leading-relaxed">
-            Disclaimer: Results depend heavily on your specific offer, sales funnel, and market execution. We do not provide refunds for simply &quot;not running the ads&quot;. 
-            <br className="mt-2" /> © {new Date().getFullYear()} MediaBuyerPro. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

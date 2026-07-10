@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Smartphone, Facebook, Search, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, ArrowRight } from 'lucide-react';
+import { Smartphone, Heart, MessageCircle, Send, Bookmark, MoreHorizontal, ArrowRight } from 'lucide-react';
 
 interface AdMockupProps {
     type: 'facebook' | 'google' | 'instagram';

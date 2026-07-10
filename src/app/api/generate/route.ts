@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { getStripe } from '@/lib/stripe';
 import OpenAI from 'openai';
 
+// AI generation can take a while — allow up to 2 minutes on Vercel.
+export const maxDuration = 120;
+
 const BodySchema = z.object({
   sessionId: z.string().min(1),
   offer: z.string().min(1),
@@ -23,10 +26,18 @@ export async function POST(req: Request) {
 
   if (!demoMode) {
     // Gate by paid Stripe session
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.retrieve(parsed.data.sessionId);
-    if (session.payment_status !== 'paid') {
-      return NextResponse.json({ error: 'Payment required' }, { status: 402 });
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(parsed.data.sessionId);
+      if (session.payment_status !== 'paid') {
+        return NextResponse.json({ error: 'Payment required — complete checkout to unlock the generator.' }, { status: 402 });
+      }
+    } catch {
+      // Invalid/expired session id or missing Stripe config — don't crash with a 500.
+      return NextResponse.json(
+        { error: 'We could not verify your purchase. Use the link from your success page or receipt email.' },
+        { status: 402 },
+      );
     }
   }
 
@@ -86,16 +97,27 @@ Outline the first 4 weeks of testing: what creative angles to test, which audien
 
 Tone: Professional, authoritative, yet simple to follow. Deliver ONLY the highest quality, conversion-focused content.`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: 'You are a senior media buyer. You write high-converting, expert-level ad strategy and copy.' },
-      { role: 'user', content: prompt },
-    ],
-    temperature: 0.7,
-  });
+  try {
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are a senior media buyer. You write high-converting, expert-level ad strategy and copy.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+    });
 
-  const content = completion.choices[0]?.message?.content ?? '';
+    const content = completion.choices[0]?.message?.content ?? '';
+    if (!content) {
+      return NextResponse.json({ error: 'The generator returned an empty result — please try again.' }, { status: 502 });
+    }
 
-  return NextResponse.json({ content });
+    return NextResponse.json({ content });
+  } catch (err) {
+    console.error('Generation error:', err);
+    return NextResponse.json(
+      { error: 'Generation failed — please try again in a moment.' },
+      { status: 502 },
+    );
+  }
 }
