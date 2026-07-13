@@ -19,6 +19,8 @@
 
 # production
 /build
+/ios/build/
+/ios/build.log
 
 # misc
 .DS_Store

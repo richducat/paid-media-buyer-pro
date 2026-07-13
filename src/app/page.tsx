@@ -1,370 +1,68 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRight,
-  CheckCircle2,
-  FileText,
-  Menu,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  TrendingUp,
-  X,
-  Zap,
-} from 'lucide-react';
-import { SiteFooter } from '@/components/SiteFooter';
+import Link from 'next/link';
+import { useState } from 'react';
+import { ArrowRight, Bot, Check, ChevronRight, Menu, ShieldCheck, Sparkles, Target, TrendingUp, X, Zap } from 'lucide-react';
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [buyError, setBuyError] = useState<string | null>(null);
-
-  const canceled = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const params = new URLSearchParams(window.location.search);
-    return params.get('canceled') === '1';
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const toggleMenu = () => setIsMenuOpen((v) => !v);
-
-  async function onBuy() {
-    setLoading(true);
-    setBuyError(null);
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: email || undefined }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? 'Checkout failed');
-      window.location.href = json.url;
-    } catch (e: unknown) {
-      setBuyError(e instanceof Error ? e.message : 'Checkout failed — please try again');
-      setLoading(false);
-    }
-  }
+  const [menuOpen, setMenuOpen] = useState(false);
+  const visible = true;
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-50 font-sans selection:bg-cyan-500/30 overflow-x-hidden">
-      {/* Navigation */}
-      <nav
-        className={`fixed w-full z-50 transition-all duration-300 border-b ${
-          scrolled ? 'bg-[#030712]/80 backdrop-blur-xl border-white/5 py-4 shadow-2xl shadow-cyan-900/10' : 'bg-transparent border-transparent py-6'
-        }`}
-      >
-        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-          <a href="#top" className="flex items-center gap-3 font-bold text-xl tracking-tighter group">
-            <div className="premium-gradient p-2 rounded-xl group-hover:scale-105 transition-transform">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <span>
-              MediaBuyer<span className="text-cyan-400">Pro</span>
-            </span>
-          </a>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#how" className="text-sm font-semibold text-slate-300 hover:text-cyan-400 transition-colors">
-              How it works
-            </a>
-            <a href="#included" className="text-sm font-semibold text-slate-300 hover:text-cyan-400 transition-colors">
-              What you get
-            </a>
-            <a href="#faq" className="text-sm font-semibold text-slate-300 hover:text-cyan-400 transition-colors">
-              FAQ
-            </a>
-            <button
-              onClick={onBuy}
-              className="premium-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover-glow border border-white/10"
-            >
-              Get Instant Access
-            </button>
-          </div>
-
-          {/* Mobile Toggle */}
-          <button onClick={toggleMenu} className="md:hidden text-slate-300 focus:outline-none" aria-label="Menu">
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
+    <main className="min-h-screen overflow-hidden bg-[#f4f0e8] text-[#19231f]">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#244036]/10 bg-[#f4f0e8]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-[15px] bg-[#f2a66f] shadow-[0_8px_24px_rgba(242,166,111,.22)]"><TrendingUp className="h-5 w-5" strokeWidth={2.5} /></span>
+            <span><b className="block text-[15px] tracking-[-.02em]">Paid Media Pro</b><span className="block text-[9px] font-bold uppercase tracking-[.18em] text-[#6f7c74]">AI media buyer</span></span>
+          </Link>
+          <nav className="hidden items-center gap-7 md:flex">
+            <a href="#how" className="text-xs font-bold text-[#59665f] hover:text-[#1c3026]">How it works</a>
+            <a href="#control" className="text-xs font-bold text-[#59665f] hover:text-[#1c3026]">You stay in control</a>
+            <Link href="/dashboard" className="rounded-xl bg-[#1d3228] px-5 py-3 text-xs font-black text-white shadow-[0_8px_20px_rgba(29,50,40,.16)]">Open workspace</Link>
+          </nav>
+          <button onClick={() => setMenuOpen((value) => !value)} className="grid h-10 w-10 place-items-center rounded-xl border border-[#d6d1c6] md:hidden" aria-label="Menu">{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
+        {menuOpen && <div className="border-t border-[#d9d4c9] bg-[#f8f4ec] p-5 md:hidden"><div className="flex flex-col gap-4"><a href="#how" onClick={() => setMenuOpen(false)} className="text-sm font-bold">How it works</a><a href="#control" onClick={() => setMenuOpen(false)} className="text-sm font-bold">You stay in control</a><Link href="/dashboard" className="rounded-xl bg-[#1d3228] px-5 py-3 text-center text-sm font-black text-white">Open workspace</Link></div></div>}
+      </header>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="absolute top-full left-0 w-full glass-card border-b border-white/5 p-4 flex flex-col gap-4 md:hidden">
-            <a href="#how" onClick={toggleMenu} className="text-slate-300 font-semibold py-2">
-              How it works
-            </a>
-            <a href="#included" onClick={toggleMenu} className="text-slate-300 font-semibold py-2">
-              What you get
-            </a>
-            <a href="#faq" onClick={toggleMenu} className="text-slate-300 font-semibold py-2">
-              FAQ
-            </a>
-            <button onClick={() => { toggleMenu(); void onBuy(); }} className="premium-gradient text-white text-center py-3 rounded-xl font-bold border border-white/10 shadow-lg shadow-cyan-900/40">
-              Get Instant Access
-            </button>
-          </div>
-        )}
-      </nav>
-
-      {/* Hero */}
-      <section id="top" className="relative pt-36 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-          <div className="absolute top-10 left-0 md:left-20 w-[40rem] h-[40rem] bg-cyan-500/10 rounded-full blur-[120px] mix-blend-screen" />
-          <div className="absolute bottom-10 right-0 md:right-20 w-[35rem] h-[35rem] bg-violet-600/10 rounded-full blur-[120px] mix-blend-screen" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[30rem] bg-orange-500/5 rounded-full blur-[140px] mix-blend-screen" />
-        </div>
-
-        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-widest uppercase mb-8 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-            </span>
-            One-time purchase • Instant access
+      <section className="relative min-h-[800px] pt-[76px] lg:min-h-screen">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(242,166,111,.28),transparent_28%),radial-gradient(circle_at_12%_70%,rgba(102,137,111,.17),transparent_30%)]" />
+        <div className="relative mx-auto grid min-h-[calc(100vh-76px)] max-w-[1440px] items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[.92fr_1.08fr] lg:px-12">
+          <div className={`max-w-2xl transition-all duration-700 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}>
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#d9b894] bg-[#fff7eb] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.15em] text-[#77502d]"><Sparkles className="h-3.5 w-3.5" /> Built by a real media buyer</div>
+            <h1 className="text-[48px] font-black leading-[.98] tracking-[-.06em] sm:text-[64px] lg:text-[78px]">Your ads,<br /><span className="text-[#bd6e3c]">finally explained.</span></h1>
+            <p className="mt-7 max-w-xl text-base font-medium leading-7 text-[#5f6c65] sm:text-lg">Connect Google and Meta. Paid Media Pro finds waste, builds campaigns, and improves performance—then tells you exactly what it wants to do in language anyone can understand.</p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href="/dashboard" className="group flex items-center justify-center gap-3 rounded-2xl bg-[#1d3228] px-7 py-4 text-sm font-black text-white shadow-[0_14px_35px_rgba(29,50,40,.18)] transition hover:-translate-y-0.5">Explore the workspace <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></Link><a href="#how" className="flex items-center justify-center gap-2 rounded-2xl border border-[#cec8bb] bg-white/45 px-7 py-4 text-sm font-black">See how it works <ChevronRight className="h-4 w-4" /></a></div>
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-bold text-[#66736b]"><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#4c765b]" /> Starts read-only</span><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#4c765b]" /> No passwords stored</span><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#4c765b]" /> Hard budget limits</span></div>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-[1.05] drop-shadow-2xl">
-            Tell us what your business does.
-            <br className="hidden md:block" />
-            <span className="premium-text-gradient">
-              We’ll write your ads and a simple launch plan.
-            </span>
-          </h1>
-
-          <p className="text-slate-400 font-medium text-lg md:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed">
-            Answer a few questions and get an ad starter kit: attention-grabbing first lines, short video scripts, ad text, and a step-by-step setup plan.
-            <span className="text-white font-semibold"> No ad experience needed.</span>
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-            <button
-              onClick={onBuy}
-              disabled={loading}
-              className="w-full sm:w-auto premium-gradient hover-glow disabled:opacity-50 text-white px-10 py-5 rounded-full font-extrabold text-lg transition-all transform hover:scale-105 shadow-[0_0_40px_rgba(6,182,212,0.4)] flex items-center justify-center gap-3 border border-white/20"
-            >
-              {loading ? 'Redirecting…' : 'Get Instant Access'} <ArrowRight className="w-5 h-5 animate-pulse-slow" />
-            </button>
-            <a
-              href="/wizard"
-              className="w-full sm:w-auto glass-card border border-white/10 hover:bg-white/5 hover:border-white/20 text-white px-10 py-5 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group"
-            >
-              Launch Ads Wizard <Sparkles className="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform" />
-            </a>
-          </div>
-
-          <div className="mt-10 flex flex-col items-center gap-3 text-sm text-slate-400">
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <Chip icon={<Zap className="w-4 h-4" />} label="Instant delivery" />
-              <Chip icon={<ShieldCheck className="w-4 h-4" />} label="One-time purchase" />
-              <Chip icon={<Sparkles className="w-4 h-4" />} label="Beginner-friendly" />
-            </div>
-            {canceled ? <div className="text-rose-400 font-bold mt-2">Checkout canceled — you can pick up where you left off anytime.</div> : null}
-            {buyError ? <div className="text-rose-400 font-bold mt-2">{buyError}</div> : null}
-          </div>
-
-          {/* Purchase card */}
-          <div className="mx-auto mt-20 max-w-4xl text-left relative group">
-            <div className="absolute -inset-1 premium-gradient rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative glass-card rounded-3xl p-8 md:p-10 border border-white/10">
-              <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-3xl md:text-4xl font-black text-white mb-2">$29 <span className="text-xl font-bold text-cyan-400">limited time</span></div>
-                  <div className="text-sm font-medium text-slate-400">Normally $49 • One-time payment • Promo codes supported</div>
-                </div>
-
-                <div className="flex w-full flex-col gap-3 md:w-[420px]">
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-300">Email (optional — for receipt)</label>
-                  <input
-                    className="glass-input rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:ring-1 focus:ring-cyan-500 transition-all"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                  />
-                  <button
-                    className="mt-2 rounded-xl premium-gradient text-white px-4 py-3 font-bold shadow-lg shadow-cyan-900/30 hover-glow disabled:opacity-50 transition-all active:scale-[0.98]"
-                    disabled={loading}
-                    onClick={onBuy}
-                  >
-                    {loading ? 'Redirecting…' : 'Get my Creative Pack'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-10 pt-8 border-t border-white/10 grid md:grid-cols-2 gap-4 text-sm font-medium text-slate-300">
-                <div className="flex gap-3 items-center">
-                  <div className="p-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                    <CheckCircle2 className="h-4 w-4 text-cyan-400" />
-                  </div>
-                  Written in plain English (no jargon)
-                </div>
-                <div className="flex gap-3 items-center">
-                  <div className="p-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                    <CheckCircle2 className="h-4 w-4 text-cyan-400" />
-                  </div>
-                  Copy/paste ad text + short video scripts
-                </div>
-                <div className="flex gap-3 items-center md:col-span-2">
-                  <div className="p-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                    <CheckCircle2 className="h-4 w-4 text-cyan-400" />
-                  </div>
-                  Simple launch plan (what to set up first + what to test next)
-                </div>
-              </div>
+          <div className={`relative mx-auto w-full max-w-[670px] transition-all delay-150 duration-700 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <div className="absolute -inset-10 rounded-full bg-[#f2a66f]/15 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[30px] border border-[#c9c5ba] bg-[#fbf9f4] shadow-[0_35px_100px_rgba(38,53,44,.18)]">
+              <div className="flex items-center justify-between border-b border-[#dfdad0] px-5 py-4"><div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#e59666]" /><span className="h-2.5 w-2.5 rounded-full bg-[#dac99c]" /><span className="h-2.5 w-2.5 rounded-full bg-[#8eaa92]" /></div><span className="rounded-full bg-[#fff0dd] px-3 py-1 text-[8px] font-black uppercase tracking-[.13em] text-[#7f562c]">Sample workspace</span></div>
+              <div className="grid sm:grid-cols-[170px_1fr]"><div className="hidden bg-[#1b2b24] p-5 text-white sm:block"><div className="flex items-center gap-2 text-xs font-black"><span className="grid h-7 w-7 place-items-center rounded-lg bg-[#f2a66f] text-[#1b2b24]"><TrendingUp className="h-3.5 w-3.5" /></span> Paid Media Pro</div><div className="mt-8 space-y-2">{['Overview', 'AI media buyer', 'Campaigns', 'Connections'].map((label, index) => <div key={label} className={`rounded-lg px-3 py-2.5 text-[10px] font-bold ${index === 0 ? 'bg-[#f2a66f] text-[#1b2b24]' : 'text-[#aebdb1]'}`}>{label}</div>)}</div><div className="mt-28 rounded-xl border border-white/10 bg-white/5 p-3"><div className="text-[8px] font-black uppercase tracking-wider text-[#8ea294]">Buyer mode</div><div className="mt-2 flex items-center gap-2 text-[10px] font-bold"><ShieldCheck className="h-3.5 w-3.5 text-[#f2a66f]" /> Ask me first</div></div></div><div className="p-5 sm:p-6"><div className="flex items-center justify-between"><div><div className="text-[8px] font-black uppercase tracking-[.15em] text-[#7b857e]">Last 30 days</div><div className="mt-1 text-lg font-black">Performance at a glance</div></div><span className="text-[8px] font-black text-[#4e765b]">UPDATED 4M AGO</span></div><div className="mt-5 grid grid-cols-2 gap-2.5">{[['Ad spend', '$12,480'], ['Qualified leads', '326'], ['Cost per lead', '$38.28'], ['ROAS', '4.18×']].map(([label, value]) => <div key={label} className="rounded-xl border border-[#ded9ce] bg-white/45 p-3"><div className="text-[8px] font-bold text-[#78817b]">{label}</div><div className="mt-1 text-lg font-black tracking-tight">{value}</div><div className="mt-1 text-[7px] font-black text-[#4b7759]">IMPROVING</div></div>)}</div><div className="mt-3 rounded-xl bg-[#1d3027] p-4 text-white"><div className="flex items-center gap-2 text-[10px] font-black"><Bot className="h-4 w-4 text-[#f2a66f]" /> Today&apos;s buyer brief</div><p className="mt-2 text-[9px] leading-4 text-[#b7c5ba]">Lead volume is up while cost per lead is down. Two low-risk improvements are ready for review.</p><div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-[9px] font-black text-[#f2b58a]">Review proposed actions <ArrowRight className="h-3 w-3" /></div></div></div></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="py-28 relative">
-        <div className="absolute inset-0 bg-[#060B18] skew-y-1 origin-top-left -z-10 border-y border-white/5 shadow-2xl"></div>
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">How it <span className="text-cyan-400">works</span></h2>
-            <p className="text-slate-400 text-lg font-medium">You don’t need to be an ads expert to launch high-converting campaigns.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card
-              step="01"
-              icon={<Target className="w-8 h-8 text-cyan-400" />}
-              title="Tell us about your business"
-              desc="Paste your website and answer a few questions (who you help, what you sell, where you serve)."
-            />
-            <Card
-              step="02"
-              icon={<FileText className="w-8 h-8 text-violet-400" />}
-              title="Get your ad starter kit"
-              desc="We generate your ad text + video scripts + a simple setup plan aligned with best practices."
-            />
-            <Card
-              step="03"
-              icon={<Sparkles className="w-8 h-8 text-orange-400" />}
-              title="Review & launch"
-              desc="You approve everything first. Then you launch and start getting calls, leads, and sales."
-            />
-          </div>
-        </div>
+      <section id="how" className="bg-[#1b2d24] py-24 text-white sm:py-32">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8"><div className="max-w-2xl"><span className="text-[10px] font-black uppercase tracking-[.18em] text-[#e9a777]">From login to clarity</span><h2 className="mt-4 text-4xl font-black tracking-[-.05em] sm:text-6xl">Three steps. One of them is yours.</h2></div><div className="mt-14 grid gap-px overflow-hidden rounded-[26px] border border-white/10 bg-white/10 md:grid-cols-3">{[
+          ['01', 'Connect', 'Sign in to Google or Meta with the accounts you already own. We begin read-only.'],
+          ['02', 'Understand', 'The agent audits tracking, campaigns, creative, spend, and real business results.'],
+          ['03', 'Approve', 'Review the exact plan in plain English. Approve each action or set safe autopilot limits.'],
+        ].map(([number, title, copy]) => <div key={number} className="bg-[#1b2d24] p-8 sm:p-10"><span className="text-xs font-black text-[#efa873]">{number}</span><h3 className="mt-16 text-2xl font-black">{title}</h3><p className="mt-3 text-sm leading-6 text-[#adbbb0]">{copy}</p></div>)}</div></div>
       </section>
 
-      {/* What you get */}
-      <section id="included" className="py-28 bg-[#030712] relative">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">What you <span className="text-violet-400">get</span></h2>
-            <p className="text-slate-400 text-lg font-medium">A complete Creative Pack you can actually use.</p>
-          </div>
+      <section id="control" className="py-24 sm:py-32"><div className="mx-auto grid max-w-[1280px] gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:items-center"><div><span className="text-[10px] font-black uppercase tracking-[.18em] text-[#a56238]">Autonomy without anxiety</span><h2 className="mt-4 text-4xl font-black tracking-[-.05em] sm:text-6xl">You decide how much the AI can do.</h2><p className="mt-6 max-w-xl text-base leading-7 text-[#626f67]">Start with observation. Move to approvals. Turn on bounded autopilot only when you are ready. Budget caps, anomaly stops, conversion checks, and a full audit trail remain on in every mode.</p><Link href="/dashboard" className="mt-8 inline-flex items-center gap-3 rounded-2xl bg-[#d8814b] px-6 py-4 text-sm font-black text-white">Try the control center <ArrowRight className="h-4 w-4" /></Link></div><div className="space-y-3">{[
+          ['Watch only', 'Analysis and recommendations. No account changes.'],
+          ['Ask me first', 'Exact changes are prepared for your approval.'],
+          ['Bounded autopilot', 'Low-risk actions inside hard limits you define.'],
+        ].map(([title, copy], index) => <div key={title} className={`flex items-center gap-4 rounded-[22px] border p-5 ${index === 1 ? 'border-[#78927e] bg-[#e6eee5]' : 'border-[#d6d1c6] bg-[#fbf9f4]'}`}><span className={`grid h-10 w-10 place-items-center rounded-xl ${index === 1 ? 'bg-[#31543f] text-white' : 'bg-[#ebe6db]'}`}>{index === 0 ? <Target className="h-5 w-5" /> : index === 1 ? <ShieldCheck className="h-5 w-5" /> : <Zap className="h-5 w-5" />}</span><span><b className="block text-sm">{title}</b><span className="mt-1 block text-xs text-[#69746d]">{copy}</span></span>{index === 1 && <span className="ml-auto text-[9px] font-black uppercase tracking-wider text-[#42644e]">Recommended</span>}</div>)}</div></div></section>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            <Included icon={<Zap className="w-6 h-6 text-cyan-400"/>} title="Attention-grabbing first lines" desc="Multiple opening lines to stop the scroll and hook your ideal customers immediately." />
-            <Included icon={<TrendingUp className="w-6 h-6 text-violet-400"/>} title="Short video scripts" desc="Exactly what to say on camera + on-screen text instructions for high engagement." />
-            <Included icon={<FileText className="w-6 h-6 text-orange-400"/>} title="Ad text variations" desc="Ready to copy/paste directly into Meta or Google Ads platform." />
-            <Included icon={<Target className="w-6 h-6 text-cyan-400"/>} title="Simple launch plan" desc="A prioritized roadmap: what to set up first + exactly what to test next." />
-          </div>
-
-          <div className="mt-20 text-center">
-            <button
-              onClick={onBuy}
-              disabled={loading}
-              className="inline-flex items-center justify-center premium-gradient text-white font-extrabold text-lg px-12 py-6 rounded-full transition-all transform hover:scale-105 shadow-[0_0_40px_rgba(139,92,246,0.3)] hover-glow border border-white/20"
-            >
-              {loading ? 'Redirecting…' : 'Access Your Creative Pack'}
-              <ArrowRight className="ml-3 w-6 h-6 animate-pulse-slow" />
-            </button>
-            <p className="mt-4 text-sm font-semibold text-slate-500 uppercase tracking-widest">One-time purchase • Instant delivery</p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="py-28 relative">
-        <div className="absolute inset-0 bg-[#060B18] -skew-y-1 origin-bottom-right -z-10 border-y border-white/5"></div>
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">F.A.Q.</h2>
-            <p className="text-slate-400 text-lg font-medium">Quick answers to the only questions that matter.</p>
-          </div>
-
-          <div className="max-w-4xl mx-auto grid gap-6">
-            <Faq q="What exactly am I buying?" a="A one-time purchase Creative Pack generator. You answer a few questions about your offer and audience, and it outputs a highly structured ad pack containing hooks, scripts, copy variants, and an execution roadmap." />
-            <Faq q="Is this a recurring subscription?" a="No — it is a single, one-time payment for lifetime access to the generation tool." />
-            <Faq q="How soon do I get access?" a="Instantly. After checkout, you’ll be redirected to a success page where you can start generating your packs immediately." />
-            <Faq q="Does it work for my specific niche?" a="Yes, for almost all niches. The AI tailors the output to your specific inputs. The more precise you are with your offer, audience, and proof, the higher the quality of the generated output." />
-          </div>
-
-          <div className="mt-20 text-center">
-            <button
-              onClick={onBuy}
-              disabled={loading}
-              className="inline-flex items-center justify-center premium-gradient text-white font-extrabold text-lg px-10 py-5 rounded-full transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover-glow border border-white/20"
-            >
-              {loading ? 'Redirecting…' : 'Get Instant Access For $29'}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-          </div>
-
-        </div>
-      </section>
-      
-      <SiteFooter />
-    </div>
-  );
-}
-
-function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full glass-card border-white/10 px-4 py-1.5 text-xs font-bold text-slate-200 shadow-sm">
-      <span className="text-cyan-400">{icon}</span>
-      {label}
-    </span>
-  );
-}
-
-function Card({ step, icon, title, desc }: { step: string; icon: React.ReactNode; title: string; desc: string }) {
-  return (
-    <div className="glass-card p-10 rounded-3xl group relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-6 text-6xl font-black text-white/[0.03] group-hover:text-cyan-500/[0.05] transition-colors duration-500 pointer-events-none">
-        {step}
-      </div>
-      <div className="bg-[#030712] border border-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:border-cyan-500/30 transition-all duration-300 shadow-inner relative z-10">
-        {icon}
-      </div>
-      <h3 className="text-2xl font-black mb-4 text-white group-hover:text-cyan-400 transition-colors relative z-10">{title}</h3>
-      <p className="text-slate-400 font-medium leading-relaxed relative z-10">{desc}</p>
-    </div>
-  );
-}
-
-function Included({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
-  return (
-    <div className="glass-card rounded-3xl p-8 hover:-translate-y-1 transition-transform duration-300">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="bg-[#030712] border border-white/10 p-3 rounded-xl shadow-inner">
-          {icon}
-        </div>
-        <div className="text-xl font-bold text-white tracking-tight">{title}</div>
-      </div>
-      <div className="text-slate-400 font-medium leading-relaxed pl-1">{desc}</div>
-    </div>
-  );
-}
-
-function Faq({ q, a }: { q: string; a: string }) {
-  return (
-    <div className="glass-card rounded-2xl p-8">
-      <div className="font-bold text-lg text-white mb-3">{q}</div>
-      <div className="text-slate-400 font-medium leading-relaxed">{a}</div>
-    </div>
+      <footer className="border-t border-[#d7d2c7] px-5 py-8 sm:px-8"><div className="mx-auto flex max-w-[1280px] flex-col gap-3 text-xs text-[#717a74] sm:flex-row sm:items-center sm:justify-between"><b className="text-[#29372f]">Paid Media Pro</b><span>Built for clarity, control, and measurable performance.</span></div></footer>
+    </main>
   );
 }
 

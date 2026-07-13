@@ -1,0 +1,304 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0344567B370D57A9823B3836 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C389276E52138A77E545FFE /* ContentView.swift */; };
+		49DC23827330AE09BC7DC98D /* PaidMediaBuyerProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5B23E4B902CCEEDC96E12E /* PaidMediaBuyerProApp.swift */; };
+		7187F71CC846248080DF09E3 /* PixelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0F88DD99B1893CD2C33F3D /* PixelStatusView.swift */; };
+		CC08439B8F9B42721D0A04D4 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB782E92C2430D76617D4D6D /* DashboardView.swift */; };
+		DF5EF1DB9ED902F4661FC2DF /* CampaignLauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8109805B5A22F1532C3B0019 /* CampaignLauncherView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		6C389276E52138A77E545FFE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7D0F88DD99B1893CD2C33F3D /* PixelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelStatusView.swift; sourceTree = "<group>"; };
+		7F166929F3E88D573B8470C8 /* PaidMediaBuyerPro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PaidMediaBuyerPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8109805B5A22F1532C3B0019 /* CampaignLauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CampaignLauncherView.swift; sourceTree = "<group>"; };
+		EB782E92C2430D76617D4D6D /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FC5B23E4B902CCEEDC96E12E /* PaidMediaBuyerProApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaidMediaBuyerProApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		026F5FD0624721C0434527D8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7F166929F3E88D573B8470C8 /* PaidMediaBuyerPro.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B12D06C56E13A297F67C07A6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				8109805B5A22F1532C3B0019 /* CampaignLauncherView.swift */,
+				EB782E92C2430D76617D4D6D /* DashboardView.swift */,
+				7D0F88DD99B1893CD2C33F3D /* PixelStatusView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C1E5EC5908E6BB76137F98C5 = {
+			isa = PBXGroup;
+			children = (
+				6C389276E52138A77E545FFE /* ContentView.swift */,
+				FC5B23E4B902CCEEDC96E12E /* PaidMediaBuyerProApp.swift */,
+				B12D06C56E13A297F67C07A6 /* Views */,
+				026F5FD0624721C0434527D8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B4C1F0F12E1842ECD8A05EE8 /* PaidMediaBuyerPro */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7D40AC011B0B912C6FF61FB2 /* Build configuration list for PBXNativeTarget "PaidMediaBuyerPro" */;
+			buildPhases = (
+				56E952136009D46BDE0E16FF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PaidMediaBuyerPro;
+			packageProductDependencies = (
+			);
+			productName = PaidMediaBuyerPro;
+			productReference = 7F166929F3E88D573B8470C8 /* PaidMediaBuyerPro.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BAA6AED352C63B8FAD367848 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B4C1F0F12E1842ECD8A05EE8 = {
+						DevelopmentTeam = WN3K69XEP4;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 41DC2414E60FE79D24F010F9 /* Build configuration list for PBXProject "PaidMediaBuyerPro" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C1E5EC5908E6BB76137F98C5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 026F5FD0624721C0434527D8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B4C1F0F12E1842ECD8A05EE8 /* PaidMediaBuyerPro */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		56E952136009D46BDE0E16FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF5EF1DB9ED902F4661FC2DF /* CampaignLauncherView.swift in Sources */,
+				0344567B370D57A9823B3836 /* ContentView.swift in Sources */,
+				CC08439B8F9B42721D0A04D4 /* DashboardView.swift in Sources */,
+				49DC23827330AE09BC7DC98D /* PaidMediaBuyerProApp.swift in Sources */,
+				7187F71CC846248080DF09E3 /* PixelStatusView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		51010B11F794CFB0173AE3C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = WN3K69XEP4;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mediabuyerpro.PaidMediaBuyerPro;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		802D5D26BF80435E57D68C59 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B5BB4BE4FC156B886C3A335A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EEE6ECBE4E0F8F2CCE8EF98B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = WN3K69XEP4;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mediabuyerpro.PaidMediaBuyerPro;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		41DC2414E60FE79D24F010F9 /* Build configuration list for PBXProject "PaidMediaBuyerPro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B5BB4BE4FC156B886C3A335A /* Debug */,
+				802D5D26BF80435E57D68C59 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7D40AC011B0B912C6FF61FB2 /* Build configuration list for PBXNativeTarget "PaidMediaBuyerPro" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EEE6ECBE4E0F8F2CCE8EF98B /* Debug */,
+				51010B11F794CFB0173AE3C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BAA6AED352C63B8FAD367848 /* Project object */;
+}
