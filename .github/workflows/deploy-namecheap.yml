@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload via FTP
         if: steps.creds.outputs.configured == 'true'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.NC_FTP_SERVER }}
           username: ${{ secrets.NC_FTP_USERNAME }}
@@ -70,4 +70,10 @@ jobs:
           protocol: ftps
           local-dir: bundle/
           server-dir: ${{ secrets.NC_SERVER_DIR }}
+          state-name: .ftp-deploy-runtime-state.json
+          # The action excludes node_modules by default, but Next standalone's
+          # traced runtime dependencies must ship with the server bundle.
+          exclude: |
+            **/.git*
+            **/.git*/**
           timeout: 600000
