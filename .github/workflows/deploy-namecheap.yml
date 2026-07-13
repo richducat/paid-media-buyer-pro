@@ -30,23 +30,20 @@ jobs:
         with:
           node-version: 24
 
-      - name: Enable pnpm
-        run: corepack enable
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Build (standalone)
-        run: pnpm build
+        run: npm run build
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Assemble deploy bundle
         run: |
           mkdir -p bundle/.next bundle/tmp
-          # pnpm-backed standalone builds contain symlinks inside node_modules.
-          # FTP cannot preserve them, so dereference the links into real files.
-          cp -rL .next/standalone/. bundle/
+          # npm gives the standalone tracer real runtime directories that FTP
+          # can upload. pnpm's symlink graph is not portable to shared hosting.
+          cp -r .next/standalone/. bundle/
           cp -r .next/static bundle/.next/static
           cp -r public bundle/public
           test -f bundle/node_modules/next/package.json
