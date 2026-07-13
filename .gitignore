@@ -21,6 +21,7 @@
 /build
 /ios/build/
 /ios/build.log
+/.paidmedia-data/
 
 # misc
 .DS_Store

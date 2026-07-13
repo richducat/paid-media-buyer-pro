@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct PixelStatusView: View {
+    @State private var readiness: MobileReadiness?
+    @State private var loadError: String?
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -13,8 +16,8 @@ struct PixelStatusView: View {
                             Text("Sign in with accounts you already own. Paid Media Pro begins read-only and shows its plan before it can act.").font(.system(size: 13, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(3)
                         }
 
-                        ConnectionCard(letter: "G", title: "Google Ads", detail: "Search, Performance Max, Shopping, YouTube, and conversion actions.")
-                        ConnectionCard(letter: "M", title: "Meta Ads", detail: "Facebook and Instagram campaigns, creatives, audiences, and Pixel data.")
+                        ConnectionCard(letter: "G", title: "Google Ads", detail: "Search, Performance Max, Shopping, YouTube, and conversion actions.", state: readiness?.google)
+                        ConnectionCard(letter: "M", title: "Meta Ads", detail: "Facebook and Instagram campaigns, creatives, audiences, and Pixel data.", state: readiness?.meta)
 
                         VStack(alignment: .leading, spacing: 16) {
                             SetupStep(number: "1", title: "Connect securely", detail: "Google or Meta opens its own sign-in screen. We never see your password.")
@@ -25,7 +28,7 @@ struct PixelStatusView: View {
                         .background(PMTheme.surface, in: RoundedRectangle(cornerRadius: 22))
                         .overlay(RoundedRectangle(cornerRadius: 22).stroke(PMTheme.line))
 
-                        Link(destination: URL(string: "https://paid-media-buyer-pro.vercel.app/dashboard")!) {
+                        Link(destination: URL(string: "https://paidmediapro.eb28.co/dashboard")!) {
                             HStack { Image(systemName: "safari.fill"); Text("Open secure web setup"); Spacer(); Image(systemName: "arrow.up.right") }
                                 .font(.system(size: 13, weight: .black))
                                 .foregroundStyle(Color.white)
@@ -33,8 +36,9 @@ struct PixelStatusView: View {
                                 .background(PMTheme.forest, in: RoundedRectangle(cornerRadius: 15))
                         }
 
-                        Text("The current production URL is unavailable. The button is retained for the next deployment and does not imply a live connection.")
-                            .font(.system(size: 9, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(2)
+                        if let loadError {
+                            Text(loadError).font(.system(size: 9, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(2)
+                        }
                     }
                     .padding(18)
                     .padding(.bottom, 24)
@@ -42,6 +46,18 @@ struct PixelStatusView: View {
             }
             .navigationTitle("Connections")
             .navigationBarTitleDisplayMode(.inline)
+            .task { await loadReadiness() }
+        }
+    }
+
+    @MainActor private func loadReadiness() async {
+        do {
+            let (data, response) = try await URLSession.shared.data(from: URL(string: "https://paidmediapro.eb28.co/api/platform-readiness")!)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
+            readiness = try JSONDecoder().decode(MobileReadiness.self, from: data)
+            loadError = nil
+        } catch {
+            loadError = "Connection status could not be refreshed. Secure web setup remains available above."
         }
     }
 }
@@ -50,17 +66,18 @@ private struct ConnectionCard: View {
     let letter: String
     let title: String
     let detail: String
+    let state: MobilePlatformState?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text(letter).font(.system(size: 17, weight: .black)).frame(width: 42, height: 42).background(PMTheme.canvas, in: RoundedRectangle(cornerRadius: 13))
                 Spacer()
-                Text("NOT CONNECTED").font(.system(size: 8, weight: .black)).tracking(1).foregroundStyle(Color.brown).padding(.horizontal, 8).padding(.vertical, 5).background(Color.orange.opacity(0.1), in: Capsule())
+                Text(state?.connected == true ? "CONNECTED" : state?.configured == true ? "READY" : "SETUP NEEDED").font(.system(size: 8, weight: .black)).tracking(1).foregroundStyle(state?.connected == true ? PMTheme.success : Color.brown).padding(.horizontal, 8).padding(.vertical, 5).background((state?.connected == true ? PMTheme.success : Color.orange).opacity(0.1), in: Capsule())
             }
             Text(title).font(.system(size: 18, weight: .black, design: .rounded))
             Text(detail).font(.system(size: 11, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(3)
-            HStack { Image(systemName: "lock.fill"); Text("Web OAuth setup required"); Spacer() }
+            HStack { Image(systemName: state?.connected == true ? "checkmark.shield.fill" : "lock.fill"); Text(state?.connected == true ? "Read-only access active" : "Secure web sign-in required"); Spacer() }
                 .font(.system(size: 11, weight: .black)).foregroundStyle(PMTheme.muted).padding(12).background(PMTheme.canvas, in: RoundedRectangle(cornerRadius: 11))
         }
         .padding(18)
@@ -68,6 +85,9 @@ private struct ConnectionCard: View {
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(PMTheme.line))
     }
 }
+
+struct MobileReadiness: Decodable { let mode: String; let google: MobilePlatformState; let meta: MobilePlatformState }
+struct MobilePlatformState: Decodable { let configured: Bool; let connected: Bool }
 
 private struct SetupStep: View {
     let number: String

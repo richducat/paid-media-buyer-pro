@@ -33,12 +33,35 @@ type Readiness = {
   connected: boolean;
   missing: string[];
   connectPath: string;
+  connectedAt?: string;
+  accounts: { id: string; name: string; currency?: string; timezone?: string; manager?: boolean }[];
+  selectedAccountId?: string;
 };
 
 type ReadinessResponse = {
   mode: 'demo' | 'live';
   google: Readiness;
   meta: Readiness;
+};
+
+type Campaign = {
+  id: string;
+  platform: 'Google Ads' | 'Meta Ads';
+  name: string;
+  status: string;
+  spend: number;
+  results: number;
+  revenue: number;
+  clicks: number;
+  impressions: number;
+};
+
+type PlatformData = {
+  live: boolean;
+  fetchedAt: string;
+  summary: { spend: number; results: number; revenue: number; clicks: number; impressions: number; costPerResult: number | null; roas: number | null };
+  campaigns: Campaign[];
+  errors: Partial<Record<'google' | 'meta', string>>;
 };
 
 const demoMetrics = [
@@ -92,6 +115,7 @@ export default function DashboardPage() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [readiness, setReadiness] = useState<ReadinessResponse | null>(null);
   const [loadingReadiness, setLoadingReadiness] = useState(true);
+  const [platformData, setPlatformData] = useState<PlatformData | null>(null);
   const [dismissedActions, setDismissedActions] = useState<string[]>([]);
   const [approvedActions, setApprovedActions] = useState<string[]>([]);
 
@@ -100,7 +124,15 @@ export default function DashboardPage() {
     try {
       const response = await fetch('/api/platform-readiness', { cache: 'no-store' });
       if (!response.ok) throw new Error('readiness unavailable');
-      setReadiness(await response.json());
+      const nextReadiness: ReadinessResponse = await response.json();
+      setReadiness(nextReadiness);
+      if (nextReadiness.google.connected || nextReadiness.meta.connected) {
+        const dataResponse = await fetch('/api/platform-data', { cache: 'no-store' });
+        if (!dataResponse.ok) throw new Error('live account data unavailable');
+        setPlatformData(await dataResponse.json());
+      } else {
+        setPlatformData(null);
+      }
     } finally {
       setLoadingReadiness(false);
     }
@@ -207,7 +239,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {tab === 'overview' && <Overview onOpenAgent={() => setTab('agent')} />}
+            {tab === 'overview' && <Overview onOpenAgent={() => setTab('agent')} data={platformData} isLive={Boolean(isLive)} onRefresh={loadReadiness} />}
             {tab === 'agent' && (
               <AgentWorkspace
                 mode={mode}
@@ -215,9 +247,10 @@ export default function DashboardPage() {
                 approved={approvedActions}
                 onApprove={(id) => setApprovedActions((items) => [...items, id])}
                 onDismiss={(id) => setDismissedActions((items) => [...items, id])}
+                isLive={Boolean(isLive)}
               />
             )}
-            {tab === 'campaigns' && <CampaignWorkspace />}
+            {tab === 'campaigns' && <CampaignWorkspace campaigns={platformData?.campaigns || []} isLive={Boolean(isLive)} errors={platformData?.errors} />}
             {tab === 'setup' && <SetupWorkspace readiness={readiness} loading={loadingReadiness} onRefresh={loadReadiness} onOpenGuardrails={() => setSetupOpen(true)} />}
           </div>
         </section>
@@ -228,19 +261,25 @@ export default function DashboardPage() {
   );
 }
 
-function Overview({ onOpenAgent }: { onOpenAgent: () => void }) {
+function Overview({ onOpenAgent, data, isLive, onRefresh }: { onOpenAgent: () => void; data: PlatformData | null; isLive: boolean; onRefresh: () => void }) {
+  const metrics = isLive && data ? [
+    { label: 'Ad spend', value: money(data.summary.spend), plain: 'Total reported by the selected Google and Meta accounts.' },
+    { label: 'Results', value: number(data.summary.results), plain: 'Platform-reported primary results during the last 30 days.' },
+    { label: 'Cost per result', value: data.summary.costPerResult === null ? '—' : money(data.summary.costPerResult), plain: 'Spend divided by reported results.' },
+    { label: 'ROAS', value: data.summary.roas === null ? '—' : `${data.summary.roas.toFixed(2)}×`, plain: 'Reported conversion value returned for every $1 in ad spend.' },
+  ] : demoMetrics;
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.35fr_.65fr]">
         <div>
           <div className="mb-5 flex items-end justify-between">
             <div><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#788078]">Last 30 days</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Performance at a glance</h2></div>
-            <button className="flex items-center gap-2 text-xs font-bold text-[#66716a]"><RefreshCw className="h-3.5 w-3.5" /> Updated 4 min ago</button>
+            <button onClick={onRefresh} className="flex items-center gap-2 text-xs font-bold text-[#66716a]"><RefreshCw className="h-3.5 w-3.5" /> {data ? `Updated ${new Date(data.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Refresh'}</button>
           </div>
           <div className="grid overflow-hidden rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] sm:grid-cols-2 xl:grid-cols-4">
-            {demoMetrics.map((metric, index) => (
+            {metrics.map((metric, index) => (
               <div key={metric.label} className={`p-5 lg:p-6 ${index > 0 ? 'border-t border-[#ddd8cd] sm:border-l sm:border-t-0' : ''} ${index === 2 ? 'sm:border-l-0 xl:border-l' : ''}`}>
-                <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#69736c]">{metric.label}</span><span className={`flex items-center gap-1 text-[11px] font-black ${metric.direction === 'down' || metric.label === 'ROAS' ? 'text-[#3e7a53]' : 'text-[#3e7a53]'}`}>{metric.direction === 'down' ? <TrendingDown className="h-3.5 w-3.5" /> : <TrendingUp className="h-3.5 w-3.5" />}{metric.change}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-xs font-bold text-[#69736c]">{metric.label}</span>{'change' in metric && <span className="flex items-center gap-1 text-[11px] font-black text-[#3e7a53]">{metric.direction === 'down' ? <TrendingDown className="h-3.5 w-3.5" /> : <TrendingUp className="h-3.5 w-3.5" />}{metric.change}</span>}</div>
                 <div className="mt-3 text-3xl font-black tracking-[-.05em]">{metric.value}</div>
                 <p className="mt-3 text-[11px] leading-4 text-[#7a817c]">{metric.plain}</p>
               </div>
@@ -250,9 +289,9 @@ function Overview({ onOpenAgent }: { onOpenAgent: () => void }) {
 
         <div className="rounded-[24px] bg-[#1c2c25] p-6 text-white shadow-[0_18px_50px_rgba(31,49,40,.13)]">
           <div className="flex items-start justify-between"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#f2a66f] text-[#1c2c25]"><Bot className="h-5 w-5" /></span><span className="rounded-full border border-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[.15em] text-[#b5c5b9]">Today&apos;s brief</span></div>
-          <h3 className="mt-6 text-xl font-black tracking-[-.03em]">Efficiency improved without increasing risk.</h3>
-          <p className="mt-3 text-sm leading-6 text-[#b9c7bc]">Lead volume is up 18% while cost per lead is down 9%. I found two low-risk improvements ready for your review.</p>
-          <div className="mt-6 border-t border-white/10 pt-5"><button onClick={onOpenAgent} className="flex w-full items-center justify-between text-sm font-extrabold text-[#f5bd91]">Review proposed actions <ArrowRight className="h-4 w-4" /></button></div>
+          <h3 className="mt-6 text-xl font-black tracking-[-.03em]">{isLive ? 'Your live account audit is ready.' : 'Efficiency improved without increasing risk.'}</h3>
+          <p className="mt-3 text-sm leading-6 text-[#b9c7bc]">{isLive ? `${data?.campaigns.length || 0} campaigns were read directly from your selected ad accounts. No changes were made.` : 'Lead volume is up 18% while cost per lead is down 9%. I found two low-risk improvements ready for your review.'}</p>
+          <div className="mt-6 border-t border-white/10 pt-5"><button onClick={onOpenAgent} className="flex w-full items-center justify-between text-sm font-extrabold text-[#f5bd91]">{isLive ? 'Open safe analysis' : 'Review proposed actions'} <ArrowRight className="h-4 w-4" /></button></div>
         </div>
       </section>
 
@@ -260,9 +299,9 @@ function Overview({ onOpenAgent }: { onOpenAgent: () => void }) {
         <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-5 sm:p-7">
           <div className="flex items-center justify-between"><div><p className="text-[11px] font-black uppercase tracking-[.17em] text-[#7b837d]">Blended result</p><h3 className="mt-1 text-lg font-black">Spend and qualified leads</h3></div><span className="rounded-full bg-[#e7eee7] px-3 py-1 text-[10px] font-black text-[#41664c]">Google + Meta</span></div>
           <div className="mt-8 flex h-[220px] items-end gap-2 sm:gap-3">
-            {[44, 58, 52, 68, 63, 74, 70, 86, 76, 91, 88, 100].map((height, index) => <div key={index} className="group relative flex h-full flex-1 items-end"><div className="w-full rounded-t-md bg-[#d7dfd7] transition-all group-hover:bg-[#f2a66f]" style={{ height: `${height}%` }} /><span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#8b918d]">{index + 1}</span></div>)}
+            {(isLive ? campaignBars(data?.campaigns || []) : [44, 58, 52, 68, 63, 74, 70, 86, 76, 91, 88, 100]).map((height, index) => <div key={index} className="group relative flex h-full flex-1 items-end"><div className="w-full rounded-t-md bg-[#d7dfd7] transition-all group-hover:bg-[#f2a66f]" style={{ height: `${height}%` }} /><span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#8b918d]">{index + 1}</span></div>)}
           </div>
-          <div className="mt-10 flex flex-wrap gap-5 border-t border-[#e2ded5] pt-5 text-xs text-[#66716a]"><span><b className="text-[#26362e]">$3.10</b> avg. cost per click</span><span><b className="text-[#26362e]">7.8%</b> lead rate</span><span><b className="text-[#26362e]">$52,166</b> attributed revenue</span></div>
+          <div className="mt-10 flex flex-wrap gap-5 border-t border-[#e2ded5] pt-5 text-xs text-[#66716a]"><span><b className="text-[#26362e]">{isLive && data ? (data.summary.clicks ? money(data.summary.spend / data.summary.clicks) : '—') : '$3.10'}</b> avg. cost per click</span><span><b className="text-[#26362e]">{isLive && data ? number(data.summary.clicks) : '7.8%'}</b> {isLive ? 'clicks' : 'lead rate'}</span><span><b className="text-[#26362e]">{isLive && data ? money(data.summary.revenue) : '$52,166'}</b> attributed revenue</span></div>
         </div>
 
         <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-5 sm:p-7">
@@ -275,47 +314,51 @@ function Overview({ onOpenAgent }: { onOpenAgent: () => void }) {
   );
 }
 
-function AgentWorkspace({ mode, actions, approved, onApprove, onDismiss }: { mode: AutonomyMode; actions: typeof demoActions[number][]; approved: string[]; onApprove: (id: string) => void; onDismiss: (id: string) => void }) {
+function AgentWorkspace({ mode, actions, approved, onApprove, onDismiss, isLive }: { mode: AutonomyMode; actions: typeof demoActions[number][]; approved: string[]; onApprove: (id: string) => void; onDismiss: (id: string) => void; isLive: boolean }) {
   return (
     <div className="grid gap-7 xl:grid-cols-[1fr_360px]">
       <div>
         <div className="mb-6"><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#77827b]">Decision queue</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Changes worth making</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#66716a]">Every recommendation includes the evidence, expected impact, and risk. In {mode} mode, no account change happens without the rule you selected.</p></div>
         <div className="space-y-4">
-          {actions.map((action) => {
+          {!isLive && actions.map((action) => {
             const isApproved = approved.includes(action.id);
             return <article key={action.id} className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-5 sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-start"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#e5ece4] text-[#41644e]"><Zap className="h-5 w-5" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-black uppercase tracking-[.13em] text-[#718078]">{action.platform}</span><span className="rounded-full bg-[#eef0ea] px-2 py-1 text-[9px] font-black text-[#657069]">{action.risk}</span></div><h3 className="mt-2 text-lg font-black tracking-[-.02em]">{action.title}</h3><p className="mt-2 text-sm leading-6 text-[#68726c]">{action.plain}</p><div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-[#e4e0d7] pt-4 text-[11px]"><span><b className="text-[#23372c]">Why:</b> {action.evidence}</span><span><b className="text-[#23372c]">Impact:</b> {action.impact}</span></div></div></div><div className="mt-5 flex justify-end gap-2">{isApproved ? <span className="flex items-center gap-2 rounded-xl bg-[#e2eee4] px-4 py-2.5 text-xs font-black text-[#376147]"><Check className="h-4 w-4" /> Approved in demo</span> : <><button onClick={() => onDismiss(action.id)} className="rounded-xl border border-[#d7d2c8] px-4 py-2.5 text-xs font-bold text-[#677069]">Not now</button><button onClick={() => onApprove(action.id)} className="rounded-xl bg-[#20382c] px-4 py-2.5 text-xs font-black text-white">Approve recommendation</button></>}</div></article>;
           })}
-          {actions.length === 0 && <div className="rounded-[24px] border border-dashed border-[#c9c4b8] p-12 text-center"><Check className="mx-auto h-6 w-6 text-[#5e806b]" /><h3 className="mt-3 font-black">Queue reviewed</h3><p className="mt-1 text-sm text-[#707970]">There are no more sample recommendations.</p></div>}
+          {(isLive || actions.length === 0) && <div className="rounded-[24px] border border-dashed border-[#c9c4b8] p-12 text-center"><Check className="mx-auto h-6 w-6 text-[#5e806b]" /><h3 className="mt-3 font-black">{isLive ? 'No unverified actions' : 'Queue reviewed'}</h3><p className="mt-1 text-sm text-[#707970]">{isLive ? 'The account is connected read-only. Recommendations appear only after their evidence can be verified against live data.' : 'There are no more sample recommendations.'}</p></div>}
         </div>
       </div>
       <aside className="space-y-5">
         <div className="rounded-[24px] bg-[#ead9c4] p-6"><MessageSquareText className="h-5 w-5 text-[#7e5935]" /><h3 className="mt-5 text-lg font-black">Ask your media buyer</h3><p className="mt-2 text-sm leading-6 text-[#695b4c]">Use ordinary language. The agent translates it into platform-specific analysis and a reviewable plan.</p><div className="mt-5 rounded-2xl border border-[#d5bea2] bg-[#f7ead9] p-3 text-xs text-[#6d5a46]">“Why did leads get more expensive this week?”</div><button className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#7b5937] px-4 py-3 text-xs font-black text-white">Open conversation <ArrowRight className="h-4 w-4" /></button></div>
-        <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-6"><div className="flex items-center justify-between"><h3 className="font-black">Audit trail</h3><LockKeyhole className="h-4 w-4 text-[#748078]" /></div><div className="mt-5 space-y-5">{timeline.map((item) => <TimelineItem key={item.title} {...item} />)}</div></div>
+        <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-6"><div className="flex items-center justify-between"><h3 className="font-black">Audit trail</h3><LockKeyhole className="h-4 w-4 text-[#748078]" /></div>{isLive ? <p className="mt-5 text-xs leading-5 text-[#68726c]">No account changes have been executed. Every future action will be recorded here with its evidence and approval.</p> : <div className="mt-5 space-y-5">{timeline.map((item) => <TimelineItem key={item.title} {...item} />)}</div>}</div>
       </aside>
     </div>
   );
 }
 
-function CampaignWorkspace() {
-  return <div><div className="mb-6"><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#77827b]">Cross-platform</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Campaigns in one language</h2><p className="mt-2 text-sm text-[#68726c]">Platform terminology stays available, with a plain-English explanation beside it.</p></div><div className="overflow-hidden rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4]"><div className="grid grid-cols-[1fr_110px_110px_110px] border-b border-[#ddd8ce] px-5 py-3 text-[10px] font-black uppercase tracking-[.12em] text-[#7c847e] sm:grid-cols-[1.4fr_.8fr_.7fr_.7fr_.7fr]"><span>Campaign</span><span className="hidden sm:block">Platform</span><span>Spend</span><span>Results</span><span className="text-right">Status</span></div>{[
+function CampaignWorkspace({ campaigns, isLive, errors }: { campaigns: Campaign[]; isLive: boolean; errors?: PlatformData['errors'] }) {
+  const demoRows = [
     ['Emergency AC Repair — Search', 'Google', '$4,820', '129 leads', 'Healthy'],
     ['Summer comfort — Advantage+', 'Meta', '$3,940', '112 leads', 'Learning'],
     ['Brand protection', 'Google', '$1,180', '58 leads', 'Healthy'],
     ['Retargeting — 30 day', 'Meta', '$2,540', '27 leads', 'Watch'],
-  ].map((row) => <div key={row[0]} className="grid grid-cols-[1fr_110px_110px_110px] items-center border-b border-[#ebe7de] px-5 py-4 text-xs last:border-0 sm:grid-cols-[1.4fr_.8fr_.7fr_.7fr_.7fr]"><span className="font-extrabold">{row[0]}</span><span className="hidden text-[#68726c] sm:block">{row[1]}</span><span className="font-bold">{row[2]}</span><span>{row[3]}</span><span className="text-right"><span className="rounded-full bg-[#e4ece4] px-2 py-1 text-[9px] font-black text-[#41634d]">{row[4]}</span></span></div>)}</div><div className="mt-5 rounded-[20px] border border-[#e2c89e] bg-[#fff8e9] p-4 text-xs leading-5 text-[#735b3b]"><b>Demo note:</b> This table is illustrative until an ad account is connected. Paid Media Pro will never mix sample numbers with live account data.</div></div>;
+  ];
+  const rows = isLive ? campaigns.map((campaign) => [campaign.name, campaign.platform, money(campaign.spend), number(campaign.results), campaign.status]) : demoRows;
+  return <div><div className="mb-6"><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#77827b]">Cross-platform</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Campaigns in one language</h2><p className="mt-2 text-sm text-[#68726c]">Platform terminology stays available, with a plain-English explanation beside it.</p></div>{errors && Object.values(errors).length > 0 && <div className="mb-5 rounded-[20px] border border-[#e2c89e] bg-[#fff8e9] p-4 text-xs leading-5 text-[#735b3b]">Some live data could not be loaded: {Object.values(errors).join(' ')}</div>}<div className="overflow-hidden rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4]"><div className="grid grid-cols-[1fr_110px_110px_110px] border-b border-[#ddd8ce] px-5 py-3 text-[10px] font-black uppercase tracking-[.12em] text-[#7c847e] sm:grid-cols-[1.4fr_.8fr_.7fr_.7fr_.7fr]"><span>Campaign</span><span className="hidden sm:block">Platform</span><span>Spend</span><span>Results</span><span className="text-right">Status</span></div>{rows.map((row) => <div key={`${row[1]}-${row[0]}`} className="grid grid-cols-[1fr_110px_110px_110px] items-center border-b border-[#ebe7de] px-5 py-4 text-xs last:border-0 sm:grid-cols-[1.4fr_.8fr_.7fr_.7fr_.7fr]"><span className="font-extrabold">{row[0]}</span><span className="hidden text-[#68726c] sm:block">{row[1]}</span><span className="font-bold">{row[2]}</span><span>{row[3]}</span><span className="text-right"><span className="rounded-full bg-[#e4ece4] px-2 py-1 text-[9px] font-black text-[#41634d]">{row[4]}</span></span></div>)}{isLive && rows.length === 0 && <div className="p-10 text-center text-sm text-[#68726c]">No campaign rows are available yet. Choose an ad account in Connections &amp; setup, then refresh.</div>}</div>{!isLive && <div className="mt-5 rounded-[20px] border border-[#e2c89e] bg-[#fff8e9] p-4 text-xs leading-5 text-[#735b3b]"><b>Demo note:</b> This table is illustrative until an ad account is connected. Paid Media Pro will never mix sample numbers with live account data.</div>}</div>;
 }
 
 function SetupWorkspace({ readiness, loading, onRefresh, onOpenGuardrails }: { readiness: ReadinessResponse | null; loading: boolean; onRefresh: () => void; onOpenGuardrails: () => void }) {
-  return <div><div className="mb-7 flex items-end justify-between"><div><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#77827b]">One-click setup</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Connect once. We handle the busywork.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#68726c]">Sign in with the accounts you already own. Paid Media Pro starts read-only, learns your history, and shows its plan before requesting permission to act.</p></div><button onClick={onRefresh} className="hidden items-center gap-2 text-xs font-bold sm:flex"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Recheck</button></div><div className="grid gap-5 lg:grid-cols-2"><ConnectionPanel platform="Google Ads" mark="G" description="Search, Performance Max, Shopping, YouTube, and conversion actions." readiness={readiness?.google} /><ConnectionPanel platform="Meta Ads" mark="M" description="Facebook and Instagram campaigns, creatives, audiences, and Pixel data." readiness={readiness?.meta} /></div><div className="mt-7 grid gap-5 md:grid-cols-3">{[
+  return <div><div className="mb-7 flex items-end justify-between"><div><p className="text-[11px] font-black uppercase tracking-[.18em] text-[#77827b]">One-click setup</p><h2 className="mt-1 text-2xl font-black tracking-[-.04em]">Connect once. We handle the busywork.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#68726c]">Sign in with the accounts you already own. Paid Media Pro starts read-only, learns your history, and shows its plan before requesting permission to act.</p></div><button onClick={onRefresh} className="hidden items-center gap-2 text-xs font-bold sm:flex"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Recheck</button></div><div className="grid gap-5 lg:grid-cols-2"><ConnectionPanel platformKey="google" platform="Google Ads" mark="G" description="Search, Performance Max, Shopping, YouTube, and conversion actions." readiness={readiness?.google} onRefresh={onRefresh} /><ConnectionPanel platformKey="meta" platform="Meta Ads" mark="M" description="Facebook and Instagram campaigns, creatives, audiences, and Pixel data." readiness={readiness?.meta} onRefresh={onRefresh} /></div><div className="mt-7 grid gap-5 md:grid-cols-3">{[
     ['1', 'Connect securely', 'Google or Meta opens its own sign-in screen. Your password never touches this app.'],
     ['2', 'Review the account', 'The agent reads structure, tracking, spend, and results before recommending anything.'],
     ['3', 'Choose control', 'Keep it read-only, approve each action, or allow bounded autopilot with hard limits.'],
   ].map((step) => <div key={step[0]} className="rounded-[22px] border border-[#d9d4c8] bg-[#fbf9f4] p-5"><span className="grid h-8 w-8 place-items-center rounded-full bg-[#e7dfd2] text-xs font-black text-[#6c563c]">{step[0]}</span><h3 className="mt-5 font-black">{step[1]}</h3><p className="mt-2 text-xs leading-5 text-[#6e7770]">{step[2]}</p></div>)}</div><button onClick={onOpenGuardrails} className="mt-7 flex w-full items-center justify-between rounded-[22px] bg-[#1d3027] p-5 text-left text-white"><span className="flex items-center gap-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10"><ShieldCheck className="h-5 w-5 text-[#f2ac79]" /></span><span><b className="block text-sm">Set budget and approval guardrails</b><span className="mt-1 block text-xs text-[#b7c6bb]">Daily caps, change limits, protected campaigns, and automatic stop rules.</span></span></span><ChevronRight className="h-5 w-5" /></button></div>;
 }
 
-function ConnectionPanel({ platform, mark, description, readiness }: { platform: string; mark: string; description: string; readiness?: Readiness }) {
+function ConnectionPanel({ platformKey, platform, mark, description, readiness, onRefresh }: { platformKey: 'google' | 'meta'; platform: string; mark: string; description: string; readiness?: Readiness; onRefresh: () => void }) {
   const status = readiness?.connected ? 'Connected' : readiness?.configured ? 'Ready to connect' : 'Needs app credentials';
-  return <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-6"><div className="flex items-start justify-between"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#e8e3d8] text-lg font-black">{mark}</span><span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.1em] ${readiness?.connected ? 'bg-[#e2ede3] text-[#3b6749]' : 'bg-[#f2eadc] text-[#7b6244]'}`}>{status}</span></div><h3 className="mt-6 text-lg font-black">{platform}</h3><p className="mt-2 text-xs leading-5 text-[#6d766f]">{description}</p>{readiness && !readiness.configured && <p className="mt-4 rounded-xl bg-[#f5eee2] p-3 text-[10px] leading-4 text-[#785f41]">Production setup needs: {readiness.missing.join(', ')}.</p>}<a href={readiness?.configured ? readiness.connectPath : '#'} onClick={(event) => { if (!readiness?.configured) event.preventDefault(); }} className={`mt-5 flex w-full items-center justify-between rounded-xl px-4 py-3 text-xs font-black ${readiness?.configured ? 'bg-[#20372c] text-white' : 'cursor-not-allowed bg-[#e5e1d8] text-[#8a8d87]'}`}><span>{readiness?.connected ? 'Manage connection' : readiness?.configured ? `Continue with ${platform.split(' ')[0]}` : 'Connection not configured'}</span><ExternalLink className="h-3.5 w-3.5" /></a></div>;
+  async function selectAccount(accountId: string) { await fetch('/api/platforms/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platform: platformKey, accountId }) }); onRefresh(); }
+  async function disconnect() { await fetch(`/api/platforms/${platformKey}/disconnect`, { method: 'POST' }); onRefresh(); }
+  return <div className="rounded-[24px] border border-[#d9d4c8] bg-[#fbf9f4] p-6"><div className="flex items-start justify-between"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#e8e3d8] text-lg font-black">{mark}</span><span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.1em] ${readiness?.connected ? 'bg-[#e2ede3] text-[#3b6749]' : 'bg-[#f2eadc] text-[#7b6244]'}`}>{status}</span></div><h3 className="mt-6 text-lg font-black">{platform}</h3><p className="mt-2 text-xs leading-5 text-[#6d766f]">{description}</p>{readiness && !readiness.configured && <p className="mt-4 rounded-xl bg-[#f5eee2] p-3 text-[10px] leading-4 text-[#785f41]">Production setup needs: {readiness.missing.join(', ')}.</p>}{readiness?.connected && readiness.accounts.length > 0 && <label className="mt-4 block text-[10px] font-black uppercase tracking-wider text-[#69736c]">Active ad account<select value={readiness.selectedAccountId || (readiness.accounts.length === 1 ? readiness.accounts[0].id : '')} onChange={(event) => void selectAccount(event.target.value)} className="mt-2 w-full rounded-xl border border-[#d7d2c8] bg-white px-3 py-3 text-xs font-bold normal-case tracking-normal"><option value="" disabled>Choose an account</option>{readiness.accounts.map((account) => <option key={account.id} value={account.id}>{account.name} ({account.id})</option>)}</select></label>}<a href={readiness?.configured ? readiness.connectPath : '#'} onClick={(event) => { if (!readiness?.configured) event.preventDefault(); }} className={`mt-5 flex w-full items-center justify-between rounded-xl px-4 py-3 text-xs font-black ${readiness?.configured ? 'bg-[#20372c] text-white' : 'cursor-not-allowed bg-[#e5e1d8] text-[#8a8d87]'}`}><span>{readiness?.connected ? 'Reconnect account access' : readiness?.configured ? `Continue with ${platform.split(' ')[0]}` : 'Connection not configured'}</span><ExternalLink className="h-3.5 w-3.5" /></a>{readiness?.connected && <button onClick={() => void disconnect()} className="mt-3 w-full text-center text-[10px] font-bold text-[#8a5946]">Disconnect securely</button>}</div>;
 }
 
 function GuardrailDrawer({ mode, onMode, onClose, readiness }: { mode: AutonomyMode; onMode: (mode: AutonomyMode) => void; onClose: () => void; readiness: ReadinessResponse | null }) {
@@ -332,3 +375,6 @@ function tabTitle(tab: WorkspaceTab) { return { overview: 'Account overview', ag
 function EyeIcon() { return <Gauge className="h-4 w-4" />; }
 function CheckIcon() { return <ShieldCheck className="h-4 w-4" />; }
 function BotIcon() { return <Bot className="h-4 w-4" />; }
+function money(value: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: value < 100 ? 2 : 0 }).format(value); }
+function number(value: number) { return new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value); }
+function campaignBars(campaigns: Campaign[]) { const values = campaigns.slice(0, 12).map((campaign) => campaign.spend); const max = Math.max(...values, 1); return values.length ? values.map((value) => Math.max(5, Math.round((value / max) * 100))) : [5]; }

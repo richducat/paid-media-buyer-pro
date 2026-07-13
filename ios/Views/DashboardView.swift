@@ -14,7 +14,9 @@ enum PMTheme {
 }
 
 struct DashboardView: View {
-    private let bars: [CGFloat] = [0.38, 0.52, 0.46, 0.64, 0.58, 0.72, 0.68, 0.84, 0.74, 0.92, 0.86, 1]
+    @State private var liveData: MobilePlatformData?
+    private let demoBars: [CGFloat] = [0.38, 0.52, 0.46, 0.64, 0.58, 0.72, 0.68, 0.84, 0.74, 0.92, 0.86, 1]
+    private var isLive: Bool { liveData?.live == true }
 
     var body: some View {
         NavigationStack {
@@ -43,6 +45,7 @@ struct DashboardView: View {
                     Button(action: {}) { Image(systemName: "person.crop.circle.fill").font(.title2).foregroundStyle(PMTheme.forest) }
                 }
             }
+            .task { await loadLiveData() }
         }
     }
 
@@ -50,8 +53,8 @@ struct DashboardView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "sparkles").foregroundStyle(Color.brown).padding(9).background(Color.orange.opacity(0.14), in: RoundedRectangle(cornerRadius: 11))
             VStack(alignment: .leading, spacing: 3) {
-                Text("Sample workspace").font(.system(size: 13, weight: .black))
-                Text("Explore safely. Nothing here can spend money or change an ad account.").font(.system(size: 11, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(2)
+                Text(isLive ? "Live account data" : "Sample workspace").font(.system(size: 13, weight: .black))
+                Text(isLive ? "Read directly from your selected ad accounts. No changes were made." : "Explore safely. Nothing here can spend money or change an ad account.").font(.system(size: 11, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(2)
             }
         }
         .padding(14)
@@ -62,17 +65,17 @@ struct DashboardView: View {
     private var summary: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("LAST 30 DAYS").font(.system(size: 9, weight: .black)).tracking(1.6).foregroundStyle(PMTheme.muted)
-            Text("More qualified leads,\nless wasted spend.").font(.system(size: 28, weight: .black, design: .rounded)).tracking(-0.8).foregroundStyle(PMTheme.ink)
-            Text("The AI buyer found two low-risk improvements ready for review.").font(.system(size: 13, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(3)
+            Text(isLive ? "Your live account,\nin one clear view." : "More qualified leads,\nless wasted spend.").font(.system(size: 28, weight: .black, design: .rounded)).tracking(-0.8).foregroundStyle(PMTheme.ink)
+            Text(isLive ? "Reporting is live; execution remains locked behind approval rules." : "The AI buyer found two low-risk improvements ready for review.").font(.system(size: 13, weight: .medium)).foregroundStyle(PMTheme.muted).lineSpacing(3)
         }
     }
 
     private var metrics: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            MetricTile(label: "Ad spend", value: "$12,480", change: "+8.2%", explanation: "Paid this month")
-            MetricTile(label: "Qualified leads", value: "326", change: "+18.4%", explanation: "Valuable actions")
-            MetricTile(label: "Cost per lead", value: "$38.28", change: "−8.7%", explanation: "Cost for one lead")
-            MetricTile(label: "ROAS", value: "4.18×", change: "+0.62×", explanation: "$4.18 back per $1")
+            MetricTile(label: "Ad spend", value: isLive ? currency(liveData?.summary.spend) : "$12,480", change: isLive ? "LIVE" : "+8.2%", explanation: "Paid in 30 days")
+            MetricTile(label: "Results", value: isLive ? count(liveData?.summary.results) : "326", change: isLive ? "LIVE" : "+18.4%", explanation: "Platform results")
+            MetricTile(label: "Cost / result", value: isLive ? currency(liveData?.summary.costPerResult) : "$38.28", change: isLive ? "LIVE" : "−8.7%", explanation: "Spend for one result")
+            MetricTile(label: "ROAS", value: isLive ? ratio(liveData?.summary.roas) : "4.18×", change: isLive ? "LIVE" : "+0.62×", explanation: "Revenue per $1")
         }
     }
 
@@ -81,10 +84,10 @@ struct DashboardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Spend and leads").font(.system(size: 16, weight: .black))
-                    Text("Google + Meta · sample").font(.system(size: 10, weight: .bold)).foregroundStyle(PMTheme.muted)
+                    Text("Google + Meta · \(isLive ? "live" : "sample")").font(.system(size: 10, weight: .bold)).foregroundStyle(PMTheme.muted)
                 }
                 Spacer()
-                Text("+18%").font(.system(size: 11, weight: .black)).foregroundStyle(PMTheme.success).padding(.horizontal, 9).padding(.vertical, 5).background(PMTheme.success.opacity(0.1), in: Capsule())
+                Text(isLive ? "30 DAYS" : "+18%").font(.system(size: 11, weight: .black)).foregroundStyle(PMTheme.success).padding(.horizontal, 9).padding(.vertical, 5).background(PMTheme.success.opacity(0.1), in: Capsule())
             }
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(Array(bars.enumerated()), id: \.offset) { index, bar in
@@ -107,9 +110,9 @@ struct DashboardView: View {
                 Image(systemName: "sparkles").foregroundStyle(PMTheme.apricot)
                 Text("Today’s buyer brief").font(.system(size: 16, weight: .black))
                 Spacer()
-                Text("2 TO REVIEW").font(.system(size: 8, weight: .black)).tracking(1).foregroundStyle(PMTheme.sage)
+                Text(isLive ? "READ ONLY" : "2 TO REVIEW").font(.system(size: 8, weight: .black)).tracking(1).foregroundStyle(PMTheme.sage)
             }
-            Text("Efficiency improved without increasing risk. Search-term cleanup can save about $184 per month, and one Meta creative has earned a careful budget increase.").font(.system(size: 13, weight: .medium)).foregroundStyle(Color.white.opacity(0.72)).lineSpacing(4)
+            Text(isLive ? "Live reporting is connected. Recommendations will appear only after the evidence is verified; no sample action will be mixed into this account." : "Efficiency improved without increasing risk. Search-term cleanup can save about $184 per month, and one Meta creative has earned a careful budget increase.").font(.system(size: 13, weight: .medium)).foregroundStyle(Color.white.opacity(0.72)).lineSpacing(4)
             Divider().overlay(Color.white.opacity(0.1))
             HStack { Text("Open AI Buyer").font(.system(size: 13, weight: .black)).foregroundStyle(PMTheme.apricot); Spacer(); Image(systemName: "arrow.right").foregroundStyle(PMTheme.apricot) }
         }
@@ -117,7 +120,30 @@ struct DashboardView: View {
         .foregroundStyle(.white)
         .background(PMTheme.evergreen, in: RoundedRectangle(cornerRadius: 24))
     }
+
+    private var bars: [CGFloat] {
+        guard isLive, let campaigns = liveData?.campaigns, !campaigns.isEmpty else { return demoBars }
+        let spends = campaigns.prefix(12).map(\.spend), maxSpend = max(spends.max() ?? 1, 1)
+        return spends.map { max(CGFloat($0 / maxSpend), 0.05) }
+    }
+
+    @MainActor private func loadLiveData() async {
+        guard let url = URL(string: "https://paidmediapro.eb28.co/api/platform-data") else { return }
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else { return }
+            liveData = try JSONDecoder().decode(MobilePlatformData.self, from: data)
+        } catch { liveData = nil }
+    }
+
+    private func currency(_ value: Double?) -> String { guard let value else { return "—" }; return value.formatted(.currency(code: "USD").precision(.fractionLength(value < 100 ? 2 : 0))) }
+    private func count(_ value: Double?) -> String { guard let value else { return "—" }; return value.formatted(.number.precision(.fractionLength(0...1))) }
+    private func ratio(_ value: Double?) -> String { guard let value else { return "—" }; return String(format: "%.2f×", value) }
 }
+
+private struct MobilePlatformData: Decodable { let live: Bool; let summary: MobileSummary; let campaigns: [MobileCampaign] }
+private struct MobileSummary: Decodable { let spend: Double; let results: Double; let revenue: Double; let clicks: Double; let impressions: Double; let costPerResult: Double?; let roas: Double? }
+private struct MobileCampaign: Decodable { let id: String; let name: String; let platform: String; let spend: Double }
 
 private struct MetricTile: View {
     let label: String
