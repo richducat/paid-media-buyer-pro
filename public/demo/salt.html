@@ -62,6 +62,13 @@
     color:var(--muted); font-weight:800; font-size:14px;
   }
   .helpbtn:hover{color:var(--accent); border-color:var(--accent)}
+  #firstHint{
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+    margin-top:12px; padding:10px 14px; border-radius:11px; font-size:13px;
+    background:rgba(157,123,255,.1); border:1px solid rgba(157,123,255,.35);
+  }
+  #firstHint[hidden]{display:none}
+  #firstHint button{font-weight:700; color:var(--accent); flex:none; padding:4px 10px; border:1px solid rgba(157,123,255,.4); border-radius:7px}
 
   /* ---------- tab bar ---------- */
   nav.tabs{
@@ -796,6 +803,10 @@ function sendLightNet(){
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
   </header>
+  <div id="firstHint" hidden>
+    <span>New here? The <b>?</b> button up top is a 60-second guide — decks, radar, requests, lights, all of it.</span>
+    <button data-hidehint aria-label="Dismiss">Got it</button>
+  </div>
   <main id="view"></main>
 </div>
 </div>
@@ -993,7 +1004,7 @@ function loadSession(){
     state.cleanOnly=!!p.cleanOnly;
     state.compatOnly=!!p.compatOnly;
     state.automix=!!p.automix;
-    if(p.chVol){ state.chVol.A=Math.max(0,Math.min(1,+p.chVol.A||1)); state.chVol.B=Math.max(0,Math.min(1,+p.chVol.B||1)); }
+    if(p.chVol){ for(const dk of ["A","B"]){ const v=+p.chVol[dk]; if(isFinite(v)) state.chVol[dk]=Math.max(0,Math.min(1,v)); } }
     if(typeof p.masterVol==="number") state.masterVol=Math.max(0,Math.min(1,p.masterVol));
     if(p.chEq){ for(const dk of ["A","B"]) if(p.chEq[dk]) for(const b of ["hi","mid","lo"]) state.chEq[dk][b]=Math.max(-1,Math.min(1,+p.chEq[dk][b]||0)); }
     if(p.lights){
@@ -2654,6 +2665,11 @@ document.addEventListener("click", e=>{
     if(d.tab){ closeSheet(); state.view=d.tab; render(); $("#scroller").scrollTo({top:0}); return; }
     if(d.mode){ state.mode=d.mode; saveSession(); render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
     if(el.hasAttribute("data-help")){ openHelp(); return; }
+    if(el.hasAttribute("data-hidehint")){
+      $("#firstHint").hidden=true;
+      try{ localStorage.setItem("salt.hint.v1","1"); }catch(err){}
+      return;
+    }
     if(el.hasAttribute("data-close")){ closeSheet(); return; }
     if(el.hasAttribute("data-newroom")){
       state.room=genRoom(); saveRoom();
@@ -2912,6 +2928,10 @@ requestAnimationFrame(tick);
 setInterval(advance, 500);
 pollRequests();
 pollTimer=setInterval(pollRequests, 5000);
+
+try{
+  if(!localStorage.getItem("salt.hint.v1")){ const fh=$("#firstHint"); if(fh) fh.hidden=false; }
+}catch(e){}
 
 /* test/debug hook */
 window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, importFiles, SONGS, sectionsFor, get serverMode(){return serverMode}};
