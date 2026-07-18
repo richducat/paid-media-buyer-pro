@@ -248,12 +248,20 @@
   .flchip .cd{font-style:normal; font-weight:800}
   .grp{font-size:8.5px; letter-spacing:.12em; color:var(--muted); font-weight:800}
   .ctlgrp{
-    display:inline-flex; align-items:center; gap:5px; padding:4px 8px 4px 9px; border-radius:11px;
+    display:flex; align-items:center; gap:5px; padding:4px 8px 4px 9px; border-radius:11px;
     background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.045);
+    box-sizing:border-box; min-width:0;
   }
+  .ctlgrp .hc{flex:1 1 0; min-width:0; padding:0 4px}
+  .pitchrow{width:100%}
+  .pitchrow .pitch{flex:1; min-width:0; display:flex}
+  .pitchrow .pitch input{width:100%; min-width:0}
+  .pitchval{width:50px; text-align:right; font-size:11px; color:var(--muted); flex:none}
   .ctlgrp .hc{border-color:transparent; background:rgba(255,255,255,.05)}
   .ctlgrp .hc.set,.ctlgrp .hc[aria-pressed="true"]{border-color:var(--dk); background:rgba(255,255,255,.05)}
-  .deck-ctl{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
+  .deck-ctl{display:flex; gap:7px; align-items:stretch}
+  .deck-ctl .dbtn{flex:1 1 0; min-width:0; padding:0 2px; letter-spacing:.02em}
+  .deck-ctl .dbtn.play{flex:0 0 56px}
   .dbtn{
     flex:none; height:36px; min-width:44px; padding:0 10px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel-2);
@@ -266,7 +274,7 @@
   .pitch{display:flex; align-items:center; gap:7px; flex:1; min-width:120px}
   .pitch input{flex:1; accent-color:var(--dk); min-width:70px}
   .pitch span{font-size:11px; color:var(--muted); width:52px; text-align:right}
-  .hotcues{display:flex; gap:8px; row-gap:8px; align-items:center; flex-wrap:wrap}
+  .hotcues{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px}
   .hc{
     height:26px; min-width:40px; padding:0 8px; border-radius:6px; border:1px dashed var(--line);
     font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--muted); white-space:nowrap;
@@ -2406,8 +2414,10 @@ function deckHtml(dk){
       <button class="dbtn cleanb" data-clean="${dk}" aria-pressed="${d.clean}" ${s&&s.clean?"":"disabled"} title="${s&&s.clean?"Toggle clean edit":"No clean edit available"}">CLEAN</button>
       <button class="dbtn klk" data-keylock="${dk}" aria-pressed="${d.keylock}" ${s?"":"disabled"} title="Keylock: pitch changes tempo, not key">KEYLOCK</button>
       <button class="dbtn cns" data-censor="${dk}" aria-pressed="${d.censoring}" ${s?"":"disabled"} title="Hold to mute a dirty word — pairs with the explicit radar countdown">CENSOR</button>
-      <label class="pitch"><input type="range" min="-8" max="8" step="0.1" value="${d.pitch}" data-pitch="${dk}" aria-label="Pitch deck ${dk}">
-        <span class="num" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span></label>
+    </div>
+    <div class="ctlgrp pitchrow"><span class="grp">PITCH</span>
+      <label class="pitch"><input type="range" min="-8" max="8" step="0.1" value="${d.pitch}" data-pitch="${dk}" aria-label="Pitch deck ${dk}"></label>
+      <span class="num pitchval" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span>
     </div>
     <div class="hotcues">
       <span class="ctlgrp"><span class="grp">CUES</span>
