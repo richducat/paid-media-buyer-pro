@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="description" content="Salt — DJ set intelligence: full booth with soundboard, EQ mixer, key/BPM detection, explicit report, events and invoicing, lights, guest requests.">
+<meta name="description" content="Salt — DJ set intelligence: full booth with lyric-flag lanes, soundboard, EQ mixer, key/BPM detection, events and invoicing, lights, guest requests.">
 <title>Salt — DJ Set Intelligence (Demo)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
 </head>
@@ -240,6 +240,21 @@
   .wave-over{width:100%; height:24px; display:block; background:#0F0E18; border-radius:5px; cursor:pointer}
   .deck-times{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted)}
   .deck-flagnext{color:var(--caution)}
+  .flagline{display:flex; gap:6px; align-items:center; flex-wrap:wrap; min-height:24px}
+  .fl-note{font-size:9.5px; font-weight:800; letter-spacing:.1em; color:var(--muted)}
+  .fl-note.good{color:var(--clean)}
+  .fl-note.warn{color:var(--caution)}
+  .flchip{
+    display:inline-flex; gap:5px; align-items:baseline; font-size:10.5px; font-weight:600;
+    padding:2px 8px; border-radius:6px; border:1px solid;
+  }
+  .flchip.hard{color:var(--explicit); border-color:rgba(255,84,104,.45)}
+  .flchip.mild{color:var(--caution); border-color:rgba(255,180,84,.4)}
+  .flchip.past{opacity:.3; text-decoration:line-through}
+  .flchip.next{background:rgba(255,84,104,.14); box-shadow:0 0 0 1.5px currentColor}
+  .flchip .cd{font-style:normal; font-weight:800}
+  .grp{font-size:8.5px; letter-spacing:.12em; color:var(--muted); font-weight:800; margin-left:4px}
+  .grp:first-child{margin-left:0}
   .deck-ctl{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
   .dbtn{
     flex:none; height:36px; min-width:44px; padding:0 10px; border-radius:8px;
@@ -574,7 +589,7 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.8 preview</div>
+      <div class="tagline">Know every track before it drops. · v0.9 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -1486,12 +1501,11 @@ function drawMain(dk){
   for(const m of s.moments){
     if(m.cat==="Note") continue;
     const mt=sec(m.t); if(isNaN(mt)) continue;
-    const x=(mt-t0)*pxSec, w=2*pxSec;
-    if(x+w<0||x>W) continue;
-    ctx.fillStyle = d.clean ? "rgba(61,220,151,.12)" : (m.sev==="hard"?"rgba(255,84,104,.22)":"rgba(255,180,84,.18)");
-    ctx.fillRect(x,0,w,H);
-    ctx.fillStyle = d.clean ? "rgba(61,220,151,.8)" : (m.sev==="hard"?"rgba(255,84,104,.9)":"rgba(255,180,84,.9)");
-    ctx.fillRect(x,0,w,3);
+    const x=(mt-t0)*pxSec;
+    if(x<-4||x>W+4) continue;
+    ctx.fillStyle = d.clean ? "rgba(61,220,151,.85)" : (m.sev==="hard"?"rgba(255,84,104,.95)":"rgba(255,180,84,.95)");
+    ctx.fillRect(x-1.5,0,3,10);
+    ctx.fillRect(x-0.5,0,1,H*0.35);
   }
   // loop region
   if(d.loop){
@@ -1586,15 +1600,24 @@ function updateDynamic(dk){
     const arm = d.playing ? 2-(d.pos/sec(s.dur))*15 : 15;
     ja.style.transform="rotate("+arm.toFixed(2)+"deg)";
   }
-  let next=null;
-  if(strictMode() && !d.clean){
-    for(const m of s.moments){
-      if(m.cat==="Note") continue;
-      const mt=sec(m.t);
-      if(!isNaN(mt) && mt>d.pos && (!next||mt<next)) next=mt;
+  const cur=sectionsFor(s).find(g=>d.pos>=g.t0 && d.pos<g.t1);
+  flag.textContent = cur ? cur.label.toUpperCase() : "";
+  const lane=$("#flagline-"+dk);
+  if(lane){
+    let nextEl=null, nextT=Infinity;
+    for(const ch of lane.querySelectorAll(".flchip")){
+      const ft=+ch.dataset.ft;
+      ch.classList.toggle("past", ft<=d.pos);
+      const cd=ch.querySelector(".cd"); if(cd) cd.textContent="";
+      ch.classList.remove("next");
+      if(ft>d.pos && ft<nextT){ nextT=ft; nextEl=ch; }
+    }
+    if(nextEl && strictMode()){
+      nextEl.classList.add("next");
+      const cd=nextEl.querySelector(".cd");
+      if(cd) cd.textContent=" in "+fmt(nextT-d.pos);
     }
   }
-  flag.textContent = next!==null ? `next flag in ${fmt(next-d.pos)}` : "";
 }
 function updateAlert(){
   const el=$("#alertBar"); if(!el) return;
@@ -2133,28 +2156,43 @@ function deckHtml(dk){
         </div>
       </div>
     </div>
+    <div class="flagline" id="flagline-${dk}" aria-label="Lyric flags deck ${dk}">${flagChips(dk)}</div>
     <div class="deck-ctl">
       <button class="dbtn play" data-play="${dk}" aria-pressed="${d.playing}" aria-label="Play/pause deck ${dk}" ${s?"":"disabled"}>${d.playing?"❚❚":"▶"}</button>
       <button class="dbtn" data-cue="${dk}" ${s?"":"disabled"}>CUE</button>
       <button class="dbtn" data-sync="${dk}" ${s?"":"disabled"}>SYNC</button>
       <button class="dbtn cleanb" data-clean="${dk}" aria-pressed="${d.clean}" ${s&&s.clean?"":"disabled"} title="${s&&s.clean?"Toggle clean edit":"No clean edit available"}">CLEAN</button>
-      <button class="dbtn klk" data-keylock="${dk}" aria-pressed="${d.keylock}" ${s?"":"disabled"} title="Keylock: pitch changes tempo, not key">KLOCK</button>
+      <button class="dbtn klk" data-keylock="${dk}" aria-pressed="${d.keylock}" ${s?"":"disabled"} title="Keylock: pitch changes tempo, not key">KEYLOCK</button>
       <button class="dbtn cns" data-censor="${dk}" aria-pressed="${d.censoring}" ${s?"":"disabled"} title="Hold to mute a dirty word — pairs with the explicit radar countdown">CENSOR</button>
       <label class="pitch"><input type="range" min="-8" max="8" step="0.1" value="${d.pitch}" data-pitch="${dk}" aria-label="Pitch deck ${dk}">
         <span class="num" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span></label>
     </div>
     <div class="hotcues">
+      <span class="grp">CUES</span>
       ${[0,1,2].map(i=>`<button class="hc ${d.cues[i]!==null?"set":""}" data-hotcue="${dk}:${i}" ${s?"":"disabled"}
         title="${d.cues[i]!==null?"Jump to "+fmt(d.cues[i])+" — shift-click to clear":"Click to set hot cue at playhead"}">${d.cues[i]!==null?fmt(d.cues[i]):i+1}</button>`).join("")}
+      <span class="grp">LOOP</span>
       ${[4,8,16].map(n=>`<button class="hc ${d.loop&&d.loop.beats===n?"set":""}" data-loop="${dk}:${n}" ${s?"":"disabled"}
-        title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">L${n}</button>`).join("")}
+        title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">${n}</button>`).join("")}
+      <span class="grp">JUMP</span>
       <button class="hc" data-bjump="${dk}:-4" ${s?"":"disabled"} title="Jump back 4 beats">«4</button>
       <button class="hc" data-bjump="${dk}:4" ${s?"":"disabled"} title="Jump forward 4 beats">4»</button>
+      <span class="grp">FX</span>
       <button class="hc" data-fxecho="${dk}" aria-pressed="${d.fx.echo}" ${s?"":"disabled"} title="Beat-synced echo (needs SOUND on)">ECHO</button>
       <button class="hc" data-fxfilt="${dk}" aria-pressed="${d.fx.filt}" ${s?"":"disabled"} title="Low-pass filter sweep (needs SOUND on)">FILT</button>
-      <span class="hc-lab">CUES·LOOP·FX</span>
     </div>
   </section>`;
+}
+function flagChips(dk){
+  const d=state.decks[dk], s=song(d.songId);
+  if(!s) return "";
+  if(d.clean) return `<span class="fl-note good">✓ CLEAN EDIT — flags removed</span>`;
+  if(s.rating==="clean") return `<span class="fl-note">LYRICS: no flags — safe anywhere</span>`;
+  if(s.rating==="unscanned") return `<span class="fl-note warn">LYRICS: not scanned yet — treat as unknown</span>`;
+  const ms=s.moments.filter(m=>m.cat!=="Note" && !isNaN(sec(m.t))).sort((a,b)=>sec(a.t)-sec(b.t));
+  return `<span class="fl-note">LYRICS</span>`+ms.map(m=>
+    `<span class="flchip ${m.sev==="hard"?"hard":"mild"}" data-ft="${sec(m.t)}" title="${esc(m.label)}">
+      <b class="num">${m.t}</b> ${esc(m.cat)}<i class="cd num"></i></span>`).join("");
 }
 function crateChips(){
   return `<div class="cratechips" role="group" aria-label="Filter crates">
@@ -2369,7 +2407,7 @@ function openHelp(){
       <button class="close-x" data-close aria-label="Close">×</button>
     </div>
     <ul class="help-list">
-      <li><b>🚨 Explicit radar</b><span>Flagged lyric moments sit on the deck waveforms as red/amber zones. When one is under 15 seconds out, the warning bar counts it down — hit <b>CLEAN</b> on the deck to swap to the clean edit.</span></li>
+      <li><b>🚨 Explicit radar</b><span>Each deck has a <b>LYRICS lane</b> under the waveform: every flagged moment as a chip with its time, the next one highlighted with a live countdown, past ones crossed off. The warning bar still counts down the final 15 seconds — hit <b>CLEAN</b> to swap to the clean edit.</span></li>
       <li><b>🎛 Mix intelligence</b><span>Every track carries BPM + Camelot key. The library's <b>Match %</b> column ranks everything against the on-air deck; <b>SYNC</b> tempo-matches the decks; the Mix tab explains every recommendation.</span></li>
       <li><b>📨 Guest requests</b><span>Guests request from their phones (link in the Requests tab). Accepting adds to <b>Up Next</b>, which auto-loads when a deck runs out. Dirty requests queue the clean edit automatically.</span></li>
       <li><b>🎤 Events & business</b><span>Multiple events with venue/date, pronunciations, timeline, shoutouts, do-not-play list — plus packages, and one-tap <b>invoice</b> and <b>contract</b> documents generated from the event details.</span></li>
