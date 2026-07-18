@@ -1,8 +1,8 @@
-# CrateCheck — DJ Set Intelligence (preview build)
+# Salt — DJ Set Intelligence (preview build)
 
 A booth tool for working DJs: know every track before it drops.
 
-**Live demo:** https://paidmediapro.eb28.co/demo/cratecheck
+**Live demo:** https://paidmediapro.eb28.co/demo/salt
 **Guest request page:** https://paidmediapro.eb28.co/demo/request.html
 
 ## Features
@@ -34,7 +34,7 @@ A booth tool for working DJs: know every track before it drops.
 | Piece | Path | Notes |
 | --- | --- | --- |
 | DJ app (single file) | `dj-prototype/index.html` | Source of truth; vanilla JS, no deps |
-| Deployed page | `public/demo/cratecheck.html` | Generated from the file above (adds doctype/head) |
+| Deployed page | `public/demo/salt.html` | Generated from the file above (adds doctype/head) |
 | Guest request page | `public/demo/request.html` | Standalone; fetches `catalog.json` |
 | Song catalog | `public/demo/catalog.json` | Generated from the SONGS array in `index.html` |
 | Requests API | `src/app/api/dj/requests/route.ts` | GET / POST / PATCH, in-memory store |

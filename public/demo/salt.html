@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="description" content="CrateCheck — DJ set intelligence: live decks with explicit-lyric warnings, BPM/key mix matching, real guest requests, emcee notes.">
-<title>CrateCheck — DJ Set Intelligence (Demo)</title>
+<meta name="description" content="Salt — DJ set intelligence: live turntables with explicit-lyric warnings, BPM/key mix matching, real guest requests, emcee notes.">
+<title>Salt — DJ Set Intelligence (Demo)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
 </head>
 <body>
@@ -126,32 +126,84 @@
   .deck-bpm b{font-family:var(--mono); font-size:20px; font-weight:700; line-height:1}
   .deck-bpm .kk{font-size:14px; color:var(--dk)}
   .deck-bpm span{font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
-  .deck-mid{display:flex; gap:10px; align-items:center; min-width:0}
+  .deck-mid{display:flex; gap:16px; align-items:center; min-width:0}
   .jog{
-    width:118px; height:118px; flex:none; cursor:grab; touch-action:none; user-select:none;
+    width:196px; height:196px; flex:none; cursor:grab; touch-action:none; user-select:none;
     -webkit-user-select:none; position:relative;
   }
   .jog:active{cursor:grabbing}
+  /* vinyl on platter — this layer rotates */
   .jog-disc{
-    width:100%; height:100%; border-radius:50%; position:relative; will-change:transform;
+    position:absolute; inset:8px; border-radius:50%; will-change:transform;
     background:
-      repeating-radial-gradient(circle at center, #1B1A28 0 1.5px, #100F1A 1.5px 3.5px);
-    border:2px solid var(--line);
-    box-shadow:inset 0 0 18px rgba(0,0,0,.7), 0 2px 10px rgba(0,0,0,.5);
+      repeating-radial-gradient(circle at center, rgba(255,255,255,.045) 0 1px, transparent 1px 3px),
+      radial-gradient(circle at center, #1C1B29 0 26%, #131220 27% 62%, #0B0A13 88%, #060510 100%);
+    box-shadow:
+      0 0 0 3px #060510,
+      0 0 0 6px #34333F,
+      0 0 0 9px #1E1D28,
+      0 0 0 10px #3E3D4C,
+      0 12px 26px rgba(0,0,0,.65),
+      inset 0 2px 10px rgba(255,255,255,.05),
+      inset 0 -8px 18px rgba(0,0,0,.75);
   }
-  .jog-line{
-    position:absolute; left:50%; top:5px; width:3px; height:24px; margin-left:-1.5px;
-    background:var(--dk); border-radius:2px; box-shadow:0 0 6px var(--dk);
+  /* Technics-style strobe dots around the platter rim (rotate with it) */
+  .jog-disc::before{
+    content:""; position:absolute; inset:-9px; border-radius:50%;
+    background:repeating-conic-gradient(rgba(238,236,248,.55) 0 1.5deg, transparent 1.5deg 7.5deg);
+    -webkit-mask:radial-gradient(circle, transparent 0 92%, #000 93% 97.5%, transparent 98.5%);
+    mask:radial-gradient(circle, transparent 0 92%, #000 93% 97.5%, transparent 98.5%);
+  }
+  /* cue sticker DJs slap on the vinyl — also shows the spin */
+  .jog-dot{
+    position:absolute; left:50%; top:8.5%; width:12px; height:12px; margin-left:-6px; border-radius:50%;
+    background:var(--dk); border:2px solid rgba(255,255,255,.85);
+    box-shadow:0 1px 3px rgba(0,0,0,.6);
   }
   .jog-label{
-    position:absolute; inset:0; margin:auto; width:46px; height:46px; border-radius:50%;
-    display:grid; place-items:center; font-family:var(--mono); font-size:12px; font-weight:800;
-    color:rgba(255,255,255,.9); border:2px solid rgba(0,0,0,.5);
+    position:absolute; inset:0; margin:auto; width:38%; height:38%; border-radius:50%;
+    display:grid; place-items:center; align-content:center; text-align:center; gap:1px;
+    font-family:var(--mono); font-size:15px; font-weight:800; line-height:1;
+    color:rgba(255,255,255,.92);
+    box-shadow:
+      inset 0 0 0 2px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.08),
+      inset 0 1px 4px rgba(255,255,255,.22), 0 0 0 2px rgba(0,0,0,.55), 0 0 12px rgba(0,0,0,.5);
   }
+  .jog-label small{font-size:7.5px; letter-spacing:.12em; font-weight:700; color:rgba(255,255,255,.72)}
   .jog-label::after{
-    content:""; position:absolute; width:6px; height:6px; border-radius:50%; background:#0C0B13;
-    border:1px solid rgba(255,255,255,.25);
+    content:""; position:absolute; width:10px; height:10px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #EAE8F2, #8B8898 45%, #2E2D3A 90%);
+    box-shadow:0 0 0 2px rgba(0,0,0,.55);
   }
+  /* fixed sheen — the light stays put while the record spins beneath it */
+  .jog::after{
+    content:""; position:absolute; inset:8px; border-radius:50%; pointer-events:none;
+    background:conic-gradient(from 318deg,
+      transparent 0deg, rgba(255,255,255,.09) 26deg, transparent 60deg,
+      transparent 178deg, rgba(255,255,255,.055) 206deg, transparent 242deg);
+  }
+  /* tonearm — parks off the record when empty, tracks inward as the song plays */
+  .jog-arm{
+    position:absolute; top:-6px; right:-8px; width:34px; height:118px; pointer-events:none;
+    transform-origin:17px 17px; z-index:2; transition:transform .4s ease;
+  }
+  .jog-arm::before{
+    content:""; position:absolute; top:0; right:2px; width:32px; height:32px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4C4B5A, #23222E 62%, #121118);
+    box-shadow:0 3px 8px rgba(0,0,0,.6), inset 0 1px 2px rgba(255,255,255,.22);
+  }
+  .jog-arm i{
+    position:absolute; top:28px; left:50%; width:5px; height:64px; margin-left:-2.5px; border-radius:3px;
+    background:linear-gradient(90deg,#55546A,#918FA4 45%,#3C3B4A);
+    box-shadow:0 2px 5px rgba(0,0,0,.55);
+  }
+  .jog-arm::after{
+    content:""; position:absolute; top:90px; left:50%; width:11px; height:24px; margin-left:-5.5px;
+    border-radius:3px 3px 6px 6px;
+    background:linear-gradient(90deg,#2E2D3A,#4E4D5E 50%,#232230);
+    box-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  @media (prefers-reduced-motion:reduce){ .jog-arm{transition:none} }
   .wave-col{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
   .wave-main{width:100%; height:92px; display:block; background:#0F0E18; border-radius:8px}
   .wave-over{width:100%; height:24px; display:block; background:#0F0E18; border-radius:5px; cursor:pointer}
@@ -421,14 +473,14 @@
   }
 </style>
 
-<noscript>CrateCheck needs JavaScript — this preview window has it turned off. Open the file in Safari or Chrome instead.</noscript>
+<noscript>Salt needs JavaScript — this preview window has it turned off. Open the file in Safari or Chrome instead.</noscript>
 
 <div id="frame">
 <div id="scroller">
 <div id="app">
   <header class="top">
     <div class="brand">
-      <div class="wordmark">Crate<em>//</em>Check</div>
+      <div class="wordmark">Salt<em>.</em></div>
       <div class="tagline">Know every track before it drops. · v0.3 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
@@ -452,7 +504,7 @@
 if (window !== window.top) document.documentElement.classList.add("framed");
 
 /* ============================================================
-   CrateCheck — preview build. Song data below is DEMO data:
+   Salt — preview build. Song data below is DEMO data:
    BPM, keys, waveforms and lyric flags are illustrative.
    When served next to its API (/api/dj/requests), guest requests
    are real and sync across devices; otherwise they're simulated.
@@ -549,8 +601,8 @@ const REQUEST_POOL = [
   {name:"Tanya", song:"iwanna", note:"Get the aunties dancing!!", tip:0},
 ];
 
-const NOTES_KEY = "cratecheck.notes.v1";
-const SESSION_KEY = "cratecheck.session.v1";
+const NOTES_KEY = "salt.notes.v1";
+const SESSION_KEY = "salt.session.v1";
 const API = "/api/dj/requests";
 const GUEST_PATH = "/demo/request.html";
 const DEPLOYED_GUEST_URL = "https://paidmediapro.eb28.co/demo/request.html";
@@ -923,11 +975,17 @@ function updateDynamic(dk){
   const d=state.decks[dk], s=song(d.songId);
   const pos=$("#dpos-"+dk), rem=$("#drem-"+dk), flag=$("#dflag-"+dk);
   if(!pos) return;
-  if(!s){ pos.textContent="0:00"; rem.textContent="-0:00"; flag.textContent=""; return; }
+  const ja=$("#jogarm-"+dk);
+  if(!s){
+    pos.textContent="0:00"; rem.textContent="-0:00"; flag.textContent="";
+    if(ja) ja.style.transform="rotate(20deg)";       // parked off the platter
+    return;
+  }
   pos.textContent=fmt(d.pos);
   rem.textContent="-"+fmt(sec(s.dur)-d.pos);
   const jd=$("#jogdisc-"+dk);
   if(jd) jd.style.transform="rotate("+((d.pos/1.8*360)%360).toFixed(1)+"deg)";  // 33⅓ RPM
+  if(ja) ja.style.transform="rotate("+(0-(d.pos/sec(s.dur))*14).toFixed(2)+"deg)";  // needle tracks inward
   let next=null;
   if(strictMode() && !d.clean){
     for(const m of s.moments){
@@ -1171,9 +1229,10 @@ function deckHtml(dk){
     <div class="deck-mid">
       <div class="jog" data-jog="${dk}" title="Drag to scratch / seek" aria-label="Turntable platter deck ${dk}">
         <div class="jog-disc" id="jogdisc-${dk}">
-          <div class="jog-line"></div>
-          <div class="jog-label" style="${s?artStyle(s):"background:var(--panel-2)"}">${s?initials(s.title):"—"}</div>
+          <div class="jog-dot"></div>
+          <div class="jog-label" style="${s?artStyle(s):"background:var(--panel-2)"}">${s?initials(s.title):"—"}<small>33⅓ RPM</small></div>
         </div>
+        <div class="jog-arm" id="jogarm-${dk}" aria-hidden="true"><i></i></div>
       </div>
       <div class="wave-col">
         <canvas class="wave-main" id="wmain-${dk}" aria-hidden="true"></canvas>
@@ -1370,7 +1429,7 @@ function openHelp(){
   ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Quick guide">
     <div class="sheet-head">
       <div>
-        <div class="sheet-title">CrateCheck in 60 seconds</div>
+        <div class="sheet-title">Salt in 60 seconds</div>
         <div class="sheet-sub">The booth tool that knows the lyrics.</div>
       </div>
       <button class="close-x" data-close aria-label="Close">×</button>
