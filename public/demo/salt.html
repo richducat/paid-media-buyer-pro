@@ -142,7 +142,7 @@
   .deck-bpm b{font-family:var(--mono); font-size:20px; font-weight:700; line-height:1}
   .deck-bpm .kk{font-size:14px; color:var(--dk)}
   .deck-bpm span{font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
-  .deck-mid{display:flex; gap:16px; align-items:center; min-width:0}
+  .deck-mid{display:flex; gap:16px; align-items:center; min-width:0; flex:1 1 auto; min-height:0}
   .jog{
     width:196px; height:196px; flex:none; cursor:grab; touch-action:none; user-select:none;
     -webkit-user-select:none; position:relative;
@@ -237,8 +237,8 @@
     background:#C9C7D6; border-radius:1px; transform:rotate(9deg);
   }
   @media (prefers-reduced-motion:reduce){ .jog-arm{transition:none} }
-  .wave-col{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
-  .wave-main{width:100%; height:92px; display:block; background:#0F0E18; border-radius:8px}
+  .wave-col{flex:1; min-width:0; align-self:stretch; display:flex; flex-direction:column; gap:6px; justify-content:center}
+  .wave-main{width:100%; height:auto; flex:1 1 92px; min-height:92px; display:block; background:#0F0E18; border-radius:8px}
   .wave-over{width:100%; height:24px; display:block; background:#0F0E18; border-radius:5px; cursor:pointer}
   .deck-times{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted)}
   .deck-flagnext{color:var(--caution)}
@@ -255,8 +255,13 @@
   .flchip.past{opacity:.3; text-decoration:line-through}
   .flchip.next{background:rgba(255,84,104,.14); box-shadow:0 0 0 1.5px currentColor}
   .flchip .cd{font-style:normal; font-weight:800}
-  .grp{font-size:8.5px; letter-spacing:.12em; color:var(--muted); font-weight:800; margin-left:4px}
-  .grp:first-child{margin-left:0}
+  .grp{font-size:8.5px; letter-spacing:.12em; color:var(--muted); font-weight:800}
+  .ctlgrp{
+    display:inline-flex; align-items:center; gap:5px; padding:4px 8px 4px 9px; border-radius:11px;
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.045);
+  }
+  .ctlgrp .hc{border-color:transparent; background:rgba(255,255,255,.05)}
+  .ctlgrp .hc.set,.ctlgrp .hc[aria-pressed="true"]{border-color:var(--dk); background:rgba(255,255,255,.05)}
   .deck-ctl{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
   .dbtn{
     flex:none; height:36px; min-width:44px; padding:0 10px; border-radius:8px;
@@ -270,7 +275,7 @@
   .pitch{display:flex; align-items:center; gap:7px; flex:1; min-width:120px}
   .pitch input{flex:1; accent-color:var(--dk); min-width:70px}
   .pitch span{font-size:11px; color:var(--muted); width:52px; text-align:right}
-  .hotcues{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+  .hotcues{display:flex; gap:8px; row-gap:8px; align-items:center; flex-wrap:wrap}
   .hc{
     height:26px; min-width:40px; padding:0 8px; border-radius:6px; border:1px dashed var(--line);
     font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--muted); white-space:nowrap;
@@ -575,7 +580,7 @@
     .jog-arm i{top:22px; height:48px; width:4px; margin-left:-2px}
     .jog-arm i::before{bottom:-16px; left:-3px; width:10px; height:18px}
     .jog-arm i::after{bottom:-18px; left:0; width:2px; height:5px}
-    .wave-main{height:74px}
+    .wave-main{min-height:74px; flex-basis:74px}
   }
   @media (min-width:700px){
     .statgrid{grid-template-columns:repeat(6,1fr)}
@@ -671,6 +676,20 @@
   .eqrow.master input{--fill:var(--clean)}
   .eqrow input::-webkit-slider-runnable-track{height:4px}
   .eqrow input::-webkit-slider-thumb{width:12px; height:12px; margin-top:-4px}
+  /* ---------- mid-size tier ---------- */
+  @media (min-width:1150px) and (max-width:1499px){
+    .jog{width:220px; height:220px}
+    .jog-label{font-size:17px}
+    .wave-main{min-height:112px}
+    .dbtn{height:40px; min-width:50px; font-size:12px}
+    .dbtn.play{width:58px; font-size:16px}
+    .hc{height:30px; min-width:44px; font-size:11.5px}
+    .deck-title{font-size:16px}
+    .deck-bpm b{font-size:24px}
+    .flchip{font-size:11.5px}
+    .librow{padding:10px 13px}
+    .song-title{font-size:15px}
+  }
   /* ---------- large-screen scale-up ---------- */
   @media (min-width:1500px){
     #scroller{padding:0 32px 32px}
@@ -687,7 +706,7 @@
     .jog-arm i{top:36px; height:86px; width:6px; margin-left:-3px}
     .jog-arm i::before{bottom:-27px; left:-5px; width:16px; height:30px}
     .jog-arm i::after{bottom:-30px; left:2px; width:4px; height:7px}
-    .wave-main{height:132px}
+    .wave-main{min-height:132px}
     .wave-over{height:30px}
     .deck-times{font-size:13px}
     .deck-title{font-size:17px}
@@ -757,7 +776,7 @@
       </svg>
       <div class="brand-txt">
         <div class="wordmark">Salt<em>.</em></div>
-        <div class="tagline">Know every track before it drops. · v1.1 preview</div>
+        <div class="tagline">Know every track before it drops. · v1.2 preview</div>
       </div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
@@ -1688,7 +1707,7 @@ function drawMain(dk){
   }
   // section boundaries + labels
   const secs=sectionsFor(s);
-  ctx.font=`600 ${Math.round(H*0.11)}px ${getComputedStyle(document.body).fontFamily}`;
+  ctx.font=`600 ${Math.round(Math.min(H*0.11, 13*(window.devicePixelRatio||1)))}px ${getComputedStyle(document.body).fontFamily}`;
   ctx.textAlign="left";
   for(const g of secs){
     const x=(g.t0-t0)*pxSec;
@@ -2400,18 +2419,18 @@ function deckHtml(dk){
         <span class="num" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span></label>
     </div>
     <div class="hotcues">
-      <span class="grp">CUES</span>
+      <span class="ctlgrp"><span class="grp">CUES</span>
       ${[0,1,2].map(i=>`<button class="hc ${d.cues[i]!==null?"set":""}" data-hotcue="${dk}:${i}" ${s?"":"disabled"}
-        title="${d.cues[i]!==null?"Jump to "+fmt(d.cues[i])+" — shift-click to clear":"Click to set hot cue at playhead"}">${d.cues[i]!==null?fmt(d.cues[i]):i+1}</button>`).join("")}
-      <span class="grp">LOOP</span>
+        title="${d.cues[i]!==null?"Jump to "+fmt(d.cues[i])+" — shift-click to clear":"Click to set hot cue at playhead"}">${d.cues[i]!==null?fmt(d.cues[i]):i+1}</button>`).join("")}</span>
+      <span class="ctlgrp"><span class="grp">LOOP</span>
       ${[4,8,16].map(n=>`<button class="hc ${d.loop&&d.loop.beats===n?"set":""}" data-loop="${dk}:${n}" ${s?"":"disabled"}
-        title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">${n}</button>`).join("")}
-      <span class="grp">JUMP</span>
+        title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">${n}</button>`).join("")}</span>
+      <span class="ctlgrp"><span class="grp">JUMP</span>
       <button class="hc" data-bjump="${dk}:-4" ${s?"":"disabled"} title="Jump back 4 beats">«4</button>
-      <button class="hc" data-bjump="${dk}:4" ${s?"":"disabled"} title="Jump forward 4 beats">4»</button>
-      <span class="grp">FX</span>
+      <button class="hc" data-bjump="${dk}:4" ${s?"":"disabled"} title="Jump forward 4 beats">4»</button></span>
+      <span class="ctlgrp"><span class="grp">FX</span>
       <button class="hc" data-fxecho="${dk}" aria-pressed="${d.fx.echo}" ${s?"":"disabled"} title="Beat-synced echo (needs SOUND on)">ECHO</button>
-      <button class="hc" data-fxfilt="${dk}" aria-pressed="${d.fx.filt}" ${s?"":"disabled"} title="Low-pass filter sweep (needs SOUND on)">FILT</button>
+      <button class="hc" data-fxfilt="${dk}" aria-pressed="${d.fx.filt}" ${s?"":"disabled"} title="Low-pass filter sweep (needs SOUND on)">FILT</button></span>
     </div>
   </section>`;
 }
