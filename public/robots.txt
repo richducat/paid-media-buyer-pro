@@ -1,0 +1,11 @@
+# paidmediapro.eb28.co
+User-agent: *
+Allow: /
+
+# Salt app internals & API are not useful search results
+Disallow: /demo/salt.html
+Disallow: /demo/request.html
+Disallow: /demo/catalog.json
+Disallow: /api/
+
+Sitemap: https://paidmediapro.eb28.co/sitemap.xml

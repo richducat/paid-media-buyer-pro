@@ -782,7 +782,7 @@
       </svg>
       <div class="brand-txt">
         <div class="wordmark">Salt<em>.</em></div>
-        <div class="tagline">Know every track before it drops. · v1.3 beta</div>
+        <div class="tagline">Know every track before it drops. · v1.4 beta</div>
       </div>
     </div>
     <button class="helpbtn beta" data-feedback aria-label="Send beta feedback" title="Beta — tell us what's broken or brilliant">β</button>
@@ -966,6 +966,17 @@ function loadRoom(){
   return "MAIN";
 }
 function saveRoom(){ try{ localStorage.setItem(ROOM_KEY, state.room); }catch(e){} }
+// Per-booth operator token — proves this browser is the DJ so only it can
+// accept/decline requests (the guest page never sends it). Random & persisted.
+const OP_KEY="salt.op.v1";
+function operatorToken(){
+  let t; try{ t=localStorage.getItem(OP_KEY); }catch(e){}
+  if(!t){
+    t=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,32);
+    try{ localStorage.setItem(OP_KEY, t); }catch(e){}
+  }
+  return t;
+}
 let simStarted = false;
 let pollTimer = null;
 
@@ -983,7 +994,13 @@ function defaultEvent(notes){
 function loadEvents(){
   try{
     const raw=localStorage.getItem(EVENTS_KEY);
-    if(raw){ const p=JSON.parse(raw); if(p && Array.isArray(p.list) && p.list.length) return p; }
+    if(raw){
+      const p=JSON.parse(raw);
+      if(p && Array.isArray(p.list) && p.list.length && p.list.every(e=>e && typeof e==="object" && Array.isArray(e.notes) && e.id)){
+        if(!p.list.some(e=>e.id===p.cur)) p.cur=p.list[0].id;
+        return p;
+      }
+    }
   }catch(e){}
   let legacy=null;
   try{ const r=localStorage.getItem(NOTES_KEY); if(r){ const n=JSON.parse(r); if(Array.isArray(n)) legacy=n; } }catch(e){}
@@ -1845,9 +1862,9 @@ function updateVU(){
     }
     const el=$("#vu-"+dk); if(!el) continue;
     let lvl=0;
-    if(s && d.playing){
-      const wave=waveFor(s), i=Math.min(wave.length-1, Math.floor(d.pos*4));
-      lvl=wave[i][0]*weight;
+    if(s && d.playing && isFinite(d.pos)){
+      const wave=waveFor(s), i=Math.min(wave.length-1, Math.max(0, Math.floor(d.pos*4)));
+      if(wave[i]) lvl=wave[i][0]*weight;
     }
     el.style.height=Math.round(lvl*100)+"%";
   }
@@ -1908,14 +1925,17 @@ function runAutomix(dt){
           if(nid){ saveSession(); loadToDeck(other, nid); }
         }
         if(od.songId && !od.playing){
-          const s2=song(od.songId);
-          od.pitch=Math.round(Math.max(-8,Math.min(8,(effBpm(oa)/s2.bpm-1)*100))*10)/10;
+          const s2=song(od.songId), target=effBpm(oa);
+          // guard 0-BPM tracks (metadata-only imports) — never divide 0/0 into NaN
+          od.pitch = (s2.bpm && target) ? Math.round(Math.max(-8,Math.min(8,(target/s2.bpm-1)*100))*10)/10 : 0;
           od.pos=0; od.logged=false; od.playing=true;
           syncReal(other);
           amxFadeTarget = other==="A" ? 0 : 100;
           toast("Automix: blending to Deck "+other);
           render();
         }
+      } else if(rem<=0.5 && !od.songId && !state.queue.length){
+        toast("Automix: nothing left to play — add tracks to the queue");
       }
     }
   }
@@ -1947,9 +1967,13 @@ function mapRemote(r){
     hue:(r.id*137)%360, time:ago(r.ts||Date.now()), status:r.status||"pending",
   };
 }
+const actioned={};   // srv-id -> status the DJ set locally, until the server agrees
 function mergeRemote(list){
   const known=new Set(state.requests.map(r=>r.id));
   const mapped=list.map(mapRemote);
+  // keep the DJ's just-made accept/decline from reverting to pending on the
+  // next poll before the server records the PATCH
+  mapped.forEach(m=>{ if(actioned[m.id] && m.status==="pending") m.status=actioned[m.id]; });
   const fresh=mapped.filter(m=>!known.has(m.id) && m.status==="pending");
   state.requests=mapped;
   if(fresh.length){
@@ -1973,8 +1997,9 @@ async function pollRequests(){
 }
 async function pushStatus(localId, status){
   if(!serverMode || !localId.startsWith("srv")) return;
+  actioned[localId]=status;   // remember so the poll doesn't revert it
   try{
-    await fetch(API, {method:"PATCH", headers:{"Content-Type":"application/json"},
+    await fetch(API, {method:"PATCH", headers:{"Content-Type":"application/json","X-Salt-Op":operatorToken()},
       body:JSON.stringify({id:+localId.slice(3), status, room:state.room})});
   }catch(e){}
 }
@@ -2486,8 +2511,9 @@ function liveLibRows(){
     </div>`).join("");
 }
 function nextCue(){
-  const card=state.notes.find(c=>/timeline/i.test(c.title));
-  return card && card.items.length ? card.items[0] : null;
+  if(!Array.isArray(state.notes)) return null;
+  const card=state.notes.find(c=>c && /timeline/i.test(c.title));
+  return card && Array.isArray(card.items) && card.items.length ? card.items[0] : null;
 }
 function viewLive(){
   const cue=nextCue();
@@ -2821,7 +2847,7 @@ function viewRequests(){
         ${s?`<span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
         <div class="song-main">
           <div class="song-title">${esc(s.title)}</div>
-          <div class="song-artist">${esc(s.artist)} · <span class="num">${s.bpm} BPM · ${s.cam}</span></div>
+          <div class="song-artist">${esc(s.artist)} · <span class="num">${s.bpm||"—"} BPM · ${s.cam||"—"}</span></div>
         </div>
         <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>`
         :`<span class="art" style="background:var(--panel-2)">?</span>
@@ -2923,7 +2949,7 @@ function viewEmcee(){
       <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap">
         <button class="btn primary" data-invoice>Download invoice</button>
         <button class="btn" data-contract>Download contract</button>
-        <span class="chip">Balance due: $${Math.max(0,(+ev.price||0)-(+ev.deposit||0)).toLocaleString()}</span>
+        <span class="chip" id="balDue">Balance due: $${Math.max(0,(+ev.price||0)-(+ev.deposit||0)).toLocaleString()}</span>
       </div>
       <p class="footnote">Generated as clean printable documents from this event's details. Templates, not legal advice.</p>
     </div>
@@ -3185,6 +3211,16 @@ document.addEventListener("input", e=>{
     const ev=curEvent();
     ev[t.dataset.evfield]=t.type==="number" ? (+t.value||0) : t.value.slice(0,120);
     saveNotes();
+    const bal=$("#balDue"); if(bal) bal.textContent="Balance due: $"+Math.max(0,(+ev.price||0)-(+ev.deposit||0)).toLocaleString();
+    return;
+  }
+  if(t.dataset && t.dataset.evswitch!==undefined){
+    if(state.events.list.some(x=>x.id===t.value)){ state.events.cur=t.value; state.notes=curEvent().notes; saveNotes(); render(); }
+    return;
+  }
+  if(t.dataset && t.dataset.evpkg!==undefined){
+    const ev=curEvent(), pk=PACKAGES.find(x=>x.id===t.value);
+    if(pk){ ev.pkg=pk.id; ev.price=pk.price; saveNotes(); render(); }
     return;
   }
   if(t.id==="lightsIntensity"){ state.lights.intensity=+t.value; saveSession(); return; }
@@ -3218,7 +3254,9 @@ document.addEventListener("pointerdown", e=>{
   const dk=j.dataset.jog;
   if(!state.decks[dk].songId) return;
   e.preventDefault();
-  scratch={dk, el:j, last:jogAngle(e,j)};
+  // remember if it was playing so auto-advance doesn't fight the drag; resume on release
+  scratch={dk, el:j, last:jogAngle(e,j), wasPlaying:state.decks[dk].playing};
+  state.decks[dk].playing=false;
   stopReal(dk);   // silence while scrubbing; resumes on release
   try{ j.setPointerCapture(e.pointerId); }catch(err){}
 });
@@ -3244,8 +3282,15 @@ function endCensor(){
     }
   }
 }
-document.addEventListener("pointerup", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; endCensor(); });
-document.addEventListener("pointercancel", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; endCensor(); });
+function releaseScratch(){
+  if(scratch){
+    if(scratch.wasPlaying){ state.decks[scratch.dk].playing=true; render(); }
+    syncReal(scratch.dk);
+    scratch=null;
+  }
+}
+document.addEventListener("pointerup", ()=>{ releaseScratch(); endCensor(); });
+document.addEventListener("pointercancel", ()=>{ releaseScratch(); endCensor(); });
 
 /* ---------- boot ---------- */
 loadSession();
@@ -3522,6 +3567,32 @@ window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, importFiles
     q("[data-feedback]").click(); await sleep(120);
     log.push("fb-sheet:"+(document.body.textContent.includes("Beta feedback")?"OK":"FAIL"));
     document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true})); await sleep(60);
+    // v1.4 regressions: automix 0-BPM no-crash, dead dropdowns, scratch-pause
+    q('[data-tab="live"]').click(); await sleep(120);
+    // two metadata-only (bpm 0) tracks, automix on, force end → must NOT freeze the loop
+    CC.SONGS.push({id:"z0a",title:"Zero A",artist:"x",bpm:0,cam:null,key:"—",energy:6,dur:"0:20",hue:1,genre:"imported",rating:"unscanned",clean:false,moments:[]});
+    CC.SONGS.push({id:"z0b",title:"Zero B",artist:"x",bpm:0,cam:null,key:"—",energy:6,dur:"0:20",hue:2,genre:"imported",rating:"unscanned",clean:false,moments:[]});
+    CC.loadToDeck("A","z0a"); CC.loadToDeck("B","z0b"); await sleep(60);
+    CC.state.decks.A.playing=true; CC.state.decks.B.playing=false;
+    if(!CC.state.automix) q("[data-automix]").click(); await sleep(60);
+    CC.state.decks.A.pos=CC.sec(CC.song("z0a").dur)-5;
+    await sleep(1500);
+    const posA=CC.state.decks.A.pos, posB=CC.state.decks.B.pos;
+    const alive=isFinite(posA)&&isFinite(posB);
+    log.push("automix-0bpm-noNaN:"+(alive?"OK":"FAIL A="+posA+" B="+posB));
+    // tick loop still alive? pos should keep advancing a frame later
+    const beforeTick=CC.state.decks.A.playing?CC.state.decks.A.pos:0;
+    await sleep(400);
+    log.push("loop-alive:"+(isFinite(CC.state.decks.A.pos)?"OK":"FAIL"));
+    q("[data-automix]").click();
+    // dead dropdowns fixed
+    q('[data-tab="emcee"]').click(); await sleep(80);
+    q("[data-newevent]").click(); await sleep(80);
+    const firstId=CC.state.events.list[0].id;
+    const sw=q("[data-evswitch]"); sw.value=firstId; sw.dispatchEvent(new Event("input",{bubbles:true})); await sleep(80);
+    log.push("evswitch:"+(CC.curEvent().id===firstId?"OK":"FAIL"));
+    const pk=q("[data-evpkg]"); pk.value="allout"; pk.dispatchEvent(new Event("input",{bubbles:true})); await sleep(80);
+    log.push("evpkg:"+(CC.curEvent().pkg==="allout"&&CC.curEvent().price===2600?"OK":"FAIL "+CC.curEvent().pkg));
     const leak=document.body.innerText;
     log.push("no-source-leak:"+(!leak.includes("${dj}")&&!leak.includes("function bizDoc")&&!leak.includes("position:absolute")?"OK":"FAIL"));
     log.push("ALLDONE");
