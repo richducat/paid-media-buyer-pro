@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="description" content="Salt — DJ set intelligence: premium booth with lyric-flag lanes, soundboard, EQ mixer, key/BPM detection, events and invoicing, lights, guest requests.">
+<meta name="description" content="Salt — DJ set intelligence: premium booth with concert-grade light show, lyric-flag lanes, soundboard, EQ mixer, events and invoicing, guest requests.">
 <title>Salt — DJ Set Intelligence (Demo)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
 </head>
@@ -644,7 +644,7 @@
     box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
   input[type=range]::-moz-range-thumb{width:15px; height:15px; border:0; border-radius:50%; background:var(--fill);
     box-shadow:0 2px 5px rgba(0,0,0,.6)}
-  .pitch input{--fill:var(--dk)}
+  .pitch input{--fill:var(--dk,var(--accent))}
   .eqrow input{--fill:#A5A1B8}
   .eqrow.vol input{--fill:var(--accent)}
   .eqrow.master input{--fill:var(--clean)}
@@ -2015,6 +2015,19 @@ function lightProgram(){
   const e=s?s.energy:5;
   return e>=9?"strobe":e>=7?"pulse":"wash";
 }
+let crowdCache=null;
+function crowdFor(W,H){
+  if(crowdCache && crowdCache.W===W && crowdCache.H===H) return crowdCache;
+  let seed=1337; const rnd=()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; };
+  const heads=[];
+  for(let x=-10; x<W+10; x+=W/80*(0.6+rnd()*0.9)){
+    heads.push({x, r:H*(0.02+rnd()*0.022), y:H-H*0.03*rnd()});
+  }
+  const hands=[];
+  for(let i=0;i<24;i++) hands.push({x:rnd()*W, h:H*(0.06+rnd()*0.06), sway:rnd()*6.28});
+  crowdCache={W,H,heads,hands};
+  return crowdCache;
+}
 function drawRig(){
   const cv=$("#rigCanvas"); if(!cv) return;
   sizeCanvas(cv);
@@ -2022,59 +2035,109 @@ function drawRig(){
   const oa=onAir(); const d=oa?state.decks[oa]:null; const s=d?song(d.songId):null;
   const playing=!!(d&&d.playing);
   const prog=lightProgram();
-  const I=state.lights.intensity*(playing?1:0.3);
-  const baseHue=s?s.hue:270;
-  const beat=lightPhase%1, bar=Math.floor(lightPhase)%4;
-  ctx.fillStyle="#040309"; ctx.fillRect(0,0,W,H);
+  const I=state.lights.intensity*(playing?1:0.35);
+  const beat=lightPhase%1, bar=Math.floor(lightPhase)%4, bar8=Math.floor(lightPhase)%8;
+  // curated stage palette — snap the track hue to concert gel colors
+  const SNAP=[265,300,330,205,180,150,20,42];
+  const th=s?s.hue:265;
+  let hueA=265, bd=999;
+  for(const c of SNAP){ const dd=Math.min(Math.abs(th-c),360-Math.abs(th-c)); if(dd<bd){bd=dd;hueA=c;} }
+  const hueB=(hueA+(bar8<4?150:210))%360;
+  const trussY=H*0.09;
+  ctx.globalCompositeOperation="source-over";
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"#07060D"); bg.addColorStop(1,"#0B0A14");
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
   if(prog!=="off"){
-    // floor wash
-    const wash = prog==="pulse" ? (1-beat)*I : prog==="wash" ? (0.55+0.35*Math.sin(lightPhase*0.7))*I : 0.35*I;
-    const grd=ctx.createLinearGradient(0,H*0.55,0,H);
-    grd.addColorStop(0,"rgba(0,0,0,0)");
-    grd.addColorStop(1,`hsla(${(baseHue+bar*12)%360} 75% 45% / ${wash*0.6})`);
-    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
-    // truss line
-    ctx.fillStyle="rgba(142,137,160,.25)"; ctx.fillRect(0,H*0.09,W,2);
-    // 8 par cans with beams
+    ctx.globalCompositeOperation="lighter";
+    // haze
+    const hz=ctx.createRadialGradient(W/2,H*0.95,0,W/2,H*0.95,W*0.7);
+    hz.addColorStop(0,`hsla(${hueA} 60% 32% / ${0.11*I})`); hz.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=hz; ctx.fillRect(0,0,W,H);
+    // eight slim beams from the truss
     for(let i=0;i<8;i++){
-      const x=(i+0.5)/8*W, hue=(baseHue+(i%2?45:0)+bar*15)%360;
-      let flash;
-      if(prog==="strobe") flash=(Math.floor(lightPhase*4)+i)%2 ? 1:0.05;
-      else if(prog==="pulse") flash=(i%4===bar?1:0.3)*(1-beat*0.7);
-      else flash=0.5+0.5*Math.sin(lightPhase*0.9+i*0.8);
-      const a=Math.max(0,flash*I);
-      const bw=W*0.055;
-      const bg=ctx.createLinearGradient(0,H*0.1,0,H*0.95);
-      bg.addColorStop(0,`hsla(${hue} 90% 65% / ${a*0.5})`);
-      bg.addColorStop(1,`hsla(${hue} 90% 55% / 0)`);
-      ctx.fillStyle=bg;
+      const fx=(i+0.5)/8*W, hue=i%2?hueA:hueB;
+      let a;
+      if(prog==="strobe") a=((Math.floor(lightPhase*4)+i)%2)?1:0.03;
+      else if(prog==="pulse") a=(i%4===bar?1:0.22)*(1-beat*0.65);
+      else a=0.4+0.6*(0.5+0.5*Math.sin(lightPhase*0.8+i*0.9));
+      a*=I;
+      if(a<0.01) continue;
+      const sway=Math.sin(lightPhase*0.35+i*1.7)*0.10+(i-3.5)*0.055;
+      const ex=fx+Math.sin(sway)*H*0.95, ey=trussY+Math.cos(sway)*H*0.95;
+      const spread=W*0.017, px=Math.cos(sway), py=-Math.sin(sway);
+      const g=ctx.createLinearGradient(fx,trussY,ex,ey);
+      g.addColorStop(0,`hsla(${hue} 95% 72% / ${0.5*a})`);
+      g.addColorStop(0.75,`hsla(${hue} 90% 60% / ${0.1*a})`);
+      g.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g;
       ctx.beginPath();
-      ctx.moveTo(x-bw*0.25,H*0.1); ctx.lineTo(x+bw*0.25,H*0.1);
-      ctx.lineTo(x+bw*1.6,H*0.95); ctx.lineTo(x-bw*1.6,H*0.95);
+      ctx.moveTo(fx-2,trussY); ctx.lineTo(fx+2,trussY);
+      ctx.lineTo(ex+px*spread,ey+py*spread); ctx.lineTo(ex-px*spread,ey-py*spread);
       ctx.closePath(); ctx.fill();
-      ctx.fillStyle=`hsla(${hue} 95% 70% / ${Math.min(1,a)})`;
-      ctx.beginPath(); ctx.arc(x,H*0.1,W*0.012,0,7); ctx.fill();
+      ctx.strokeStyle=`hsla(${hue} 100% 84% / ${0.45*a})`;
+      ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(fx,trussY); ctx.lineTo(ex,ey); ctx.stroke();
+      if(ey>H*0.7){
+        const hs=ctx.createRadialGradient(ex,H*0.965,0,ex,H*0.965,W*0.07);
+        hs.addColorStop(0,`hsla(${hue} 90% 65% / ${0.32*a})`); hs.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=hs;
+        ctx.beginPath(); ctx.ellipse(ex,H*0.965,W*0.07,H*0.032,0,0,7); ctx.fill();
+      }
+      const fl=ctx.createRadialGradient(fx,trussY,0,fx,trussY,9);
+      fl.addColorStop(0,`hsla(${hue} 100% 92% / ${a})`); fl.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=fl; ctx.beginPath(); ctx.arc(fx,trussY,9,0,7); ctx.fill();
     }
-    // 2 moving heads sweeping from the corners
+    // two sweeping mover shafts from the corners
     for(const side of [0,1]){
-      const px=side?W*0.94:W*0.06, hue=(baseHue+180+side*30)%360;
-      const ang=(side?-1:1)*(0.45+0.35*Math.sin(lightPhase*(prog==="strobe"?1.3:0.45)+side*2));
-      const len=H*1.05, ex=px+Math.sin(ang)*len*(side?-1:1), ey=H*0.06+Math.cos(ang)*len;
-      const mg=ctx.createLinearGradient(px,H*0.06,ex,ey);
-      mg.addColorStop(0,`hsla(${hue} 95% 70% / ${0.5*I})`);
-      mg.addColorStop(1,`hsla(${hue} 95% 60% / 0)`);
-      ctx.strokeStyle=mg; ctx.lineWidth=W*0.02; ctx.lineCap="round";
-      ctx.beginPath(); ctx.moveTo(px,H*0.06); ctx.lineTo(ex,ey); ctx.stroke();
+      const sx=side?W*0.97:W*0.03, hue=side?hueB:hueA;
+      const ang=(side?-1:1)*(0.55+0.4*Math.sin(lightPhase*(prog==="strobe"?1.1:0.4)+side*2.1));
+      const ex=sx+Math.sin(ang)*H*1.15*(side?-1:1), ey=trussY+Math.cos(ang)*H*1.15;
+      const g=ctx.createLinearGradient(sx,trussY,ex,ey);
+      g.addColorStop(0,`hsla(${hue} 100% 78% / ${0.5*I})`);
+      g.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.strokeStyle=g; ctx.lineWidth=Math.max(4,W*0.008); ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(sx,trussY); ctx.lineTo(ex,ey); ctx.stroke();
+      ctx.strokeStyle=`hsla(${hue} 100% 92% / ${0.35*I})`; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(sx,trussY); ctx.lineTo(ex,ey); ctx.stroke();
+      const fl=ctx.createRadialGradient(sx,trussY,0,sx,trussY,12);
+      fl.addColorStop(0,`hsla(${hue} 100% 95% / ${0.9*I})`); fl.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=fl; ctx.beginPath(); ctx.arc(sx,trussY,12,0,7); ctx.fill();
     }
-    // strobe blast
     if(prog==="strobe" && Math.floor(lightPhase*8)%4===0){
-      ctx.fillStyle=`rgba(255,255,255,${0.22*I})`; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle=`rgba(255,255,255,${0.2*I})`; ctx.fillRect(0,0,W,H);
     }
-  } else {
+  }
+  // truss + fixture bodies (matte, on top of light)
+  ctx.globalCompositeOperation="source-over";
+  ctx.fillStyle="#1A1927"; ctx.fillRect(0,trussY-3,W,4);
+  ctx.fillStyle="rgba(255,255,255,.05)"; ctx.fillRect(0,trussY-3,W,1);
+  for(let i=0;i<8;i++){ const fx=(i+0.5)/8*W;
+    ctx.fillStyle="#0F0E19"; ctx.fillRect(fx-7,trussY-2,14,11);
+    ctx.fillStyle="rgba(255,255,255,.07)"; ctx.fillRect(fx-7,trussY-2,14,1.5);
+  }
+  if(prog==="off"){
     ctx.fillStyle="rgba(142,137,160,.4)";
-    ctx.font=`600 ${Math.round(H*0.05)}px sans-serif`; ctx.textAlign="center";
+    ctx.font=`600 ${Math.round(H*0.045)}px sans-serif`; ctx.textAlign="center";
     ctx.fillText("BLACKOUT", W/2, H/2); ctx.textAlign="left";
   }
+  // crowd silhouette with swaying hands
+  const crowd=crowdFor(W,H);
+  ctx.fillStyle="#050409";
+  for(const hd of crowd.heads){
+    ctx.beginPath(); ctx.arc(hd.x,hd.y,hd.r,Math.PI,Math.PI*2); ctx.fill();
+    ctx.fillRect(hd.x-hd.r,hd.y-0.5,hd.r*2,H-hd.y+1);
+  }
+  for(const hn of crowd.hands){
+    const hx=hn.x+Math.sin(lightPhase*1.05+hn.sway)*6;
+    const hy=H-H*0.04-hn.h;
+    ctx.fillRect(hx,hy,2.5,hn.h+H*0.05);
+    ctx.beginPath(); ctx.arc(hx+1.2,hy,3.2,0,7); ctx.fill();
+  }
+  // vignette
+  const vg=ctx.createRadialGradient(W/2,H*0.5,H*0.35,W/2,H*0.5,W*0.72);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(4,3,9,.55)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
   const st=$("#lightStatus");
   if(st){
     const bpmTxt=oa&&effBpm(oa)?effBpm(oa).toFixed(1)+" BPM":"idle";
