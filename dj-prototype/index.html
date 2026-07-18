@@ -30,7 +30,7 @@
   .framed #frame{height:740px; margin:12px auto; border:1px solid var(--line); border-radius:18px}
   #scroller{flex:1 1 0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 20px}
   header.top{
-    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
     padding:14px 0 10px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:linear-gradient(var(--bg) 82%,transparent); z-index:20;
   }
@@ -41,6 +41,11 @@
   .modes{display:flex; gap:6px; background:var(--panel); border:1px solid var(--line); border-radius:99px; padding:4px}
   .modes button{padding:5px 12px; border-radius:99px; font-size:12.5px; font-weight:600; color:var(--muted); letter-spacing:.02em}
   .modes button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+  .helpbtn{
+    width:30px; height:30px; border-radius:50%; border:1px solid var(--line); background:var(--panel);
+    color:var(--muted); font-weight:800; font-size:14px;
+  }
+  .helpbtn:hover{color:var(--accent); border-color:var(--accent)}
 
   /* ---------- tab bar ---------- */
   nav.tabs{
@@ -90,6 +95,7 @@
   }
   .footnote{font-size:11.5px; color:var(--muted); margin:14px 2px 0}
   .empty{padding:26px 18px; text-align:center; color:var(--muted); font-size:13.5px}
+  .playedmark{color:var(--clean); font-size:11px; font-weight:800; margin-left:5px; letter-spacing:.02em}
 
   /* ---------- LIVE: decks ---------- */
   .live-decks{display:grid; grid-template-columns:1fr 128px 1fr; gap:12px; margin-top:14px; align-items:stretch}
@@ -111,6 +117,33 @@
   .deck-bpm b{font-family:var(--mono); font-size:20px; font-weight:700; line-height:1}
   .deck-bpm .kk{font-size:14px; color:var(--dk)}
   .deck-bpm span{font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
+  .deck-mid{display:flex; gap:10px; align-items:center; min-width:0}
+  .jog{
+    width:118px; height:118px; flex:none; cursor:grab; touch-action:none; user-select:none;
+    -webkit-user-select:none; position:relative;
+  }
+  .jog:active{cursor:grabbing}
+  .jog-disc{
+    width:100%; height:100%; border-radius:50%; position:relative; will-change:transform;
+    background:
+      repeating-radial-gradient(circle at center, #1B1A28 0 1.5px, #100F1A 1.5px 3.5px);
+    border:2px solid var(--line);
+    box-shadow:inset 0 0 18px rgba(0,0,0,.7), 0 2px 10px rgba(0,0,0,.5);
+  }
+  .jog-line{
+    position:absolute; left:50%; top:5px; width:3px; height:24px; margin-left:-1.5px;
+    background:var(--dk); border-radius:2px; box-shadow:0 0 6px var(--dk);
+  }
+  .jog-label{
+    position:absolute; inset:0; margin:auto; width:46px; height:46px; border-radius:50%;
+    display:grid; place-items:center; font-family:var(--mono); font-size:12px; font-weight:800;
+    color:rgba(255,255,255,.9); border:2px solid rgba(0,0,0,.5);
+  }
+  .jog-label::after{
+    content:""; position:absolute; width:6px; height:6px; border-radius:50%; background:#0C0B13;
+    border:1px solid rgba(255,255,255,.25);
+  }
+  .wave-col{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
   .wave-main{width:100%; height:92px; display:block; background:#0F0E18; border-radius:8px}
   .wave-over{width:100%; height:24px; display:block; background:#0F0E18; border-radius:5px; cursor:pointer}
   .deck-times{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted)}
@@ -128,6 +161,14 @@
   .pitch{display:flex; align-items:center; gap:7px; flex:1; min-width:120px}
   .pitch input{flex:1; accent-color:var(--dk); min-width:70px}
   .pitch span{font-size:11px; color:var(--muted); width:52px; text-align:right}
+  .hotcues{display:flex; gap:6px; align-items:center}
+  .hc{
+    height:26px; min-width:40px; padding:0 8px; border-radius:6px; border:1px dashed var(--line);
+    font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--muted);
+  }
+  .hc.set{border-style:solid; border-color:var(--dk); color:var(--dk)}
+  .hc:disabled{opacity:.35; cursor:default}
+  .hc-lab{font-size:9px; letter-spacing:.12em; color:var(--muted); margin-left:auto}
 
   /* ---------- LIVE: mixer ---------- */
   .mixer{
@@ -144,6 +185,9 @@
   .xfade-lab{display:flex; justify-content:space-between; width:100%; font-family:var(--mono); font-size:10px; color:var(--muted)}
   .onair{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-align:center}
   .onair b{color:var(--ink)}
+  .mixer .dbtn{width:100%; height:30px; font-size:10px}
+  .dbtn.amx[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .dbtn.klk[aria-pressed="true"]{color:var(--dk); border-color:var(--dk)}
 
   /* ---------- LIVE: alert + status ---------- */
   .alertbar{
@@ -177,6 +221,12 @@
   .sorts{display:flex; gap:5px}
   .sorts button{padding:6px 11px; border-radius:8px; border:1px solid var(--line); font-size:11.5px; font-weight:700; color:var(--muted)}
   .sorts button[aria-pressed="true"]{color:var(--accent-ink); background:var(--accent); border-color:var(--accent)}
+  .cratechips{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px}
+  .cratechips button{
+    padding:5px 11px; border-radius:99px; border:1px solid var(--line); font-size:11.5px; font-weight:600; color:var(--muted);
+  }
+  .cratechips button[aria-pressed="true"]{color:var(--accent-ink); background:var(--accent); border-color:var(--accent)}
+  .cratechips button.cleanonly[aria-pressed="true"]{background:var(--clean); border-color:var(--clean)}
   #libRows{margin-top:10px; display:flex; flex-direction:column; gap:6px}
   .librow{
     display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px;
@@ -218,7 +268,7 @@
   .song-main{min-width:0; flex:1}
   .song-data{display:flex; align-items:center; gap:10px; flex:none}
 
-  /* ---------- song sheet ---------- */
+  /* ---------- song sheet + overlays ---------- */
   .overlay{
     position:absolute; inset:0; z-index:40; background:rgba(7,6,12,.7);
     display:flex; align-items:flex-end; justify-content:center;
@@ -255,6 +305,13 @@
   .sheet-actions{display:flex; gap:8px; margin-top:18px; flex-wrap:wrap}
   .sheet-actions .btn.dA{border-color:var(--deckA); color:var(--deckA)}
   .sheet-actions .btn.dB{border-color:var(--deckB); color:var(--deckB)}
+  .help-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:12px; font-size:14px}
+  .help-list b{display:block}
+  .help-list span{color:var(--muted); font-size:13px}
+  .kbd{
+    font-family:var(--mono); font-size:11.5px; border:1px solid var(--line); border-bottom-width:2px;
+    border-radius:5px; padding:1px 6px; background:var(--panel-2);
+  }
 
   /* ---------- mix ---------- */
   .mix-src-chips{display:flex; gap:6px; margin-top:14px}
@@ -283,6 +340,11 @@
   .switch .track::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--muted); transition:transform .15s,background .15s}
   .switch[aria-pressed="true"] .track{background:rgba(61,220,151,.25)}
   .switch[aria-pressed="true"] .track::after{transform:translateX(16px); background:var(--clean)}
+  .guest-link{padding:12px 14px; margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px}
+  .guest-link code{
+    font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--panel-2);
+    padding:4px 9px; border-radius:7px; word-break:break-all;
+  }
   .req-card{padding:13px 14px; display:flex; flex-direction:column; gap:9px; margin-top:10px}
   .req-who{display:flex; align-items:center; gap:9px; font-size:13px}
   .avatar{width:28px; height:28px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:11px; font-weight:700; color:rgba(255,255,255,.9)}
@@ -313,6 +375,10 @@
     padding:8px 11px; color:var(--ink); font-size:13.5px;
   }
   .note-add input::placeholder{color:var(--muted)}
+  .setlog{list-style:none; margin:6px 0 0; padding:0}
+  .setlog li{display:flex; gap:12px; align-items:baseline; padding:7px 0; border-top:1px solid var(--line); font-size:13.5px}
+  .setlog li:first-child{border-top:0}
+  .setlog .t{font-family:var(--mono); color:var(--muted); flex:none; width:74px; font-size:12px}
 
   /* ---------- toast ---------- */
   #toast{
@@ -326,11 +392,15 @@
 
   @media (max-width:900px){
     .live-decks{grid-template-columns:1fr}
-    .mixer{flex-direction:row; padding:10px 14px}
+    .mixer{flex-direction:row; flex-wrap:wrap; padding:10px 14px}
     .vu-pair{height:44px; order:0}
     .vu{width:9px}
     .xfade-wrap{flex:1}
     .onair{flex:none}
+    .mixer .dbtn{width:auto; flex:1}
+    .jog{width:86px; height:86px}
+    .jog-label{width:36px; height:36px; font-size:10px}
+    .wave-main{height:74px}
   }
   @media (min-width:700px){
     .statgrid{grid-template-columns:repeat(6,1fr)}
@@ -350,8 +420,9 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Crate<em>//</em>Check</div>
-      <div class="tagline">Know every track before it drops.</div>
+      <div class="tagline">Know every track before it drops. · v0.3 preview</div>
     </div>
+    <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
   </header>
   <main id="view"></main>
@@ -372,66 +443,83 @@
 if (window !== window.top) document.documentElement.classList.add("framed");
 
 /* ============================================================
-   CrateCheck — live prototype. All song data below is DEMO data:
-   BPM, keys and lyric flags are illustrative, not authoritative.
+   CrateCheck — preview build. Song data below is DEMO data:
+   BPM, keys, waveforms and lyric flags are illustrative.
+   When served next to its API (/api/dj/requests), guest requests
+   are real and sync across devices; otherwise they're simulated.
    ============================================================ */
 
 const SONGS = [
-  {id:"yeah", title:"Yeah!", artist:"Usher ft. Lil Jon & Ludacris", bpm:105, cam:"1A", key:"G♯ min", energy:8, dur:"4:10", hue:275,
+  {id:"yeah", title:"Yeah!", artist:"Usher ft. Lil Jon & Ludacris", bpm:105, cam:"1A", key:"G♯ min", energy:8, dur:"4:10", hue:275, genre:"hiphop",
     rating:"caution", clean:true,
     moments:[{t:"0:52",cat:"Suggestive",label:"Club hookup themes",sev:"mild"},{t:"2:41",cat:"Language",label:"Mild profanity ×1",sev:"mild"}]},
-  {id:"sicko", title:"SICKO MODE", artist:"Travis Scott", bpm:155, cam:"8A", key:"A min", energy:9, dur:"5:12", hue:0,
+  {id:"sicko", title:"SICKO MODE", artist:"Travis Scott", bpm:155, cam:"8A", key:"A min", energy:9, dur:"5:12", hue:0, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:34",cat:"Language",label:"F-word ×6 across track",sev:"hard"},{t:"1:05",cat:"Language",label:"N-word, repeated",sev:"hard"},{t:"2:18",cat:"Drugs",label:"Multiple drug references",sev:"hard"},{t:"3:40",cat:"Language",label:"Strong profanity cluster",sev:"hard"}]},
-  {id:"uptown", title:"Uptown Funk", artist:"Mark Ronson ft. Bruno Mars", bpm:115, cam:"7A", key:"D min", energy:8, dur:"4:30", hue:35,
+  {id:"uptown", title:"Uptown Funk", artist:"Mark Ronson ft. Bruno Mars", bpm:115, cam:"7A", key:"D min", energy:8, dur:"4:30", hue:35, genre:"pop",
     rating:"caution", clean:false,
     moments:[{t:"0:19",cat:"Language",label:"“Damn” ×4 (hook)",sev:"mild"},{t:"2:12",cat:"Language",label:"“Damn” reprise",sev:"mild"}]},
-  {id:"september", title:"September", artist:"Earth, Wind & Fire", bpm:126, cam:"11B", key:"A maj", energy:7, dur:"3:35", hue:45, rating:"clean", clean:false, moments:[]},
-  {id:"golddigger", title:"Gold Digger", artist:"Kanye West ft. Jamie Foxx", bpm:93, cam:"9A", key:"E min", energy:7, dur:"3:28", hue:50,
+  {id:"september", title:"September", artist:"Earth, Wind & Fire", bpm:126, cam:"11B", key:"A maj", energy:7, dur:"3:35", hue:45, genre:"throwback", rating:"clean", clean:false, moments:[]},
+  {id:"golddigger", title:"Gold Digger", artist:"Kanye West ft. Jamie Foxx", bpm:93, cam:"9A", key:"E min", energy:7, dur:"3:28", hue:50, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:14",cat:"Language",label:"N-word in hook, every chorus",sev:"hard"},{t:"1:47",cat:"Language",label:"Strong profanity ×3",sev:"hard"}]},
-  {id:"shakeitoff", title:"Shake It Off", artist:"Taylor Swift", bpm:160, cam:"9B", key:"G maj", energy:8, dur:"3:39", hue:200, rating:"clean", clean:false, moments:[]},
-  {id:"humble", title:"HUMBLE.", artist:"Kendrick Lamar", bpm:150, cam:"11A", key:"F♯ min", energy:9, dur:"2:57", hue:15,
+  {id:"shakeitoff", title:"Shake It Off", artist:"Taylor Swift", bpm:160, cam:"9B", key:"G maj", energy:8, dur:"3:39", hue:200, genre:"pop", rating:"clean", clean:false, moments:[]},
+  {id:"humble", title:"HUMBLE.", artist:"Kendrick Lamar", bpm:150, cam:"11A", key:"F♯ min", energy:9, dur:"2:57", hue:15, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:22",cat:"Language",label:"F-word + N-word throughout",sev:"hard"},{t:"1:10",cat:"Sexual",label:"Explicit sexual reference",sev:"hard"}]},
-  {id:"levitating", title:"Levitating", artist:"Dua Lipa", bpm:103, cam:"10A", key:"B min", energy:7, dur:"3:23", hue:290, rating:"clean", clean:false, moments:[]},
-  {id:"indaclub", title:"In Da Club", artist:"50 Cent", bpm:90, cam:"6A", key:"G min", energy:8, dur:"3:44", hue:220,
+  {id:"levitating", title:"Levitating", artist:"Dua Lipa", bpm:103, cam:"10A", key:"B min", energy:7, dur:"3:23", hue:290, genre:"pop", rating:"clean", clean:false, moments:[]},
+  {id:"indaclub", title:"In Da Club", artist:"50 Cent", bpm:90, cam:"6A", key:"G min", energy:8, dur:"3:44", hue:220, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:30",cat:"Language",label:"N-word + strong profanity",sev:"hard"},{t:"1:26",cat:"Drugs",label:"Drug dealing references",sev:"hard"},{t:"2:02",cat:"Sexual",label:"Explicit sexual line",sev:"hard"}]},
-  {id:"iwanna", title:"I Wanna Dance with Somebody", artist:"Whitney Houston", bpm:119, cam:"1B", key:"B maj", energy:8, dur:"4:52", hue:320, rating:"clean", clean:false, moments:[]},
-  {id:"wap", title:"WAP", artist:"Cardi B ft. Megan Thee Stallion", bpm:133, cam:"12A", key:"D♭ min", energy:9, dur:"3:07", hue:330,
+  {id:"iwanna", title:"I Wanna Dance with Somebody", artist:"Whitney Houston", bpm:119, cam:"1B", key:"B maj", energy:8, dur:"4:52", hue:320, genre:"throwback", rating:"clean", clean:false, moments:[]},
+  {id:"wap", title:"WAP", artist:"Cardi B ft. Megan Thee Stallion", bpm:133, cam:"12A", key:"D♭ min", energy:9, dur:"3:07", hue:330, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:03",cat:"Sexual",label:"Explicit sexual content, entire track",sev:"hard"},{t:"0:11",cat:"Language",label:"Strong profanity throughout",sev:"hard"},{t:"—",cat:"Note",label:"Radio edit exists but is still heavily suggestive",sev:"mild"}]},
-  {id:"brightside", title:"Mr. Brightside", artist:"The Killers", bpm:148, cam:"10B", key:"D maj", energy:8, dur:"3:43", hue:180, rating:"clean", clean:false, moments:[]},
-  {id:"crankthat", title:"Crank That (Soulja Boy)", artist:"Soulja Boy", bpm:140, cam:"5B", key:"E♭ maj", energy:8, dur:"3:42", hue:60,
+  {id:"brightside", title:"Mr. Brightside", artist:"The Killers", bpm:148, cam:"10B", key:"D maj", energy:8, dur:"3:43", hue:180, genre:"rock", rating:"clean", clean:false, moments:[]},
+  {id:"crankthat", title:"Crank That (Soulja Boy)", artist:"Soulja Boy", bpm:140, cam:"5B", key:"E♭ maj", energy:8, dur:"3:42", hue:60, genre:"hiphop",
     rating:"caution", clean:true,
     moments:[{t:"0:48",cat:"Sexual",label:"Hook is a sexual innuendo (widely missed)",sev:"mild"}]},
-  {id:"partyusa", title:"Party in the U.S.A.", artist:"Miley Cyrus", bpm:96, cam:"2B", key:"F♯ maj", energy:7, dur:"3:22", hue:210, rating:"clean", clean:false, moments:[]},
-  {id:"low", title:"Low", artist:"Flo Rida ft. T-Pain", bpm:128, cam:"8A", key:"A min", energy:9, dur:"3:50", hue:250,
+  {id:"partyusa", title:"Party in the U.S.A.", artist:"Miley Cyrus", bpm:96, cam:"2B", key:"F♯ maj", energy:7, dur:"3:22", hue:210, genre:"pop", rating:"clean", clean:false, moments:[]},
+  {id:"low", title:"Low", artist:"Flo Rida ft. T-Pain", bpm:128, cam:"8A", key:"A min", energy:9, dur:"3:50", hue:250, genre:"hiphop",
     rating:"caution", clean:false,
     moments:[{t:"0:26",cat:"Suggestive",label:"Strip-club setting, suggestive hook",sev:"mild"}]},
-  {id:"hotline", title:"Hotline Bling", artist:"Drake", bpm:135, cam:"7A", key:"D min", energy:6, dur:"4:27", hue:25, rating:"clean", clean:false, moments:[]},
-  {id:"firstclass", title:"First Class", artist:"Jack Harlow", bpm:107, cam:"8A", key:"A min", energy:6, dur:"2:53", hue:120,
+  {id:"hotline", title:"Hotline Bling", artist:"Drake", bpm:135, cam:"7A", key:"D min", energy:6, dur:"4:27", hue:25, genre:"hiphop", rating:"clean", clean:false, moments:[]},
+  {id:"firstclass", title:"First Class", artist:"Jack Harlow", bpm:107, cam:"8A", key:"A min", energy:6, dur:"2:53", hue:120, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:40",cat:"Language",label:"F-word ×3, N-word ×2",sev:"hard"},{t:"1:31",cat:"Sexual",label:"Explicit sexual reference",sev:"hard"}]},
-  {id:"adt", title:"About Damn Time", artist:"Lizzo", bpm:109, cam:"9A", key:"E min", energy:8, dur:"3:12", hue:300,
+  {id:"adt", title:"About Damn Time", artist:"Lizzo", bpm:109, cam:"9A", key:"E min", energy:8, dur:"3:12", hue:300, genre:"pop",
     rating:"caution", clean:true,
     moments:[{t:"0:05",cat:"Language",label:"“Damn” in title + hook",sev:"mild"},{t:"1:22",cat:"Language",label:"F-word ×1 (album version only)",sev:"hard"}]},
-  {id:"chacha", title:"Cha Cha Slide", artist:"DJ Casper", bpm:123, cam:"8B", key:"C maj", energy:7, dur:"3:52", hue:90, rating:"clean", clean:false, moments:[]},
-  {id:"cupid", title:"Cupid Shuffle", artist:"Cupid", bpm:97, cam:"5A", key:"C min", energy:7, dur:"3:52", hue:150, rating:"clean", clean:false, moments:[]},
-  {id:"dontstop", title:"Don't Stop Believin'", artist:"Journey", bpm:119, cam:"12B", key:"E maj", energy:8, dur:"4:10", hue:230, rating:"clean", clean:false, moments:[]},
-  {id:"family", title:"Family Affair", artist:"Mary J. Blige", bpm:93, cam:"8A", key:"A min", energy:7, dur:"4:26", hue:265, rating:"clean", clean:false, moments:[]},
-  {id:"getlow", title:"Get Low", artist:"Lil Jon & The East Side Boyz", bpm:101, cam:"2A", key:"A♭ min", energy:9, dur:"5:34", hue:5,
+  {id:"chacha", title:"Cha Cha Slide", artist:"DJ Casper", bpm:123, cam:"8B", key:"C maj", energy:7, dur:"3:52", hue:90, genre:"linedance", rating:"clean", clean:false, moments:[]},
+  {id:"cupid", title:"Cupid Shuffle", artist:"Cupid", bpm:97, cam:"5A", key:"C min", energy:7, dur:"3:52", hue:150, genre:"linedance", rating:"clean", clean:false, moments:[]},
+  {id:"dontstop", title:"Don't Stop Believin'", artist:"Journey", bpm:119, cam:"12B", key:"E maj", energy:8, dur:"4:10", hue:230, genre:"rock", rating:"clean", clean:false, moments:[]},
+  {id:"family", title:"Family Affair", artist:"Mary J. Blige", bpm:93, cam:"8A", key:"A min", energy:7, dur:"4:26", hue:265, genre:"throwback", rating:"clean", clean:false, moments:[]},
+  {id:"getlow", title:"Get Low", artist:"Lil Jon & The East Side Boyz", bpm:101, cam:"2A", key:"A♭ min", energy:9, dur:"5:34", hue:5, genre:"hiphop",
     rating:"explicit", clean:true,
     moments:[{t:"0:16",cat:"Sexual",label:"Explicit sexual content, entire hook",sev:"hard"},{t:"0:58",cat:"Language",label:"Strong profanity throughout",sev:"hard"},{t:"—",cat:"Note",label:"“Sweat” radio edit is wedding-famous — use it",sev:"mild"}]},
-  {id:"blinding", title:"Blinding Lights", artist:"The Weeknd", bpm:171, cam:"4A", key:"F min", energy:8, dur:"3:20", hue:355, rating:"clean", clean:false, moments:[]},
-  {id:"otr", title:"Old Town Road (Remix)", artist:"Lil Nas X ft. Billy Ray Cyrus", bpm:136, cam:"6B", key:"B♭ maj", energy:7, dur:"2:37", hue:30,
+  {id:"blinding", title:"Blinding Lights", artist:"The Weeknd", bpm:171, cam:"4A", key:"F min", energy:8, dur:"3:20", hue:355, genre:"pop", rating:"clean", clean:false, moments:[]},
+  {id:"otr", title:"Old Town Road (Remix)", artist:"Lil Nas X ft. Billy Ray Cyrus", bpm:136, cam:"6B", key:"B♭ maj", energy:7, dur:"2:37", hue:30, genre:"hiphop",
     rating:"caution", clean:false,
     moments:[{t:"1:04",cat:"Drugs",label:"One passing substance reference",sev:"mild"}]},
-  {id:"poker", title:"Poker Face", artist:"Lady Gaga", bpm:119, cam:"1A", key:"G♯ min", energy:8, dur:"3:57", hue:195,
+  {id:"poker", title:"Poker Face", artist:"Lady Gaga", bpm:119, cam:"1A", key:"G♯ min", energy:8, dur:"3:57", hue:195, genre:"pop",
     rating:"caution", clean:false,
     moments:[{t:"2:20",cat:"Suggestive",label:"Bridge contains a well-known innuendo",sev:"mild"}]},
+  {id:"dancingqueen", title:"Dancing Queen", artist:"ABBA", bpm:101, cam:"11B", key:"A maj", energy:6, dur:"3:50", hue:205, genre:"throwback", rating:"clean", clean:false, moments:[]},
+  {id:"heyya", title:"Hey Ya!", artist:"OutKast", bpm:160, cam:"9B", key:"G maj", energy:9, dur:"3:55", hue:95, genre:"throwback", rating:"clean", clean:false, moments:[]},
+  {id:"crazyinlove", title:"Crazy in Love", artist:"Beyoncé ft. Jay-Z", bpm:99, cam:"7A", key:"D min", energy:8, dur:"3:56", hue:40, genre:"pop", rating:"clean", clean:false, moments:[]},
+  {id:"loseyourself", title:"Lose Yourself", artist:"Eminem", bpm:86, cam:"12A", key:"D♭ min", energy:9, dur:"5:22", hue:15, genre:"hiphop",
+    rating:"caution", clean:true,
+    moments:[{t:"2:16",cat:"Language",label:"Mild profanity ×2",sev:"mild"},{t:"4:01",cat:"Language",label:"F-word ×1 (album version)",sev:"hard"}]},
+  {id:"24k", title:"24K Magic", artist:"Bruno Mars", bpm:107, cam:"11A", key:"F♯ min", energy:8, dur:"3:46", hue:48, genre:"pop",
+    rating:"caution", clean:false,
+    moments:[{t:"0:37",cat:"Language",label:"“Damn” + playful trash talk",sev:"mild"}]},
+  {id:"wobble", title:"Wobble", artist:"V.I.C.", bpm:84, cam:"6A", key:"G min", energy:7, dur:"4:19", hue:130, genre:"linedance",
+    rating:"caution", clean:true,
+    moments:[{t:"1:12",cat:"Suggestive",label:"Suggestive dance call-outs",sev:"mild"}]},
+  {id:"electric", title:"Electric Boogie (Electric Slide)", artist:"Marcia Griffiths", bpm:110, cam:"4B", key:"A♭ maj", energy:6, dur:"4:20", hue:170, genre:"linedance", rating:"clean", clean:false, moments:[]},
 ];
+
+const GENRES=[["all","All"],["hiphop","Hip-hop"],["pop","Pop"],["throwback","Throwbacks"],["rock","Rock"],["linedance","Line dance"]];
 
 const MODES = [
   {id:"wedding", label:"Wedding"},
@@ -453,6 +541,11 @@ const REQUEST_POOL = [
 ];
 
 const NOTES_KEY = "cratecheck.notes.v1";
+const SESSION_KEY = "cratecheck.session.v1";
+const API = "/api/dj/requests";
+const GUEST_PATH = "/demo/request.html";
+const DEPLOYED_GUEST_URL = "https://paidmediapro.eb28.co/demo/request.html";
+
 const DEFAULT_NOTES = [
   {title:"Pronunciations", color:"var(--accent)", items:[
     "Bride: Siobhan — say “shiv-AWN”",
@@ -471,14 +564,17 @@ const DEFAULT_NOTES = [
 ];
 
 /* ---------- state ---------- */
-function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false}; }
+function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false, cues:[null,null,null], loop:null, keylock:true, logged:false}; }
 const state = {
-  mode:"wedding", view:"live", search:"", libSort:"match", mixSrc:null,
-  decks:{A:deckInit(), B:deckInit()}, xfade:50,
-  requestsOpen:true, requests:[], queue:[], notes:loadNotes(),
+  mode:"wedding", view:"live", search:"", libSort:"match", crate:"all", cleanOnly:false, mixSrc:null,
+  decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false,
+  requestsOpen:true, requests:[], queue:[], played:[], notes:loadNotes(),
 };
 let reqCounter = 0;
 let scanTimer = null;
+let serverMode = false;
+let simStarted = false;
+let pollTimer = null;
 
 function loadNotes(){
   try{
@@ -490,6 +586,27 @@ function loadNotes(){
 function saveNotes(){
   try{ localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes)); }catch(e){}
 }
+function loadSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY); if(!raw) return;
+    const p=JSON.parse(raw);
+    if(MODES.some(m=>m.id===p.mode)) state.mode=p.mode;
+    if(Array.isArray(p.queue)) state.queue=p.queue.filter(id=>song(id));
+    if(Array.isArray(p.played)) state.played=p.played.slice(-60);
+    if(["match","bpm","az"].includes(p.libSort)) state.libSort=p.libSort;
+    if(GENRES.some(g=>g[0]===p.crate)) state.crate=p.crate;
+    state.cleanOnly=!!p.cleanOnly;
+    state.automix=!!p.automix;
+  }catch(e){}
+}
+function saveSession(){
+  try{
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      mode:state.mode, queue:state.queue, played:state.played,
+      libSort:state.libSort, crate:state.crate, cleanOnly:state.cleanOnly, automix:state.automix,
+    }));
+  }catch(e){}
+}
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -500,6 +617,13 @@ const artStyle = s => `background:linear-gradient(135deg,hsl(${s.hue} 45% 38%),h
 const sec = t => { const m=/^(\d+):(\d{2})$/.exec(t); return m ? (+m[1])*60+(+m[2]) : NaN; };
 const fmt = s => { s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
 const strictMode = () => state.mode!=="club";
+const wasPlayed = id => state.played.some(p=>p.id===id);
+function ago(ts){
+  const m=Math.round((Date.now()-ts)/60000);
+  if(m<1) return "Just now";
+  if(m<60) return m+" min ago";
+  return Math.round(m/60)+" h ago";
+}
 
 const RATING_LABEL = {clean:"Clean", caution:"Caution", explicit:"Explicit"};
 
@@ -559,6 +683,13 @@ function matchesFor(src){
     return {s, score:k.s+b.s, chips};
   }).filter(m=>m.score>=30).sort((x,y)=>y.score-x.score).slice(0,8);
 }
+function filterSongs(){
+  const q=state.search.trim().toLowerCase();
+  return SONGS.filter(s=>
+    (!q || s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q)) &&
+    (state.crate==="all" || s.genre===state.crate) &&
+    (!state.cleanOnly || s.rating==="clean" || s.clean));
+}
 
 /* ---------- deck engine ---------- */
 function effBpm(dk){ const d=state.decks[dk], s=song(d.songId); return s ? s.bpm*(1+d.pitch/100) : 0; }
@@ -577,7 +708,7 @@ function loadToDeck(dk, id, opts){
   const s=song(id); if(!s) return;
   const wantClean = opts && "clean" in opts ? opts.clean
     : (strictMode() && s.rating!=="clean" && s.clean);
-  state.decks[dk] = {songId:id, playing:false, pos:0, pitch:0, clean:!!wantClean && s.clean};
+  state.decks[dk] = Object.assign(deckInit(), {songId:id, clean:!!wantClean && s.clean});
   toast(`Deck ${dk}: ${s.title}${state.decks[dk].clean?" (clean edit)":""}`);
   render();
 }
@@ -590,6 +721,13 @@ function togglePlay(dk){
 function cueDeck(dk){
   const d=state.decks[dk]; if(!d.songId) return;
   d.pos=0; d.playing=false; render();
+}
+function hotCue(dk,i,clear){
+  const d=state.decks[dk]; if(!d.songId) return;
+  if(clear){ d.cues[i]=null; }
+  else if(d.cues[i]===null){ d.cues[i]=d.pos; toast(`Deck ${dk}: hot cue ${i+1} set at ${fmt(d.pos)}`); }
+  else { d.pos=d.cues[i]; }
+  render();
 }
 function syncDeck(dk){
   const other = dk==="A" ? "B" : "A";
@@ -608,6 +746,54 @@ function toggleClean(dk){
   d.clean=!d.clean;
   toast(`Deck ${dk}: ${d.clean?"clean edit":"album version"}`);
   render();
+}
+function setLoop(dk,beats){
+  const d=state.decks[dk], s=song(d.songId); if(!s) return;
+  const spb=60/s.bpm;
+  if(d.loop && d.loop.beats===beats){ d.loop=null; toast(`Deck ${dk}: loop off`); }
+  else{
+    const start=Math.floor(d.pos/spb)*spb;
+    d.loop={start, len:beats*spb, beats};
+    toast(`Deck ${dk}: ${beats}-beat loop`);
+  }
+  render();
+}
+function beatJump(dk,beats){
+  const d=state.decks[dk], s=song(d.songId); if(!s) return;
+  d.pos=Math.max(0, Math.min(sec(s.dur), d.pos+beats*(60/s.bpm)));
+  drawDeck(dk); updateDynamic(dk);
+}
+function toggleKeylock(dk){
+  const d=state.decks[dk]; if(!d.songId) return;
+  d.keylock=!d.keylock;
+  toast(`Deck ${dk}: keylock ${d.keylock?"on — pitch keeps the key":"off — pitch bends the key"}`);
+  render();
+}
+function suggestPick(){
+  const oa=onAir();
+  const src=oa ? song(state.decks[oa].songId) : null;
+  const used=new Set([state.decks.A.songId, state.decks.B.songId].filter(Boolean));
+  let best=null, bs=-1;
+  for(const s of SONGS){
+    if(used.has(s.id) || wasPlayed(s.id)) continue;
+    if(strictMode() && s.rating!=="clean" && !s.clean) continue;
+    const sc=src ? scoreFor(src,s) : s.energy*10;
+    if(sc>bs){ bs=sc; best=s.id; }
+  }
+  return best;
+}
+function doSuggest(){
+  const pick=suggestPick();
+  if(!pick){ toast("Nothing left to suggest — crate exhausted"); return; }
+  const oa=onAir();
+  const idle = !state.decks.A.songId ? "A" : !state.decks.B.songId ? "B" : (oa==="A"?"B":"A");
+  loadToDeck(idle, pick);
+}
+function addPlayed(id){
+  if(state.played.length && state.played[state.played.length-1].id===id) return;
+  state.played.push({id, at:new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})});
+  state.played=state.played.slice(-60);
+  saveSession();
 }
 
 /* seeded per-song waveform: [low, mid, high] per quarter-second */
@@ -647,13 +833,11 @@ function drawMain(dk){
     ctx.textAlign="center"; ctx.fillText("NO TRACK LOADED", W/2, H/2+4); return; }
   const wave=waveFor(s), dur=sec(s.dur), bps=4, rgb=DECK_RGB[dk];
   const winSec=22, pxSec=W/winSec, t0=d.pos-winSec/2, mid=H/2;
-  // beat grid
   const spb=60/s.bpm;
   ctx.fillStyle="rgba(142,137,160,.12)";
   for(let b=Math.max(0,Math.ceil(t0/spb)); b*spb<Math.min(dur,t0+winSec); b++){
     ctx.fillRect((b*spb-t0)*pxSec, 0, 1, H);
   }
-  // bars
   const bw=Math.max(1, pxSec/bps - 1);
   for(let i=Math.max(0,Math.floor(t0*bps)); i<Math.min(wave.length, Math.ceil((t0+winSec)*bps)); i++){
     const t=i/bps, x=(t-t0)*pxSec, a=wave[i];
@@ -665,7 +849,6 @@ function drawMain(dk){
     ctx.fillStyle=`rgba(241,238,230,${past?0.3:0.5})`;
     ctx.fillRect(x, mid-a[2]*H*0.2, bw, a[2]*H*0.4);
   }
-  // explicit zones
   for(const m of s.moments){
     if(m.cat==="Note") continue;
     const mt=sec(m.t); if(isNaN(mt)) continue;
@@ -676,7 +859,27 @@ function drawMain(dk){
     ctx.fillStyle = d.clean ? "rgba(61,220,151,.8)" : (m.sev==="hard"?"rgba(255,84,104,.9)":"rgba(255,180,84,.9)");
     ctx.fillRect(x,0,w,3);
   }
-  // playhead
+  // loop region
+  if(d.loop){
+    const x0=(d.loop.start-t0)*pxSec, x1=(d.loop.start+d.loop.len-t0)*pxSec;
+    if(x1>0 && x0<W){
+      ctx.fillStyle=`rgba(${rgb},.14)`;
+      ctx.fillRect(x0,0,x1-x0,H);
+      ctx.fillStyle=`rgba(${rgb},1)`;
+      ctx.fillRect(x0,0,2,H); ctx.fillRect(x1-2,0,2,H);
+    }
+  }
+  // hot cue markers
+  for(let i=0;i<3;i++){
+    const c=d.cues[i]; if(c===null) continue;
+    const x=(c-t0)*pxSec;
+    if(x<0||x>W) continue;
+    ctx.fillStyle=`rgba(${rgb},.95)`;
+    ctx.fillRect(x-1,0,2,H*0.25);
+    ctx.font=`bold ${H*0.16}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign="left";
+    ctx.fillText(String(i+1), x+3, H*0.18);
+  }
   ctx.fillStyle="#F1EEE6";
   ctx.fillRect(W/2-1,0,2,H);
 }
@@ -714,6 +917,8 @@ function updateDynamic(dk){
   if(!s){ pos.textContent="0:00"; rem.textContent="-0:00"; flag.textContent=""; return; }
   pos.textContent=fmt(d.pos);
   rem.textContent="-"+fmt(sec(s.dur)-d.pos);
+  const jd=$("#jogdisc-"+dk);
+  if(jd) jd.style.transform="rotate("+((d.pos/1.8*360)%360).toFixed(1)+"deg)";  // 33⅓ RPM
   let next=null;
   if(strictMode() && !d.clean){
     for(const m of s.moments){
@@ -722,7 +927,7 @@ function updateDynamic(dk){
       if(!isNaN(mt) && mt>d.pos && (!next||mt<next)) next=mt;
     }
   }
-  flag.textContent = next!==null ? `next flag in ${fmt(next-d.pos)}` : (s.moments.length&&!d.clean&&strictMode()?"":"");
+  flag.textContent = next!==null ? `next flag in ${fmt(next-d.pos)}` : "";
 }
 function updateAlert(){
   const el=$("#alertBar"); if(!el) return;
@@ -773,17 +978,58 @@ function advance(){
     const d=state.decks[dk], s=song(d.songId);
     if(!s||!d.playing) continue;
     d.pos += dt*(1+d.pitch/100);
+    if(d.loop && d.pos>=d.loop.start+d.loop.len){
+      d.pos=d.loop.start+((d.pos-d.loop.start)%d.loop.len);
+    }
+    if(!d.logged && d.pos>=15){ d.logged=true; addPlayed(s.id); }
     const dur=sec(s.dur);
     if(d.pos>=dur){
       d.pos=dur; d.playing=false;
       if(state.queue.length){
         const nextId=state.queue.shift();
+        saveSession();
         loadToDeck(dk, nextId);         // calls render()
         toast(`Deck ${dk}: track ended — loaded next from queue`);
       } else { render(); }
     }
   }
+  runAutomix(dt);
   if(state.view==="live") redrawLive(false);
+}
+/* Automix: as the on-air track runs out, prep the other deck (queue first,
+   then best suggestion), sync it, start it, and glide the crossfader over. */
+let amxFadeTarget=null;
+function runAutomix(dt){
+  if(!state.automix){ amxFadeTarget=null; return; }
+  const oa=onAir();
+  if(oa){
+    const d=state.decks[oa], s=song(d.songId);
+    if(s && d.playing && !d.loop){
+      const rem=sec(s.dur)-d.pos;
+      const other = oa==="A"?"B":"A", od=state.decks[other];
+      if(rem<=12){
+        if(!od.songId){
+          const nid=state.queue.length ? state.queue.shift() : suggestPick();
+          if(nid){ saveSession(); loadToDeck(other, nid); }
+        }
+        if(od.songId && !od.playing){
+          const s2=song(od.songId);
+          od.pitch=Math.round(Math.max(-8,Math.min(8,(effBpm(oa)/s2.bpm-1)*100))*10)/10;
+          od.pos=0; od.logged=false; od.playing=true;
+          amxFadeTarget = other==="A" ? 0 : 100;
+          toast("Automix: blending to Deck "+other);
+          render();
+        }
+      }
+    }
+  }
+  if(amxFadeTarget!==null){
+    const dir=Math.sign(amxFadeTarget-state.xfade);
+    if(dir===0){ amxFadeTarget=null; return; }
+    state.xfade=Math.max(0, Math.min(100, state.xfade+dir*dt*(100/8)));
+    if(Math.abs(state.xfade-amxFadeTarget)<0.6){ state.xfade=amxFadeTarget; amxFadeTarget=null; }
+    const xf=$("#xfade"); if(xf) xf.value=state.xfade;
+  }
 }
 function redrawLive(force){
   const anyPlaying = state.decks.A.playing || state.decks.B.playing;
@@ -794,6 +1040,68 @@ function redrawLive(force){
   updateAlert(); updateVU();
 }
 function tick(){ advance(); requestAnimationFrame(tick); }
+
+/* ---------- live requests: real API with simulated fallback ---------- */
+function mapRemote(r){
+  const known = song(r.songId) ? r.songId : null;
+  return {
+    id:"srv"+r.id, name:(r.name||"Guest").slice(0,40), song:known,
+    songText:known?"":(r.songText||r.songId||"Unknown song").slice(0,80),
+    note:(r.note||"").slice(0,140), tip:+r.tip||0,
+    hue:(r.id*137)%360, time:ago(r.ts||Date.now()), status:r.status||"pending",
+  };
+}
+function mergeRemote(list){
+  const known=new Set(state.requests.map(r=>r.id));
+  const mapped=list.map(mapRemote);
+  const fresh=mapped.filter(m=>!known.has(m.id) && m.status==="pending");
+  state.requests=mapped;
+  if(fresh.length){
+    if(state.view==="requests") render(); else renderTabs();
+    toast("New request: "+(fresh[0].song?song(fresh[0].song).title:fresh[0].songText));
+  } else if(!known.size && mapped.length){
+    if(state.view==="requests") render(); else renderTabs();
+  }
+}
+async function pollRequests(){
+  try{
+    const r=await fetch(API, {cache:"no-store"});
+    if(!r.ok) throw new Error("http "+r.status);
+    const data=await r.json();
+    serverMode=true;
+    mergeRemote(Array.isArray(data.requests)?data.requests:[]);
+  }catch(e){
+    if(!serverMode && !simStarted) startSim();
+    if(!serverMode && pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+  }
+}
+async function pushStatus(localId, status){
+  if(!serverMode || !localId.startsWith("srv")) return;
+  try{
+    await fetch(API, {method:"PATCH", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:+localId.slice(3), status})});
+  }catch(e){}
+}
+function startSim(){
+  simStarted=true;
+  spawnRequest(true); spawnRequest(true); spawnRequest(true);
+  if(state.requests[0]) state.requests[0].time="Just now";
+  renderTabs();
+  if(state.view==="requests") render();
+  setInterval(()=>{ if(state.requestsOpen && state.requests.filter(r=>r.status==="pending").length<6) spawnRequest(false); },15000);
+}
+function spawnRequest(initial){
+  const pick=REQUEST_POOL[reqCounter%REQUEST_POOL.length];
+  reqCounter++;
+  state.requests.unshift({
+    id:"r"+reqCounter, name:pick.name, song:pick.song, songText:"", note:pick.note, tip:pick.tip,
+    hue:(reqCounter*137)%360, time:initial?(reqCounter*3)+" min ago":"Just now", status:"pending",
+  });
+  if(!initial){
+    if(state.view==="requests") render(); else renderTabs();
+    toast("New request: "+song(pick.song).title);
+  }
+}
 
 /* ---------- toast ---------- */
 let toastTimer=null;
@@ -851,39 +1159,62 @@ function deckHtml(dk){
         <div><b class="num kk">${s?s.cam:"—"}</b><br><span>${s?esc(s.key):"Key"}</span></div>
       </div>
     </div>
-    <canvas class="wave-main" id="wmain-${dk}" aria-hidden="true"></canvas>
-    <canvas class="wave-over" id="wover-${dk}" data-seek="${dk}" title="Click to seek" aria-label="Track overview deck ${dk}"></canvas>
-    <div class="deck-times num">
-      <span id="dpos-${dk}">0:00</span>
-      <span class="deck-flagnext" id="dflag-${dk}"></span>
-      <span id="drem-${dk}">-0:00</span>
+    <div class="deck-mid">
+      <div class="jog" data-jog="${dk}" title="Drag to scratch / seek" aria-label="Turntable platter deck ${dk}">
+        <div class="jog-disc" id="jogdisc-${dk}">
+          <div class="jog-line"></div>
+          <div class="jog-label" style="${s?artStyle(s):"background:var(--panel-2)"}">${s?initials(s.title):"—"}</div>
+        </div>
+      </div>
+      <div class="wave-col">
+        <canvas class="wave-main" id="wmain-${dk}" aria-hidden="true"></canvas>
+        <canvas class="wave-over" id="wover-${dk}" data-seek="${dk}" title="Click to seek" aria-label="Track overview deck ${dk}"></canvas>
+        <div class="deck-times num">
+          <span id="dpos-${dk}">0:00</span>
+          <span class="deck-flagnext" id="dflag-${dk}"></span>
+          <span id="drem-${dk}">-0:00</span>
+        </div>
+      </div>
     </div>
     <div class="deck-ctl">
       <button class="dbtn play" data-play="${dk}" aria-pressed="${d.playing}" aria-label="Play/pause deck ${dk}" ${s?"":"disabled"}>${d.playing?"❚❚":"▶"}</button>
       <button class="dbtn" data-cue="${dk}" ${s?"":"disabled"}>CUE</button>
       <button class="dbtn" data-sync="${dk}" ${s?"":"disabled"}>SYNC</button>
       <button class="dbtn cleanb" data-clean="${dk}" aria-pressed="${d.clean}" ${s&&s.clean?"":"disabled"} title="${s&&s.clean?"Toggle clean edit":"No clean edit available"}">CLEAN</button>
+      <button class="dbtn klk" data-keylock="${dk}" aria-pressed="${d.keylock}" ${s?"":"disabled"} title="Keylock: pitch changes tempo, not key">KLOCK</button>
       <label class="pitch"><input type="range" min="-8" max="8" step="0.1" value="${d.pitch}" data-pitch="${dk}" aria-label="Pitch deck ${dk}">
         <span class="num" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span></label>
     </div>
+    <div class="hotcues">
+      ${[0,1,2].map(i=>`<button class="hc ${d.cues[i]!==null?"set":""}" data-hotcue="${dk}:${i}" ${s?"":"disabled"}
+        title="${d.cues[i]!==null?"Jump to "+fmt(d.cues[i])+" — shift-click to clear":"Click to set hot cue at playhead"}">${d.cues[i]!==null?fmt(d.cues[i]):i+1}</button>`).join("")}
+      ${[4,8,16].map(n=>`<button class="hc ${d.loop&&d.loop.beats===n?"set":""}" data-loop="${dk}:${n}" ${s?"":"disabled"}
+        title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">L${n}</button>`).join("")}
+      <button class="hc" data-bjump="${dk}:-4" ${s?"":"disabled"} title="Jump back 4 beats">«4</button>
+      <button class="hc" data-bjump="${dk}:4" ${s?"":"disabled"} title="Jump forward 4 beats">4»</button>
+      <span class="hc-lab">CUES · LOOP · JUMP</span>
+    </div>
   </section>`;
 }
+function crateChips(){
+  return `<div class="cratechips" role="group" aria-label="Filter crates">
+    ${GENRES.map(([id,label])=>`<button data-crate="${id}" aria-pressed="${state.crate===id}">${label}</button>`).join("")}
+    <button class="cleanonly" data-cleanonly aria-pressed="${state.cleanOnly}">✓ Clean-safe only</button>
+  </div>`;
+}
 function liveLibRows(){
-  const q=state.search.trim().toLowerCase();
   const oa=onAir();
   const src=oa ? song(state.decks[oa].songId) : null;
-  let rows=SONGS
-    .filter(s=>!q||s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q))
-    .map(s=>({s, m:(src&&s.id!==src.id)?scoreFor(src,s):null}));
+  let rows=filterSongs().map(s=>({s, m:(src&&s.id!==src.id)?scoreFor(src,s):null}));
   if(state.libSort==="match") rows.sort((a,b)=>(b.m??-1)-(a.m??-1));
   else if(state.libSort==="bpm") rows.sort((a,b)=>a.s.bpm-b.s.bpm);
   else rows.sort((a,b)=>a.s.title.localeCompare(b.s.title));
-  if(!rows.length) return `<div class="empty">Nothing matches that search.</div>`;
+  if(!rows.length) return `<div class="empty">Nothing matches those filters.</div>`;
   return rows.map(({s,m})=>`
     <div class="librow" data-song="${s.id}" role="button" tabindex="0" aria-label="${esc(s.title)} details">
       <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
       <div class="lib-main">
-        <div class="song-title">${esc(s.title)}</div>
+        <div class="song-title">${esc(s.title)}${wasPlayed(s.id)?`<span class="playedmark" title="Already played tonight">✓ played</span>`:""}</div>
         <div class="song-artist">${esc(s.artist)}</div>
       </div>
       <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
@@ -914,6 +1245,8 @@ function viewLive(){
           <div class="xfade-lab"><span>A</span><span>B</span></div>
         </div>
         <div class="onair" id="onairLabel"></div>
+        <button class="dbtn amx" data-automix aria-pressed="${state.automix}" title="Hands-free: syncs, starts and blends the next track as the current one ends">AUTOMIX</button>
+        <button class="dbtn sug" data-suggest title="Load the best next track: key/BPM match, safe for this room, not yet played">SUGGEST</button>
       </div>
       ${deckHtml("B")}
     </div>
@@ -937,8 +1270,9 @@ function viewLive(){
         <button data-sort="az" aria-pressed="${state.libSort==="az"}">A–Z</button>
       </div>
     </div>
+    ${crateChips()}
     <div id="libRows">${liveLibRows()}</div>
-    <p class="footnote">Prototype demo data — BPM, keys, waveforms and lyric flags are illustrative; no audio plays. Match % = harmonic fit (Camelot) + tempo fit vs the on-air deck.</p>`;
+    <p class="footnote">Preview build — audio, BPM, keys, waveforms and lyric flags are simulated. Match % = harmonic fit (Camelot) + tempo fit vs the on-air deck. Keys: <span class="kbd">Space</span> play/pause on-air · <span class="kbd">1</span>/<span class="kbd">2</span> decks A/B.</p>`;
 }
 
 /* ---------- crates view ---------- */
@@ -946,7 +1280,7 @@ function songRow(s){
   return `<li><button class="song-row" data-song="${s.id}">
     <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
     <span class="song-main">
-      <span class="song-title">${esc(s.title)}</span><br>
+      <span class="song-title">${esc(s.title)}${wasPlayed(s.id)?`<span class="playedmark">✓ played</span>`:""}</span><br>
       <span class="song-artist">${esc(s.artist)}</span>
     </span>
     <span class="song-data">
@@ -956,18 +1290,18 @@ function songRow(s){
   </button></li>`;
 }
 function viewCrates(){
-  const q=state.search.trim().toLowerCase();
-  const list=SONGS.filter(s=>!q||s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+  const list=filterSongs();
   return `
     <div class="searchbar">
       <input id="searchInput" type="search" placeholder="Search your crates…" value="${esc(state.search)}" aria-label="Search songs">
     </div>
-    <h2 class="view-title">Your crates · ${list.length} tracks</h2>
-    <ul class="songs">${list.map(songRow).join("")||`<div class="empty">Nothing matches that search.</div>`}</ul>
-    <p class="footnote">Prototype demo data — BPM, keys and lyric flags are illustrative. The real app would analyze your actual files.</p>`;
+    ${crateChips()}
+    <h2 class="view-title" id="crateCount">Your crates · ${list.length} tracks</h2>
+    <ul class="songs">${list.map(songRow).join("")||`<div class="empty">Nothing matches those filters.</div>`}</ul>
+    <p class="footnote">Preview build — BPM, keys and lyric flags are illustrative. The commercial version analyzes your actual files and licensed lyric data.</p>`;
 }
 
-/* ---------- song sheet ---------- */
+/* ---------- song sheet + help ---------- */
 function openSheet(id){
   const s=song(id); if(!s) return;
   closeSheet();
@@ -1020,6 +1354,31 @@ function fillSheet(s){
       <button class="btn" data-mix="${s.id}">Find mixes</button>
     </div>`;
 }
+function openHelp(){
+  closeSheet();
+  const ov=document.createElement("div");
+  ov.className="overlay"; ov.id="sheetOverlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Quick guide">
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-title">CrateCheck in 60 seconds</div>
+        <div class="sheet-sub">The booth tool that knows the lyrics.</div>
+      </div>
+      <button class="close-x" data-close aria-label="Close">×</button>
+    </div>
+    <ul class="help-list">
+      <li><b>🚨 Explicit radar</b><span>Flagged lyric moments sit on the deck waveforms as red/amber zones. When one is under 15 seconds out, the warning bar counts it down — hit <b>CLEAN</b> on the deck to swap to the clean edit.</span></li>
+      <li><b>🎛 Mix intelligence</b><span>Every track carries BPM + Camelot key. The library's <b>Match %</b> column ranks everything against the on-air deck; <b>SYNC</b> tempo-matches the decks; the Mix tab explains every recommendation.</span></li>
+      <li><b>📨 Guest requests</b><span>Guests request from their phones (link in the Requests tab). Accepting adds to <b>Up Next</b>, which auto-loads when a deck runs out. Dirty requests queue the clean edit automatically.</span></li>
+      <li><b>🎤 Emcee notes</b><span>Pronunciations, timeline, shoutouts and the do-not-play list. Your next timeline cue stays pinned to the Live screen.</span></li>
+      <li><b>🏛 Event modes</b><span>Wedding / Corporate / Club switch every safety verdict in the app — the same crate reads differently per room.</span></li>
+      <li><b>🤖 Automix + Suggest</b><span>Need a bathroom break? <b>AUTOMIX</b> syncs, starts and blends the next track (queue first, then best match) as the current one runs out. <b>SUGGEST</b> loads the smartest next track in one tap — key/BPM-matched, room-safe, not played yet.</span></li>
+      <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
+      <li><b>⌨ Keys</b><span><span class="kbd">Space</span> play/pause on-air deck · <span class="kbd">1</span>/<span class="kbd">2</span> toggle decks · <span class="kbd">Esc</span> close panels.</span></li>
+    </ul>
+    <p class="footnote">Preview build with simulated audio and demo metadata. The commercial version plugs in real audio analysis and licensed lyric data.</p>`;
+  $("#frame").appendChild(ov);
+}
 function closeSheet(){
   clearTimeout(scanTimer);
   const ov=$("#sheetOverlay"); if(ov) ov.remove();
@@ -1059,6 +1418,9 @@ function viewMix(){
 }
 
 /* ---------- requests view ---------- */
+function guestUrl(){
+  return serverMode ? location.origin+GUEST_PATH : DEPLOYED_GUEST_URL;
+}
 function viewRequests(){
   const pending=state.requests.filter(r=>r.status==="pending");
   const done=state.requests.filter(r=>r.status!=="pending");
@@ -1070,6 +1432,14 @@ function viewRequests(){
         <span class="track"></span>${state.requestsOpen?"Open — guests can send":"Closed"}
       </button>
     </div>
+    <div class="card guest-link">
+      <span>Guests request from their phones:</span>
+      <code>${esc(guestUrl())}</code>
+      <button class="btn" data-copylink>Copy link</button>
+      ${serverMode
+        ? `<span class="chip good">● LIVE — synced across devices</span>`
+        : `<span class="chip">Simulated here — real on the deployed site</span>`}
+    </div>
     ${state.queue.length?`
       <h2 class="view-title">Up next · ${state.queue.length}</h2>
       <div class="queue-strip">${state.queue.map((id,i)=>{const s=song(id);return `
@@ -1078,14 +1448,18 @@ function viewRequests(){
           <button class="qbtn" data-qload="B:${i}" aria-label="Load to deck B">B</button>
           <button class="qbtn" data-qdel="${i}" aria-label="Remove from queue">×</button></span>`;}).join("")}
       </div>`:""}
-    ${pending.length===0&&done.length===0?`<div class="card empty" style="margin-top:12px">No requests yet.${state.requestsOpen?" Guests see a QR code on the booth — new ones will pop in here.":""}</div>`:""}
+    ${pending.length===0&&done.length===0?`<div class="card empty" style="margin-top:12px">No requests yet.${state.requestsOpen?" Share the link above — new requests pop in here instantly.":""}</div>`:""}
     ${pending.map(reqCard).join("")}
     ${done.length?`<h2 class="view-title">Handled</h2>${done.map(reqCard).join("")}`:""}
-    <p class="footnote">Prototype simulates incoming guest requests every ~15 seconds. Accepted requests join Up Next and auto-load when a deck runs out.</p>`;
+    <p class="footnote">${serverMode
+      ?"Live mode: requests come from the guest page and sync every few seconds."
+      :"Preview build simulates incoming guest requests. Deploy next to its API and this becomes a real cross-device request line."}
+      Accepted requests join Up Next and auto-load when a deck runs out.</p>`;
 
   function reqCard(r){
-    const s=song(r.song);
-    const warn = strict && s.rating!=="clean";
+    const s=r.song?song(r.song):null;
+    const warn = s && strict && s.rating!=="clean";
+    const played = s && wasPlayed(s.id);
     return `<div class="card req-card">
       <div class="req-who">
         <span class="avatar" style="background:hsl(${r.hue} 45% 40%)">${initials(r.name)}</span>
@@ -1093,36 +1467,30 @@ function viewRequests(){
         <span class="req-time">${esc(r.time)}</span>
       </div>
       <div class="req-song">
-        <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
+        ${s?`<span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
         <div class="song-main">
           <div class="song-title">${esc(s.title)}</div>
           <div class="song-artist">${esc(s.artist)} · <span class="num">${s.bpm} BPM · ${s.cam}</span></div>
         </div>
-        <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
+        <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>`
+        :`<span class="art" style="background:var(--panel-2)">?</span>
+        <div class="song-main">
+          <div class="song-title">${esc(r.songText||"Unknown song")}</div>
+          <div class="song-artist">Not in your crates — search your library</div>
+        </div>`}
       </div>
       ${r.note?`<div class="req-note">“${esc(r.note)}”</div>`:""}
+      ${played?`<div class="req-warn"><span aria-hidden="true">↻</span><span>Already played tonight — check the set log.</span></div>`:""}
       ${warn?`<div class="req-warn"><span aria-hidden="true">⚠</span><span>${s.rating==="explicit"
           ?(s.clean?"Dirty version — accept queues the <b>clean edit</b> automatically.":"Explicit with no clean edit — decline or own the consequences.")
           :"Mild flags for this room — tap the song in Crates to review."}</span></div>`:""}
       ${r.status==="pending"?`
         <div class="req-actions">
-          <button class="btn primary" data-accept="${r.id}">Accept${warn&&s.clean?" (clean)":""}</button>
+          <button class="btn primary" data-accept="${r.id}">Accept${warn&&s&&s.clean?" (clean)":""}</button>
           <button class="btn" data-decline="${r.id}">Decline</button>
         </div>`
       :`<div class="req-done ${r.status==="accepted"?"ok":"no"}">${r.status==="accepted"?"✓ In queue":"Declined"}</div>`}
     </div>`;
-  }
-}
-function spawnRequest(initial){
-  const pick=REQUEST_POOL[reqCounter%REQUEST_POOL.length];
-  reqCounter++;
-  state.requests.unshift({
-    id:"r"+reqCounter, name:pick.name, song:pick.song, note:pick.note, tip:pick.tip,
-    hue:(reqCounter*137)%360, time:initial?(reqCounter*3)+" min ago":"Just now", status:"pending",
-  });
-  if(!initial){
-    if(state.view==="requests") render(); else renderTabs();
-    toast("New request: "+song(pick.song).title);
   }
 }
 
@@ -1147,7 +1515,14 @@ function viewEmcee(){
           <button class="btn" type="submit">Add</button>
         </form>
       </div>`).join("")}
-    <p class="footnote">Notes save on this device automatically — they'll still be here at the gig. The first Timeline item is pinned to the Live screen.</p>`;
+    <div class="card note-card">
+      <h3><span class="dot" style="background:var(--deckB)"></span>Set log · ${state.played.length} played</h3>
+      ${state.played.length?`<ul class="setlog">${state.played.slice().reverse().map(p=>{
+        const s=song(p.id); return `<li><span class="t">${esc(p.at)}</span><span>${s?esc(s.title):esc(p.id)}</span>
+          <span class="song-artist" style="margin-left:auto">${s?esc(s.artist):""}</span></li>`;}).join("")}</ul>`
+      :`<div class="empty" style="padding:14px">Tracks log here automatically after 15 seconds of play.</div>`}
+    </div>
+    <p class="footnote">Notes and the set log save on this device automatically. The first Timeline item is pinned to the Live screen.</p>`;
 }
 
 /* ---------- events ---------- */
@@ -1166,14 +1541,21 @@ document.addEventListener("click", e=>{
   if(el){
     const d=el.dataset||{};
     if(d.tab){ closeSheet(); state.view=d.tab; render(); $("#scroller").scrollTo({top:0}); return; }
-    if(d.mode){ state.mode=d.mode; render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
+    if(d.mode){ state.mode=d.mode; saveSession(); render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
+    if(el.hasAttribute("data-help")){ openHelp(); return; }
     if(el.hasAttribute("data-close")){ closeSheet(); return; }
+    if(el.hasAttribute("data-copylink")){
+      const url=guestUrl();
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(()=>toast("Guest link copied"),()=>toast(url));
+      } else toast(url);
+      return;
+    }
     if(d.loada){ closeSheet(); loadToDeck("A", d.loada); return; }
     if(d.loadb){ closeSheet(); loadToDeck("B", d.loadb); return; }
     if(d.mix){ closeSheet(); state.view="mix"; state.mixSrc=null;
       const oa=onAir();
       if(!oa || state.decks[oa].songId!==d.mix){
-        // browsing mixes for a song that isn't on a deck: stage it on the idle deck
         const idle = state.decks.A.playing ? "B" : (state.decks.B.playing ? "A" : (state.xfade<=50?"B":"A"));
         loadToDeck(idle, d.mix); state.mixSrc=idle;
       }
@@ -1183,19 +1565,37 @@ document.addEventListener("click", e=>{
     if(d.cue){ cueDeck(d.cue); return; }
     if(d.sync){ syncDeck(d.sync); return; }
     if(d.clean){ toggleClean(d.clean); return; }
-    if(d.sort){ state.libSort=d.sort; render(); return; }
+    if(d.hotcue){ const [dk,i]=d.hotcue.split(":"); hotCue(dk,+i,e.shiftKey); return; }
+    if(d.loop){ const [dk,n]=d.loop.split(":"); setLoop(dk,+n); return; }
+    if(d.bjump){ const [dk,n]=d.bjump.split(":"); beatJump(dk,+n); return; }
+    if(d.keylock){ toggleKeylock(d.keylock); return; }
+    if(el.hasAttribute("data-automix")){
+      state.automix=!state.automix; saveSession();
+      toast("Automix "+(state.automix?"on — hands-free blending":"off"));
+      render(); return;
+    }
+    if(el.hasAttribute("data-suggest")){ doSuggest(); return; }
+    if(d.sort){ state.libSort=d.sort; saveSession(); render(); return; }
+    if(d.crate){ state.crate=d.crate; saveSession(); render(); return; }
+    if(el.hasAttribute("data-cleanonly")){ state.cleanOnly=!state.cleanOnly; saveSession(); render(); return; }
     if(d.qload){ const [dk,i]=d.qload.split(":"); const id=state.queue[+i];
-      if(id){ state.queue.splice(+i,1); loadToDeck(dk,id); } return; }
-    if(d.qdel){ state.queue.splice(+d.qdel,1); render(); return; }
+      if(id){ state.queue.splice(+i,1); saveSession(); loadToDeck(dk,id); } return; }
+    if(d.qdel){ state.queue.splice(+d.qdel,1); saveSession(); render(); return; }
     if(d.song){ openSheet(d.song); return; }
     if(d.accept){
       const r=state.requests.find(x=>x.id===d.accept);
-      if(r){ r.status="accepted"; state.queue.push(r.song); toast("Queued: "+song(r.song).title); render(); }
+      if(r){
+        r.status="accepted";
+        if(r.song){ state.queue.push(r.song); saveSession(); toast("Queued: "+song(r.song).title); }
+        else toast("Accepted — find it in your library");
+        pushStatus(r.id,"accepted");
+        render();
+      }
       return;
     }
     if(d.decline){
       const r=state.requests.find(x=>x.id===d.decline);
-      if(r){ r.status="declined"; render(); }
+      if(r){ r.status="declined"; pushStatus(r.id,"declined"); render(); }
       return;
     }
     if(el.id==="reqToggle"){ state.requestsOpen=!state.requestsOpen; render(); return; }
@@ -1216,9 +1616,15 @@ document.addEventListener("click", e=>{
 });
 document.addEventListener("keydown", e=>{
   if(e.key==="Escape"){ closeSheet(); return; }
+  const tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea"||tag==="select") return;
   if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("librow")){
-    e.preventDefault(); openSheet(e.target.dataset.song);
+    e.preventDefault(); openSheet(e.target.dataset.song); return;
   }
+  if(state.view!=="live") return;
+  if(e.key===" "){ e.preventDefault(); const oa=onAir(); if(oa) togglePlay(oa); return; }
+  if(e.key==="1"){ togglePlay("A"); return; }
+  if(e.key==="2"){ togglePlay("B"); return; }
 });
 document.addEventListener("submit", e=>{
   const f=e.target.closest("form.note-add"); if(!f) return;
@@ -1235,11 +1641,10 @@ document.addEventListener("input", e=>{
     if(state.view==="live"){
       const rows=$("#libRows"); if(rows) rows.innerHTML=liveLibRows();
     } else {
-      const q=state.search.trim().toLowerCase();
-      const list=SONGS.filter(s=>!q||s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+      const list=filterSongs();
       const ul=document.querySelector("ul.songs");
-      const title=document.querySelector("h2.view-title");
-      if(ul) ul.innerHTML=list.map(songRow).join("")||`<div class="empty">Nothing matches that search.</div>`;
+      const title=$("#crateCount");
+      if(ul) ul.innerHTML=list.map(songRow).join("")||`<div class="empty">Nothing matches those filters.</div>`;
       if(title) title.textContent=`Your crates · ${list.length} tracks`;
     }
     return;
@@ -1255,7 +1660,6 @@ document.addEventListener("input", e=>{
   if(t.id==="xfade"){ state.xfade=+t.value; updateVU(); return; }
 });
 document.addEventListener("change", e=>{
-  // crossfader release can change the on-air deck → refresh match column
   if(e.target.id==="xfade" && state.view==="live"){
     const rows=$("#libRows"); if(rows) rows.innerHTML=liveLibRows();
     updateVU();
@@ -1263,17 +1667,45 @@ document.addEventListener("change", e=>{
 });
 window.addEventListener("resize", ()=>{ if(state.view==="live"){ drawnOnce=false; } });
 
-/* ---------- boot ---------- */
-spawnRequest(true); spawnRequest(true); spawnRequest(true);
-state.requests[0].time="Just now";
-setInterval(()=>{ if(state.requestsOpen && state.requests.filter(r=>r.status==="pending").length<6) spawnRequest(false); },15000);
+/* turntable scratching: drag the platter to scrub (1 revolution = 1.8s, like 33⅓ vinyl) */
+let scratch=null;
+function jogAngle(e, el){
+  const r=el.getBoundingClientRect();
+  return Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2));
+}
+document.addEventListener("pointerdown", e=>{
+  const j=e.target.closest("[data-jog]"); if(!j) return;
+  const dk=j.dataset.jog;
+  if(!state.decks[dk].songId) return;
+  e.preventDefault();
+  scratch={dk, el:j, last:jogAngle(e,j)};
+  try{ j.setPointerCapture(e.pointerId); }catch(err){}
+});
+document.addEventListener("pointermove", e=>{
+  if(!scratch) return;
+  const d=state.decks[scratch.dk], s=song(d.songId);
+  if(!s){ scratch=null; return; }
+  const a=jogAngle(e, scratch.el);
+  let da=a-scratch.last;
+  if(da>Math.PI) da-=2*Math.PI;
+  if(da<-Math.PI) da+=2*Math.PI;
+  scratch.last=a;
+  d.pos=Math.max(0, Math.min(sec(s.dur), d.pos + da/(2*Math.PI)*1.8));
+  drawDeck(scratch.dk); updateDynamic(scratch.dk);
+});
+document.addEventListener("pointerup", ()=>{ scratch=null; });
+document.addEventListener("pointercancel", ()=>{ scratch=null; });
 
-state.decks.A={songId:"september", playing:true, pos:38, pitch:0, clean:false};
-state.decks.B={songId:"iwanna", playing:false, pos:0, pitch:0, clean:false};
+/* ---------- boot ---------- */
+loadSession();
+state.decks.A=Object.assign(deckInit(), {songId:"september", playing:true, pos:38});
+state.decks.B=Object.assign(deckInit(), {songId:"iwanna"});
 render();
 requestAnimationFrame(tick);
 setInterval(advance, 500);
+pollRequests();
+pollTimer=setInterval(pollRequests, 5000);
 
 /* test/debug hook */
-window.CC={state, loadToDeck, song, sec, effBpm, onAir};
+window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, get serverMode(){return serverMode}};
 </script>
