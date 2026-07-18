@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  async rewrites() {
+    return [
+      // Client-facing demo prototype, served from public/demo/
+      { source: "/demo/cratecheck", destination: "/demo/cratecheck.html" },
+    ];
+  },
 };
 
 export default nextConfig;
