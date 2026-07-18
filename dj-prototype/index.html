@@ -1,0 +1,828 @@
+<title>CrateCheck — DJ Set Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{
+    --bg:#0C0B13; --panel:#161522; --panel-2:#1D1B2C; --line:#262438;
+    --ink:#F1EEE6; --muted:#8E89A0; --accent:#9D7BFF; --accent-ink:#14101F;
+    --clean:#3DDC97; --caution:#FFB454; --explicit:#FF5468;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    color-scheme:dark;
+  }
+  html{background:var(--bg)}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; min-height:100dvh;
+  }
+  button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0}
+  button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+  input{font:inherit}
+  .num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+
+  /* ---------- shell ---------- */
+  #app{max-width:860px; margin:0 auto; padding:0 16px 148px}
+  header.top{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:18px 0 14px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:linear-gradient(var(--bg) 82%,transparent); z-index:20;
+  }
+  .brand{display:flex; flex-direction:column; gap:2px; margin-right:auto}
+  .wordmark{
+    font-weight:800; font-size:20px; letter-spacing:.06em; text-transform:uppercase; line-height:1;
+  }
+  .wordmark em{font-style:normal; color:var(--accent)}
+  .tagline{font-size:11.5px; color:var(--muted); letter-spacing:.02em}
+  .modes{display:flex; gap:6px; background:var(--panel); border:1px solid var(--line); border-radius:99px; padding:4px}
+  .modes button{
+    padding:5px 12px; border-radius:99px; font-size:12.5px; font-weight:600; color:var(--muted);
+    letter-spacing:.02em;
+  }
+  .modes button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+
+  /* ---------- tab bar ---------- */
+  nav.tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:rgba(18,17,28,.94); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    padding:8px max(12px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom));
+  }
+  nav.tabs .row{max-width:860px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+  nav.tabs button{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:7px 4px 6px; border-radius:10px; color:var(--muted); font-size:11.5px; font-weight:600;
+    letter-spacing:.03em; position:relative;
+  }
+  nav.tabs button svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+  nav.tabs button[aria-current="page"]{color:var(--ink); background:var(--panel-2)}
+  nav.tabs button[aria-current="page"] svg{stroke:var(--accent)}
+  .tab-badge{
+    position:absolute; top:2px; right:calc(50% - 22px);
+    background:var(--explicit); color:#fff; font-size:10px; font-weight:700;
+    min-width:16px; height:16px; border-radius:8px; display:grid; place-items:center; padding:0 4px;
+  }
+
+  /* ---------- shared bits ---------- */
+  h2.view-title{font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); margin:22px 0 12px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px}
+  .pill{
+    display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:6px;
+  }
+  .pill::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor}
+  .pill.clean{color:var(--clean); background:rgba(61,220,151,.12)}
+  .pill.caution{color:var(--caution); background:rgba(255,180,84,.12)}
+  .pill.explicit{color:var(--explicit); background:rgba(255,84,104,.13)}
+  .chip{
+    display:inline-block; font-size:11.5px; font-weight:600; color:var(--muted);
+    border:1px solid var(--line); border-radius:6px; padding:2px 7px;
+  }
+  .chip.good{color:var(--clean); border-color:rgba(61,220,151,.35)}
+  .chip.accent{color:var(--accent); border-color:rgba(157,123,255,.4)}
+  .btn{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
+    padding:8px 14px; border-radius:9px; border:1px solid var(--line); background:var(--panel-2);
+  }
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .btn.danger{color:var(--explicit); border-color:rgba(255,84,104,.4)}
+  .art{
+    width:44px; height:44px; border-radius:8px; flex:none; display:grid; place-items:center;
+    font-family:var(--mono); font-size:13px; font-weight:700; color:rgba(255,255,255,.85);
+  }
+  .footnote{font-size:11.5px; color:var(--muted); margin:14px 2px 0}
+
+  /* ---------- crates ---------- */
+  .searchbar{display:flex; gap:8px; margin-top:16px}
+  .searchbar input{
+    flex:1; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; color:var(--ink);
+  }
+  .searchbar input::placeholder{color:var(--muted)}
+  ul.songs{list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:8px}
+  .song-row{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    padding:10px 12px; border-radius:14px; background:var(--panel); border:1px solid var(--line);
+  }
+  .song-row:hover{border-color:var(--accent)}
+  .song-main{min-width:0; flex:1}
+  .song-title{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .song-artist{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .song-data{display:flex; align-items:center; gap:10px; flex:none}
+  .song-bpmkey{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12.5px; line-height:1.45}
+  .song-bpmkey .k{color:var(--muted)}
+
+  /* ---------- song detail ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:40; background:rgba(7,6,12,.7);
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .sheet{
+    width:100%; max-width:640px; max-height:88dvh; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); border-bottom:0;
+    border-radius:20px 20px 0 0; padding:18px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  .sheet-head{display:flex; gap:14px; align-items:center}
+  .sheet-head .art{width:58px; height:58px; font-size:16px}
+  .sheet-title{font-size:19px; font-weight:800; line-height:1.2}
+  .sheet-sub{color:var(--muted); font-size:13px}
+  .close-x{margin-left:auto; align-self:flex-start; color:var(--muted); font-size:22px; line-height:1; padding:4px 8px}
+  .scanline{height:6px; border-radius:3px; background:var(--panel-2); overflow:hidden; margin:18px 0}
+  .scanline i{display:block; height:100%; width:35%; border-radius:3px; background:var(--accent); animation:scan .8s linear infinite}
+  @keyframes scan{from{transform:translateX(-110%)}to{transform:translateX(320%)}}
+  .verdict{
+    display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:12px; margin:16px 0 14px;
+    font-weight:600; font-size:14px;
+  }
+  .verdict.clean{background:rgba(61,220,151,.1); color:var(--clean)}
+  .verdict.caution{background:rgba(255,180,84,.1); color:var(--caution)}
+  .verdict.explicit{background:rgba(255,84,104,.1); color:var(--explicit)}
+  .verdict small{display:block; font-weight:500; color:var(--ink); opacity:.8; margin-top:2px; font-size:12.5px}
+  .statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0}
+  .stat{background:var(--panel-2); border-radius:10px; padding:10px 12px}
+  .stat b{display:block; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:17px}
+  .stat span{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
+  .moments{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column}
+  .moments li{
+    display:flex; gap:12px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line); font-size:13.5px;
+  }
+  .moments .t{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--muted); flex:none; width:44px}
+  .moments .cat{margin-left:auto; flex:none}
+  .sheet-actions{display:flex; gap:8px; margin-top:18px; flex-wrap:wrap}
+
+  /* ---------- mix ---------- */
+  .mix-source{display:flex; align-items:center; gap:12px; padding:14px}
+  .match-row{display:flex; align-items:center; gap:12px; padding:11px 12px; border-top:1px solid var(--line)}
+  .match-score{
+    flex:none; width:46px; height:46px; border-radius:50%; display:grid; place-items:center;
+    font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:700; font-size:14px;
+    border:2px solid var(--line);
+  }
+  .match-score.hot{border-color:var(--accent); color:var(--accent)}
+  .match-score.warm{border-color:var(--muted)}
+  .match-main{min-width:0; flex:1}
+  .match-chips{display:flex; gap:5px; flex-wrap:wrap; margin-top:4px}
+  .empty{padding:28px 18px; text-align:center; color:var(--muted); font-size:13.5px}
+
+  /* ---------- requests ---------- */
+  .req-head{display:flex; align-items:center; gap:10px; margin-top:16px}
+  .req-toggle{margin-left:auto}
+  .switch{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--muted)}
+  .switch .track{width:38px; height:22px; border-radius:11px; background:var(--panel-2); border:1px solid var(--line); position:relative; transition:background .15s}
+  .switch .track::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--muted); transition:transform .15s,background .15s}
+  .switch[aria-pressed="true"] .track{background:rgba(61,220,151,.25)}
+  .switch[aria-pressed="true"] .track::after{transform:translateX(16px); background:var(--clean)}
+  .queue-strip{display:flex; gap:8px; overflow-x:auto; padding:4px 2px 6px; scrollbar-width:none}
+  .queue-strip::-webkit-scrollbar{display:none}
+  .queue-item{
+    flex:none; display:flex; gap:9px; align-items:center; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:7px 12px 7px 8px; font-size:12.5px;
+  }
+  .queue-item .art{width:28px; height:28px; font-size:9px; border-radius:6px}
+  .req-card{padding:13px 14px; display:flex; flex-direction:column; gap:9px; margin-top:10px}
+  .req-who{display:flex; align-items:center; gap:9px; font-size:13px}
+  .avatar{width:28px; height:28px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:11px; font-weight:700; color:rgba(255,255,255,.9)}
+  .req-time{margin-left:auto; color:var(--muted); font-size:11.5px}
+  .tip{color:var(--clean); font-weight:700; font-family:var(--mono)}
+  .req-song{display:flex; align-items:center; gap:11px}
+  .req-note{font-size:13px; color:var(--muted); font-style:italic}
+  .req-warn{font-size:12.5px; color:var(--caution); display:flex; gap:6px; align-items:baseline}
+  .req-actions{display:flex; gap:8px}
+  .req-actions .btn{flex:1; justify-content:center}
+  .req-done{font-size:12.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase}
+  .req-done.ok{color:var(--clean)} .req-done.no{color:var(--muted)}
+
+  /* ---------- emcee ---------- */
+  .event-line{display:flex; align-items:baseline; gap:10px; margin-top:16px; flex-wrap:wrap}
+  .event-name{font-size:17px; font-weight:800}
+  .note-card{padding:14px; margin-top:12px}
+  .note-card h3{
+    margin:0 0 4px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+  }
+  .note-card h3 .dot{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:7px; vertical-align:1px}
+  .note-items{list-style:none; margin:6px 0 0; padding:0}
+  .note-items li{display:flex; gap:10px; align-items:baseline; padding:7px 0; border-top:1px solid var(--line); font-size:14px}
+  .note-items li:first-child{border-top:0}
+  .note-del{color:var(--muted); font-size:15px; margin-left:auto; padding:0 4px; flex:none}
+  .note-del:hover{color:var(--explicit)}
+  .note-add{display:flex; gap:8px; margin-top:10px}
+  .note-add input{
+    flex:1; background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    padding:8px 11px; color:var(--ink); font-size:13.5px;
+  }
+  .note-add input::placeholder{color:var(--muted)}
+
+  /* ---------- deck ---------- */
+  #deck{
+    position:fixed; left:0; right:0; bottom:calc(64px + env(safe-area-inset-bottom)); z-index:29;
+    pointer-events:none;
+  }
+  #deck .inner{
+    max-width:860px; margin:0 auto; padding:0 12px;
+  }
+  #deck .bar{
+    pointer-events:auto; display:flex; align-items:center; gap:11px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:14px;
+    padding:9px 12px; box-shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+  #deck .art{width:38px; height:38px; font-size:11px}
+  #deck .meta{min-width:0; flex:1}
+  #deck .meta .t{font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  #deck canvas{width:90px; height:30px; flex:none}
+  #deck .bpm{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px; color:var(--muted); flex:none; text-align:right; line-height:1.4}
+  .playbtn{
+    flex:none; width:34px; height:34px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    display:grid; place-items:center; font-size:13px;
+  }
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(8px);
+    bottom:calc(132px + env(safe-area-inset-bottom)); z-index:50;
+    background:var(--ink); color:var(--bg); font-size:13px; font-weight:700;
+    padding:9px 16px; border-radius:99px; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none;
+    max-width:88vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  @media (min-width:700px){
+    .statgrid{grid-template-columns:repeat(6,1fr)}
+    .overlay{align-items:center}
+    .sheet{border-radius:20px; border-bottom:1px solid var(--line)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important; transition:none!important}
+  }
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="wordmark">Crate<em>//</em>Check</div>
+      <div class="tagline">Know every track before it drops.</div>
+    </div>
+    <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div id="deck" hidden>
+  <div class="inner"><div class="bar">
+    <button class="playbtn" id="playBtn" aria-label="Play or pause">▶</button>
+    <div class="art" id="deckArt"></div>
+    <div class="meta">
+      <div class="t" id="deckTitle"></div>
+      <div class="tagline" id="deckArtist"></div>
+    </div>
+    <canvas id="wave" width="180" height="60" aria-hidden="true"></canvas>
+    <div class="bpm" id="deckData"></div>
+  </div></div>
+</div>
+
+<nav class="tabs" aria-label="Main">
+  <div class="row" id="tabRow"></div>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   CrateCheck — live prototype. All song data below is DEMO data:
+   BPM, keys and lyric flags are illustrative, not authoritative.
+   ============================================================ */
+
+const SONGS = [
+  {id:"yeah", title:"Yeah!", artist:"Usher ft. Lil Jon & Ludacris", bpm:105, cam:"1A", key:"G♯ min", energy:8, dur:"4:10", hue:275,
+    rating:"caution", clean:true,
+    moments:[{t:"0:52",cat:"Suggestive",label:"Club hookup themes",sev:"mild"},{t:"2:41",cat:"Language",label:"Mild profanity ×1",sev:"mild"}]},
+  {id:"sicko", title:"SICKO MODE", artist:"Travis Scott", bpm:155, cam:"8A", key:"A min", energy:9, dur:"5:12", hue:0,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:34",cat:"Language",label:"F-word ×6 across track",sev:"hard"},{t:"1:05",cat:"Language",label:"N-word, repeated",sev:"hard"},{t:"2:18",cat:"Drugs",label:"Multiple drug references",sev:"hard"}]},
+  {id:"uptown", title:"Uptown Funk", artist:"Mark Ronson ft. Bruno Mars", bpm:115, cam:"7A", key:"D min", energy:8, dur:"4:30", hue:35,
+    rating:"caution", clean:false,
+    moments:[{t:"0:19",cat:"Language",label:"“Damn” ×4 (hook)",sev:"mild"}]},
+  {id:"september", title:"September", artist:"Earth, Wind & Fire", bpm:126, cam:"11B", key:"A maj", energy:7, dur:"3:35", hue:45, rating:"clean", clean:false, moments:[]},
+  {id:"golddigger", title:"Gold Digger", artist:"Kanye West ft. Jamie Foxx", bpm:93, cam:"9A", key:"E min", energy:7, dur:"3:28", hue:50,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:14",cat:"Language",label:"N-word in hook, every chorus",sev:"hard"},{t:"1:47",cat:"Language",label:"Strong profanity ×3",sev:"hard"}]},
+  {id:"shakeitoff", title:"Shake It Off", artist:"Taylor Swift", bpm:160, cam:"9B", key:"G maj", energy:8, dur:"3:39", hue:200, rating:"clean", clean:false, moments:[]},
+  {id:"humble", title:"HUMBLE.", artist:"Kendrick Lamar", bpm:150, cam:"11A", key:"F♯ min", energy:9, dur:"2:57", hue:15,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:22",cat:"Language",label:"F-word + N-word throughout",sev:"hard"},{t:"1:10",cat:"Sexual",label:"Explicit sexual reference",sev:"hard"}]},
+  {id:"levitating", title:"Levitating", artist:"Dua Lipa", bpm:103, cam:"10A", key:"B min", energy:7, dur:"3:23", hue:290, rating:"clean", clean:false, moments:[]},
+  {id:"indaclub", title:"In Da Club", artist:"50 Cent", bpm:90, cam:"6A", key:"G min", energy:8, dur:"3:44", hue:220,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:30",cat:"Language",label:"N-word + strong profanity",sev:"hard"},{t:"1:26",cat:"Drugs",label:"Drug dealing references",sev:"hard"},{t:"2:02",cat:"Sexual",label:"Explicit sexual line",sev:"hard"}]},
+  {id:"iwanna", title:"I Wanna Dance with Somebody", artist:"Whitney Houston", bpm:119, cam:"1B", key:"B maj", energy:8, dur:"4:52", hue:320, rating:"clean", clean:false, moments:[]},
+  {id:"wap", title:"WAP", artist:"Cardi B ft. Megan Thee Stallion", bpm:133, cam:"12A", key:"D♭ min", energy:9, dur:"3:07", hue:330,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:00",cat:"Sexual",label:"Explicit sexual content, entire track",sev:"hard"},{t:"0:11",cat:"Language",label:"Strong profanity throughout",sev:"hard"},{t:"—",cat:"Note",label:"Radio edit exists but is still heavily suggestive",sev:"mild"}]},
+  {id:"brightside", title:"Mr. Brightside", artist:"The Killers", bpm:148, cam:"10B", key:"D maj", energy:8, dur:"3:43", hue:180, rating:"clean", clean:false, moments:[]},
+  {id:"crankthat", title:"Crank That (Soulja Boy)", artist:"Soulja Boy", bpm:140, cam:"5B", key:"E♭ maj", energy:8, dur:"3:42", hue:60,
+    rating:"caution", clean:true,
+    moments:[{t:"0:48",cat:"Sexual",label:"Hook is a sexual innuendo (widely missed)",sev:"mild"}]},
+  {id:"partyusa", title:"Party in the U.S.A.", artist:"Miley Cyrus", bpm:96, cam:"2B", key:"F♯ maj", energy:7, dur:"3:22", hue:210, rating:"clean", clean:false, moments:[]},
+  {id:"low", title:"Low", artist:"Flo Rida ft. T-Pain", bpm:128, cam:"8A", key:"A min", energy:9, dur:"3:50", hue:250,
+    rating:"caution", clean:false,
+    moments:[{t:"0:26",cat:"Suggestive",label:"Strip-club setting, suggestive hook",sev:"mild"}]},
+  {id:"hotline", title:"Hotline Bling", artist:"Drake", bpm:135, cam:"7A", key:"D min", energy:6, dur:"4:27", hue:25, rating:"clean", clean:false, moments:[]},
+  {id:"firstclass", title:"First Class", artist:"Jack Harlow", bpm:107, cam:"8A", key:"A min", energy:6, dur:"2:53", hue:120,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:40",cat:"Language",label:"F-word ×3, N-word ×2",sev:"hard"},{t:"1:31",cat:"Sexual",label:"Explicit sexual reference",sev:"hard"}]},
+  {id:"adt", title:"About Damn Time", artist:"Lizzo", bpm:109, cam:"9A", key:"E min", energy:8, dur:"3:12", hue:300,
+    rating:"caution", clean:true,
+    moments:[{t:"0:00",cat:"Language",label:"“Damn” in title + hook",sev:"mild"},{t:"1:22",cat:"Language",label:"F-word ×1 (album version only)",sev:"hard"}]},
+  {id:"chacha", title:"Cha Cha Slide", artist:"DJ Casper", bpm:123, cam:"8B", key:"C maj", energy:7, dur:"3:52", hue:90, rating:"clean", clean:false, moments:[]},
+  {id:"cupid", title:"Cupid Shuffle", artist:"Cupid", bpm:97, cam:"5A", key:"C min", energy:7, dur:"3:52", hue:150, rating:"clean", clean:false, moments:[]},
+  {id:"dontstop", title:"Don't Stop Believin'", artist:"Journey", bpm:119, cam:"12B", key:"E maj", energy:8, dur:"4:10", hue:230, rating:"clean", clean:false, moments:[]},
+  {id:"family", title:"Family Affair", artist:"Mary J. Blige", bpm:93, cam:"8A", key:"A min", energy:7, dur:"4:26", hue:265, rating:"clean", clean:false, moments:[]},
+  {id:"getlow", title:"Get Low", artist:"Lil Jon & The East Side Boyz", bpm:101, cam:"2A", key:"A♭ min", energy:9, dur:"5:34", hue:5,
+    rating:"explicit", clean:true,
+    moments:[{t:"0:16",cat:"Sexual",label:"Explicit sexual content, entire hook",sev:"hard"},{t:"0:58",cat:"Language",label:"Strong profanity throughout",sev:"hard"},{t:"—",cat:"Note",label:"“Sweat” radio edit is wedding-famous — use it",sev:"mild"}]},
+  {id:"blinding", title:"Blinding Lights", artist:"The Weeknd", bpm:171, cam:"4A", key:"F min", energy:8, dur:"3:20", hue:355, rating:"clean", clean:false, moments:[]},
+  {id:"otr", title:"Old Town Road (Remix)", artist:"Lil Nas X ft. Billy Ray Cyrus", bpm:136, cam:"6B", key:"B♭ maj", energy:7, dur:"2:37", hue:30,
+    rating:"caution", clean:false,
+    moments:[{t:"1:04",cat:"Drugs",label:"One passing substance reference",sev:"mild"}]},
+  {id:"poker", title:"Poker Face", artist:"Lady Gaga", bpm:119, cam:"1A", key:"G♯ min", energy:8, dur:"3:57", hue:195,
+    rating:"caution", clean:false,
+    moments:[{t:"2:20",cat:"Suggestive",label:"Bridge contains a well-known innuendo",sev:"mild"}]},
+];
+
+const MODES = [
+  {id:"wedding", label:"Wedding"},
+  {id:"corporate", label:"Corporate"},
+  {id:"club", label:"Club"},
+];
+
+const REQUEST_POOL = [
+  {name:"Maya R.", song:"getlow", note:"Bridal party demands this 🙏", tip:20},
+  {name:"Uncle Tony", song:"dontstop", note:"You know why.", tip:0},
+  {name:"Jess + Kim", song:"wap", note:"PLEASE it's her bachelorette month", tip:15},
+  {name:"Derrick", song:"sicko", note:"turn it UP", tip:5},
+  {name:"Grandma Lois", song:"september", note:"Our song from 1978 ❤️", tip:0},
+  {name:"The Groomsmen", song:"crankthat", note:"we have a whole dance ready", tip:25},
+  {name:"Sam", song:"brightside", note:"Last song of the night?", tip:10},
+  {name:"Priya", song:"levitating", note:"for the dance floor lull", tip:0},
+  {name:"Coach Mike", song:"indaclub", note:"it's literally my birthday", tip:8},
+  {name:"Tanya", song:"iwanna", note:"Get the aunties dancing!!", tip:0},
+];
+
+const NOTES_KEY = "cratecheck.notes.v1";
+const DEFAULT_NOTES = [
+  {title:"Pronunciations", color:"var(--accent)", items:[
+    "Bride: Siobhan — say “shiv-AWN”",
+    "Groom's mother: Ngozi — say “n-GOH-zee”",
+    "Best man: Joaquin — say “wah-KEEN”"]},
+  {title:"Timeline", color:"var(--clean)", items:[
+    "6:30 — Doors, cocktail set (keep it 90–105 BPM)",
+    "7:15 — Grand entrance: Yeah! (CLEAN EDIT)",
+    "8:00 — Toasts — music OFF, mic to best man",
+    "9:30 — Anniversary dance, then open floor"]},
+  {title:"Shoutouts", color:"var(--caution)", items:[
+    "Grandma Lois's 80th birthday is Sunday — announce during dinner",
+    "Thank the Hendersons for hosting"]},
+  {title:"Do NOT play", color:"var(--explicit)", items:[
+    "Chicken Dance (bride's one rule)",
+    "Anything slow by request of the couple after 10pm"]},
+];
+
+/* ---------- state ---------- */
+const state = {
+  mode:"wedding",
+  view:"crates",
+  search:"",
+  deckId:null,
+  playing:false,
+  requestsOpen:true,
+  requests:[],
+  queue:[],
+  seenTabs:{requests:true},
+  notes:loadNotes(),
+};
+let reqCounter = 0;
+let scanTimer = null;
+
+function loadNotes(){
+  try{
+    const raw = localStorage.getItem(NOTES_KEY);
+    if(raw){ const p = JSON.parse(raw); if(Array.isArray(p)) return p; }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_NOTES));
+}
+function saveNotes(){
+  try{ localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes)); }catch(e){}
+}
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const song = id => SONGS.find(s=>s.id===id);
+const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const initials = t => t.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const artStyle = s => `background:linear-gradient(135deg,hsl(${s.hue} 45% 38%),hsl(${(s.hue+40)%360} 55% 22%))`;
+
+const RATING_LABEL = {clean:"Clean", caution:"Caution", explicit:"Explicit"};
+
+function verdictFor(s, mode){
+  if(s.rating==="clean") return {cls:"clean", head:"Safe for any room.", sub:"No flagged content found in this track."};
+  if(mode==="club"){
+    if(s.rating==="explicit") return {cls:"caution", head:"Fine for this room — flagged content noted.", sub:"Club mode: explicit tracks allowed. Flags shown so you're never surprised."};
+    return {cls:"clean", head:"Fine for this room.", sub:"Only mild flags — nothing unusual for a club set."};
+  }
+  const room = mode==="wedding" ? "wedding" : "corporate event";
+  if(s.rating==="explicit"){
+    return s.clean
+      ? {cls:"explicit", head:`Do not play the album version at a ${room}.`, sub:"A clean edit exists — load that instead."}
+      : {cls:"explicit", head:`Not safe for a ${room}.`, sub:"No reliable clean edit. Skip it."};
+  }
+  return s.clean
+    ? {cls:"caution", head:"Playable — grab the clean edit to be safe.", sub:`Mild flags only, but this is a ${room}. The clean edit removes all of them.`}
+    : {cls:"caution", head:"Use judgment — mild flags, no separate edit.", sub:`Most ${room} crowds are fine with this. Check the moments below.`};
+}
+
+/* ---------- camelot + bpm matching ---------- */
+function parseCam(c){ return {n:parseInt(c,10), l:c.slice(-1)}; }
+function keyScore(a,b){
+  const A=parseCam(a.cam), B=parseCam(b.cam);
+  if(A.n===B.n && A.l===B.l) return {s:50, label:"Same key"};
+  if(A.n===B.n) return {s:44, label:"Relative major/minor"};
+  const d = Math.min((A.n-B.n+12)%12,(B.n-A.n+12)%12);
+  if(d===1 && A.l===B.l) return {s:38, label:"Adjacent key"};
+  if(d===2 && A.l===B.l) return {s:16, label:"Energy-jump key"};
+  if(d===1) return {s:12, label:"Near key"};
+  return {s:0, label:null};
+}
+function bpmScore(a,b){
+  let best={pct:1e9, cand:b.bpm, mode:"straight"};
+  for(const [cand,mode] of [[b.bpm,"straight"],[b.bpm*2,"double-time"],[b.bpm/2,"half-time"]]){
+    const pct=Math.abs(a.bpm-cand)/a.bpm;
+    if(pct<best.pct) best={pct,cand,mode};
+  }
+  let s=0;
+  if(best.pct<=0.02)s=50; else if(best.pct<=0.04)s=42; else if(best.pct<=0.06)s=30; else if(best.pct<=0.09)s=14;
+  const delta=Math.round(best.cand-a.bpm);
+  let label = best.mode!=="straight" ? cap(best.mode)+" blend"
+            : delta===0 ? "Same tempo" : (delta>0?"+":"")+delta+" BPM";
+  return {s, label};
+}
+function cap(x){return x.charAt(0).toUpperCase()+x.slice(1)}
+function matchesFor(src){
+  return SONGS.filter(s=>s.id!==src.id).map(s=>{
+    const k=keyScore(src,s), b=bpmScore(src,s);
+    const chips=[];
+    if(k.label) chips.push({txt:k.label, cls:k.s>=38?"good":""});
+    chips.push({txt:b.label, cls:b.s>=42?"good":""});
+    const de=s.energy-src.energy;
+    if(de>0) chips.push({txt:"Energy +"+de, cls:"accent"});
+    else if(de<0) chips.push({txt:"Energy "+de, cls:""});
+    return {s, score:k.s+b.s, chips};
+  }).filter(m=>m.score>=30).sort((x,y)=>y.score-x.score).slice(0,8);
+}
+
+/* ---------- toast ---------- */
+let toastTimer=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ---------- top-level render ---------- */
+const TABS=[
+  {id:"crates", label:"Crates", icon:"M4 7h16M4 7v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7M4 7l2-3h12l2 3M10 11h4"},
+  {id:"mix", label:"Mix", icon:"M7 4v16M7 14h.01M17 4v16M17 9h.01M4 14h6M14 9h6"},
+  {id:"requests", label:"Requests", icon:"M21 12a8 8 0 0 1-8 8H4l2.5-2.5A8 8 0 1 1 21 12ZM9 10h6M9 13h4"},
+  {id:"emcee", label:"Emcee", icon:"M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM6 11a6 6 0 0 0 12 0M12 17v4"},
+];
+
+function renderTabs(){
+  const pending = state.requests.filter(r=>r.status==="pending").length;
+  $("#tabRow").innerHTML = TABS.map(t=>{
+    const badge = t.id==="requests" && pending && state.view!=="requests"
+      ? `<span class="tab-badge">${pending}</span>` : "";
+    return `<button data-tab="${t.id}" ${state.view===t.id?'aria-current="page"':""}>
+      ${badge}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${t.icon}"/></svg>${t.label}</button>`;
+  }).join("");
+}
+function renderModes(){
+  $("#modeGroup").innerHTML = MODES.map(m=>
+    `<button data-mode="${m.id}" aria-pressed="${state.mode===m.id}">${m.label}</button>`).join("");
+}
+function render(){
+  renderModes(); renderTabs(); renderDeck();
+  const v=$("#view");
+  if(state.view==="crates") v.innerHTML=viewCrates();
+  else if(state.view==="mix") v.innerHTML=viewMix();
+  else if(state.view==="requests") v.innerHTML=viewRequests();
+  else v.innerHTML=viewEmcee();
+}
+
+/* ---------- crates view ---------- */
+function songRow(s){
+  return `<li><button class="song-row" data-song="${s.id}">
+    <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
+    <span class="song-main">
+      <span class="song-title">${esc(s.title)}</span><br>
+      <span class="song-artist">${esc(s.artist)}</span>
+    </span>
+    <span class="song-data">
+      <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
+      <span class="song-bpmkey">${s.bpm} <span class="k">BPM</span><br>${s.cam} <span class="k">${esc(s.key)}</span></span>
+    </span>
+  </button></li>`;
+}
+function viewCrates(){
+  const q=state.search.trim().toLowerCase();
+  const list=SONGS.filter(s=>!q||s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+  return `
+    <div class="searchbar">
+      <input id="searchInput" type="search" placeholder="Search your crates…" value="${esc(state.search)}" aria-label="Search songs">
+    </div>
+    <h2 class="view-title">Your crates · ${list.length} tracks</h2>
+    <ul class="songs">${list.map(songRow).join("")||`<div class="empty">Nothing matches that search.</div>`}</ul>
+    <p class="footnote">Prototype demo data — BPM, keys and lyric flags are illustrative. The real app would analyze your actual files.</p>`;
+}
+
+/* ---------- song sheet ---------- */
+function openSheet(id){
+  const s=song(id); if(!s) return;
+  closeSheet();
+  const ov=document.createElement("div");
+  ov.className="overlay"; ov.id="sheetOverlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(s.title)} details">
+    <div class="sheet-head">
+      <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
+      <div>
+        <div class="sheet-title">${esc(s.title)}</div>
+        <div class="sheet-sub">${esc(s.artist)} · ${s.dur}</div>
+      </div>
+      <button class="close-x" data-close aria-label="Close">×</button>
+    </div>
+    <div id="sheetBody">
+      <div class="scanline" aria-hidden="true"><i></i></div>
+      <p class="footnote" style="text-align:center">Scanning lyrics, tempo &amp; key…</p>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  scanTimer=setTimeout(()=>fillSheet(s), reduced?0:850);
+}
+function fillSheet(s){
+  const body=$("#sheetBody"); if(!body) return;
+  const v=verdictFor(s,state.mode);
+  const cats={};
+  s.moments.forEach(m=>{ if(m.cat!=="Note") cats[m.cat]=(cats[m.cat]||0)+1; });
+  const catLine=Object.keys(cats).length
+    ? Object.entries(cats).map(([c,n])=>`${c} ×${n}`).join(" · ") : "No flags";
+  body.innerHTML=`
+    <div class="verdict ${v.cls}"><span aria-hidden="true">${v.cls==="clean"?"✓":v.cls==="caution"?"◐":"✕"}</span>
+      <div>${esc(v.head)}<small>${esc(v.sub)}</small></div></div>
+    <div class="statgrid">
+      <div class="stat"><b>${s.bpm}</b><span>BPM</span></div>
+      <div class="stat"><b>${s.cam}</b><span>${esc(s.key)}</span></div>
+      <div class="stat"><b>${s.energy}/10</b><span>Energy</span></div>
+      <div class="stat"><b>${s.dur}</b><span>Length</span></div>
+      <div class="stat"><b>${s.moments.filter(m=>m.cat!=="Note").length}</b><span>Flags</span></div>
+      <div class="stat"><b>${s.clean?"Yes":"—"}</b><span>Clean edit</span></div>
+    </div>
+    <h2 class="view-title" style="margin-top:18px">Flagged moments · ${esc(catLine)}</h2>
+    ${s.moments.length?`<ul class="moments">${s.moments.map(m=>`
+      <li><span class="t num">${m.t}</span><span>${esc(m.label)}</span>
+      <span class="cat pill ${m.sev==="hard"?"explicit":"caution"}">${esc(m.cat)}</span></li>`).join("")}</ul>`
+      :`<div class="empty">Nothing flagged. Full send.</div>`}
+    <div class="sheet-actions">
+      <button class="btn primary" data-load="${s.id}">Load to deck</button>
+      <button class="btn" data-mix="${s.id}">Find mixes</button>
+      ${s.clean?`<button class="btn" data-cleanedit="${s.id}">Use clean edit</button>`:""}
+    </div>`;
+}
+function closeSheet(){
+  clearTimeout(scanTimer);
+  const ov=$("#sheetOverlay"); if(ov) ov.remove();
+}
+
+/* ---------- mix view ---------- */
+function viewMix(){
+  const src=song(state.deckId);
+  if(!src) return `<h2 class="view-title">Mixes well with…</h2>
+    <div class="card empty">Load a track to the deck first — open any song in <b>Crates</b> and hit “Load to deck”.</div>`;
+  const ms=matchesFor(src);
+  return `
+    <h2 class="view-title">On deck</h2>
+    <div class="card mix-source">
+      <span class="art" style="${artStyle(src)}">${initials(src.title)}</span>
+      <div class="song-main">
+        <div class="song-title">${esc(src.title)}</div>
+        <div class="song-artist">${esc(src.artist)}</div>
+      </div>
+      <span class="song-bpmkey num">${src.bpm} <span class="k">BPM</span><br>${src.cam} <span class="k">${esc(src.key)}</span></span>
+    </div>
+    <h2 class="view-title">Mixes well with…</h2>
+    <div class="card">
+      ${ms.length?ms.map(m=>`
+        <div class="match-row">
+          <span class="match-score ${m.score>=75?"hot":"warm"}">${m.score}</span>
+          <span class="art" style="${artStyle(m.s)}">${initials(m.s.title)}</span>
+          <div class="match-main">
+            <div class="song-title">${esc(m.s.title)} <span class="pill ${m.s.rating}" style="vertical-align:2px">${RATING_LABEL[m.s.rating]}</span></div>
+            <div class="match-chips">${m.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join("")}</div>
+          </div>
+          <button class="btn" data-load="${m.s.id}">Load</button>
+        </div>`).join("")
+      :`<div class="empty">No strong matches in the demo crate for this one.</div>`}
+    </div>
+    <p class="footnote">Score = harmonic fit (Camelot wheel) + tempo fit (±BPM, half/double-time). 75+ is a lock.</p>`;
+}
+
+/* ---------- requests view ---------- */
+function viewRequests(){
+  const pending=state.requests.filter(r=>r.status==="pending");
+  const done=state.requests.filter(r=>r.status!=="pending");
+  const strict=state.mode!=="club";
+  return `
+    <div class="req-head">
+      <h2 class="view-title" style="margin:0">Live requests</h2>
+      <button class="switch req-toggle" id="reqToggle" aria-pressed="${state.requestsOpen}">
+        <span class="track"></span>${state.requestsOpen?"Open — guests can send":"Closed"}
+      </button>
+    </div>
+    ${state.queue.length?`
+      <h2 class="view-title">Up next · ${state.queue.length}</h2>
+      <div class="queue-strip">${state.queue.map(id=>{const s=song(id);return `
+        <span class="queue-item"><span class="art" style="${artStyle(s)}">${initials(s.title)}</span>${esc(s.title)}</span>`;}).join("")}
+      </div>`:""}
+    ${pending.length===0&&done.length===0?`<div class="card empty" style="margin-top:12px">No requests yet.${state.requestsOpen?" Guests see a QR code on the booth — new ones will pop in here.":""}</div>`:""}
+    ${pending.map(reqCard).join("")}
+    ${done.length?`<h2 class="view-title">Handled</h2>${done.map(reqCard).join("")}`:""}
+    <p class="footnote">Prototype simulates incoming guest requests every ~15 seconds while this tab is open.</p>`;
+
+  function reqCard(r){
+    const s=song(r.song);
+    const warn = strict && s.rating!=="clean";
+    return `<div class="card req-card">
+      <div class="req-who">
+        <span class="avatar" style="background:hsl(${r.hue} 45% 40%)">${initials(r.name)}</span>
+        <b>${esc(r.name)}</b>${r.tip?`<span class="tip">$${r.tip} tip</span>`:""}
+        <span class="req-time">${esc(r.time)}</span>
+      </div>
+      <div class="req-song">
+        <span class="art" style="${artStyle(s)}">${initials(s.title)}</span>
+        <div class="song-main">
+          <div class="song-title">${esc(s.title)}</div>
+          <div class="song-artist">${esc(s.artist)} · <span class="num">${s.bpm} BPM · ${s.cam}</span></div>
+        </div>
+        <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
+      </div>
+      ${r.note?`<div class="req-note">“${esc(r.note)}”</div>`:""}
+      ${warn?`<div class="req-warn"><span aria-hidden="true">⚠</span><span>${s.rating==="explicit"
+          ?(s.clean?"Dirty version — accept queues the <b>clean edit</b> automatically.":"Explicit with no clean edit — decline or own the consequences.")
+          :"Mild flags for this room — tap the song in Crates to review."}</span></div>`:""}
+      ${r.status==="pending"?`
+        <div class="req-actions">
+          <button class="btn primary" data-accept="${r.id}">Accept${warn&&s.clean?" (clean)":""}</button>
+          <button class="btn" data-decline="${r.id}">Decline</button>
+        </div>`
+      :`<div class="req-done ${r.status==="accepted"?"ok":"no"}">${r.status==="accepted"?"✓ In queue":"Declined"}</div>`}
+    </div>`;
+  }
+}
+function spawnRequest(initial){
+  const pick=REQUEST_POOL[reqCounter%REQUEST_POOL.length];
+  reqCounter++;
+  state.requests.unshift({
+    id:"r"+reqCounter, name:pick.name, song:pick.song, note:pick.note, tip:pick.tip,
+    hue:(reqCounter*137)%360, time:initial?(reqCounter*3)+" min ago":"Just now", status:"pending",
+  });
+  if(!initial){
+    if(state.view==="requests") render(); else renderTabs();
+    toast("New request: "+song(pick.song).title);
+  }
+}
+
+/* ---------- emcee view ---------- */
+function viewEmcee(){
+  return `
+    <div class="event-line">
+      <span class="event-name">Rivera Wedding</span>
+      <span class="chip">Sat · Grand Ballroom · 6:30 PM</span>
+      <button class="chip" id="resetNotes" style="margin-left:auto">Reset demo notes</button>
+    </div>
+    ${state.notes.map((card,ci)=>`
+      <div class="card note-card">
+        <h3><span class="dot" style="background:${card.color}"></span>${esc(card.title)}</h3>
+        <ul class="note-items">
+          ${card.items.map((it,ii)=>`<li><span>${esc(it)}</span>
+            <button class="note-del" data-del="${ci}:${ii}" aria-label="Delete note">×</button></li>`).join("")
+          ||`<li><span class="song-artist">Nothing yet.</span></li>`}
+        </ul>
+        <form class="note-add" data-card="${ci}">
+          <input type="text" placeholder="Add to ${esc(card.title.toLowerCase())}…" aria-label="Add note to ${esc(card.title)}">
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </div>`).join("")}
+    <p class="footnote">Notes save on this device automatically — they'll still be here at the gig.</p>`;
+}
+
+/* ---------- deck ---------- */
+function renderDeck(){
+  const d=$("#deck"), s=song(state.deckId);
+  if(!s){ d.hidden=true; return; }
+  d.hidden=false;
+  $("#deckArt").style.cssText=artStyle(s);
+  $("#deckArt").textContent=initials(s.title);
+  $("#deckTitle").textContent=s.title;
+  $("#deckArtist").textContent=s.artist;
+  $("#deckData").innerHTML=`${s.bpm} BPM<br>${s.cam}`;
+  $("#playBtn").textContent=state.playing?"❚❚":"▶";
+  drawWave(s);
+}
+let waveFrame=null, waveT=0;
+function drawWave(s){
+  cancelAnimationFrame(waveFrame);
+  const cv=$("#wave"), ctx=cv.getContext("2d");
+  let seed=0; for(const ch of s.id) seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const rand=()=>{ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; };
+  const bars=36, heights=[];
+  for(let i=0;i<bars;i++) heights.push(0.25+0.75*rand());
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function frame(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const bw=cv.width/bars, playFrac=(waveT%600)/600;
+    for(let i=0;i<bars;i++){
+      const h=heights[i]*cv.height*0.9;
+      ctx.fillStyle = (i/bars)<playFrac && state.playing ? "#9D7BFF" : "rgba(142,137,160,.45)";
+      ctx.fillRect(i*bw+1,(cv.height-h)/2,bw-2,h);
+    }
+    if(state.playing && !reduced){ waveT++; waveFrame=requestAnimationFrame(frame); }
+  }
+  frame();
+}
+function loadDeck(id, silent){
+  state.deckId=id; state.playing=true;
+  renderDeck();
+  if(!silent) toast("Loaded to deck: "+song(id).title);
+  if(state.view==="mix") render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e=>{
+  const el=e.target.closest("button, form"); if(!el) return;
+  const d=el.dataset||{};
+
+  if(d.tab){ state.view=d.tab; render(); window.scrollTo({top:0}); return; }
+  if(d.mode){ state.mode=d.mode; render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
+  if(el.hasAttribute("data-close")){ closeSheet(); return; }
+  if(d.song){ openSheet(d.song); return; }
+  if(d.load){ closeSheet(); loadDeck(d.load); return; }
+  if(d.mix){ closeSheet(); loadDeck(d.mix,true); state.view="mix"; render(); window.scrollTo({top:0}); return; }
+  if(d.cleanedit){ closeSheet(); loadDeck(d.cleanedit,true); toast("Clean edit loaded: "+song(d.cleanedit).title); return; }
+  if(el.id==="playBtn"){ state.playing=!state.playing; renderDeck(); return; }
+  if(el.id==="reqToggle"){ state.requestsOpen=!state.requestsOpen; render(); return; }
+  if(d.accept){
+    const r=state.requests.find(x=>x.id===d.accept);
+    if(r){ r.status="accepted"; state.queue.push(r.song); toast("Queued: "+song(r.song).title); render(); }
+    return;
+  }
+  if(d.decline){
+    const r=state.requests.find(x=>x.id===d.decline);
+    if(r){ r.status="declined"; render(); }
+    return;
+  }
+  if(el.id==="resetNotes"){
+    state.notes=JSON.parse(JSON.stringify(DEFAULT_NOTES)); saveNotes(); render(); toast("Demo notes restored");
+    return;
+  }
+  if(d.del){
+    const [ci,ii]=d.del.split(":").map(Number);
+    state.notes[ci].items.splice(ii,1); saveNotes(); render();
+    return;
+  }
+});
+document.addEventListener("submit", e=>{
+  const f=e.target.closest("form.note-add"); if(!f) return;
+  e.preventDefault();
+  const input=f.querySelector("input"), val=input.value.trim();
+  if(!val) return;
+  state.notes[Number(f.dataset.card)].items.push(val);
+  saveNotes(); render();
+});
+document.addEventListener("input", e=>{
+  if(e.target.id==="searchInput"){
+    state.search=e.target.value;
+    const q=state.search.trim().toLowerCase();
+    const list=SONGS.filter(s=>!q||s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q));
+    const ul=document.querySelector("ul.songs");
+    const title=document.querySelector("h2.view-title");
+    if(ul){ ul.innerHTML=list.map(songRow).join("")||`<div class="empty">Nothing matches that search.</div>`; }
+    if(title){ title.textContent=`Your crates · ${list.length} tracks`; }
+  }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheet(); });
+document.addEventListener("click", e=>{ if(e.target.id==="sheetOverlay") closeSheet(); });
+
+/* ---------- boot ---------- */
+spawnRequest(true); spawnRequest(true); spawnRequest(true);
+state.requests[0].time="Just now";
+setInterval(()=>{ if(state.requestsOpen && state.requests.filter(r=>r.status==="pending").length<6) spawnRequest(false); },15000);
+loadDeck("september", true);
+state.playing=false;
+render();
+renderDeck();
+</script>
