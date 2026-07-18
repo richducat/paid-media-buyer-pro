@@ -12,15 +12,25 @@
   body{
     margin:0; background:var(--bg); color:var(--ink);
     font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased; min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
   }
+  noscript{display:block; padding:40px 20px; text-align:center; color:var(--muted)}
   button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0}
   button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
   input{font:inherit}
   .num{font-family:var(--mono); font-variant-numeric:tabular-nums}
 
-  /* ---------- shell ---------- */
-  #app{max-width:860px; margin:0 auto; padding:0 16px 148px}
+  /* ---------- shell ----------
+     The whole app lives in #frame with its own internal scroller, so it
+     works identically as a top-level page, inside an embedded artifact
+     viewer frame, or in a side panel — no viewport-fixed positioning. */
+  #frame{
+    position:relative; overflow:hidden; display:flex; flex-direction:column;
+    max-width:860px; margin:0 auto; width:100%;
+    height:100vh; height:100dvh; background:var(--bg);
+  }
+  .framed #frame{height:680px; margin:12px auto; border:1px solid var(--line); border-radius:18px}
+  #scroller{flex:1 1 0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 84px}
   header.top{
     display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     padding:18px 0 14px; border-bottom:1px solid var(--line);
@@ -41,12 +51,12 @@
 
   /* ---------- tab bar ---------- */
   nav.tabs{
-    position:fixed; left:0; right:0; bottom:0; z-index:30;
-    background:rgba(18,17,28,.94); backdrop-filter:blur(10px);
+    flex:none; z-index:30;
+    background:#14131E;
     border-top:1px solid var(--line);
-    padding:8px max(12px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom));
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
   }
-  nav.tabs .row{max-width:860px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+  nav.tabs .row{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
   nav.tabs button{
     display:flex; flex-direction:column; align-items:center; gap:3px;
     padding:7px 4px 6px; border-radius:10px; color:var(--muted); font-size:11.5px; font-weight:600;
@@ -112,11 +122,11 @@
 
   /* ---------- song detail ---------- */
   .overlay{
-    position:fixed; inset:0; z-index:40; background:rgba(7,6,12,.7);
+    position:absolute; inset:0; z-index:40; background:rgba(7,6,12,.7);
     display:flex; align-items:flex-end; justify-content:center;
   }
   .sheet{
-    width:100%; max-width:640px; max-height:88dvh; overflow-y:auto;
+    width:100%; max-width:640px; max-height:88%; overflow-y:auto;
     background:var(--panel); border:1px solid var(--line); border-bottom:0;
     border-radius:20px 20px 0 0; padding:18px 18px calc(20px + env(safe-area-inset-bottom));
   }
@@ -212,11 +222,11 @@
 
   /* ---------- deck ---------- */
   #deck{
-    position:fixed; left:0; right:0; bottom:calc(64px + env(safe-area-inset-bottom)); z-index:29;
+    position:absolute; left:0; right:0; bottom:calc(66px + env(safe-area-inset-bottom,0px)); z-index:29;
     pointer-events:none;
   }
   #deck .inner{
-    max-width:860px; margin:0 auto; padding:0 12px;
+    padding:0 12px;
   }
   #deck .bar{
     pointer-events:auto; display:flex; align-items:center; gap:11px;
@@ -235,8 +245,8 @@
 
   /* ---------- toast ---------- */
   #toast{
-    position:fixed; left:50%; transform:translateX(-50%) translateY(8px);
-    bottom:calc(132px + env(safe-area-inset-bottom)); z-index:50;
+    position:absolute; left:50%; transform:translateX(-50%) translateY(8px);
+    bottom:calc(132px + env(safe-area-inset-bottom,0px)); z-index:50;
     background:var(--ink); color:var(--bg); font-size:13px; font-weight:700;
     padding:9px 16px; border-radius:99px; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none;
     max-width:88vw; text-align:center;
@@ -253,6 +263,10 @@
   }
 </style>
 
+<noscript>CrateCheck needs JavaScript — this preview window has it turned off. Open the file in Safari or Chrome instead.</noscript>
+
+<div id="frame">
+<div id="scroller">
 <div id="app">
   <header class="top">
     <div class="brand">
@@ -262,6 +276,7 @@
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
   </header>
   <main id="view"></main>
+</div>
 </div>
 
 <div id="deck" hidden>
@@ -282,9 +297,13 @@
 </nav>
 
 <div id="toast" role="status" aria-live="polite"></div>
+</div>
 
 <script>
 "use strict";
+/* Embedded viewers (artifact frame, side panels) get a fixed-height app
+   card instead of viewport-height layout, which they can't provide. */
+if (window !== window.top) document.documentElement.classList.add("framed");
 /* ============================================================
    CrateCheck — live prototype. All song data below is DEMO data:
    BPM, keys and lyric flags are illustrative, not authoritative.
@@ -560,7 +579,7 @@ function openSheet(id){
       <p class="footnote" style="text-align:center">Scanning lyrics, tempo &amp; key…</p>
     </div>
   </div>`;
-  document.body.appendChild(ov);
+  $("#frame").appendChild(ov);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   scanTimer=setTimeout(()=>fillSheet(s), reduced?0:850);
 }
@@ -766,12 +785,12 @@ document.addEventListener("click", e=>{
   const el=e.target.closest("button, form"); if(!el) return;
   const d=el.dataset||{};
 
-  if(d.tab){ state.view=d.tab; render(); window.scrollTo({top:0}); return; }
+  if(d.tab){ state.view=d.tab; render(); $("#scroller").scrollTo({top:0}); return; }
   if(d.mode){ state.mode=d.mode; render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
   if(el.hasAttribute("data-close")){ closeSheet(); return; }
   if(d.song){ openSheet(d.song); return; }
   if(d.load){ closeSheet(); loadDeck(d.load); return; }
-  if(d.mix){ closeSheet(); loadDeck(d.mix,true); state.view="mix"; render(); window.scrollTo({top:0}); return; }
+  if(d.mix){ closeSheet(); loadDeck(d.mix,true); state.view="mix"; render(); $("#scroller").scrollTo({top:0}); return; }
   if(d.cleanedit){ closeSheet(); loadDeck(d.cleanedit,true); toast("Clean edit loaded: "+song(d.cleanedit).title); return; }
   if(el.id==="playBtn"){ state.playing=!state.playing; renderDeck(); return; }
   if(el.id==="reqToggle"){ state.requestsOpen=!state.requestsOpen; render(); return; }
