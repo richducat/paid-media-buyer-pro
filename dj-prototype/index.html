@@ -2,10 +2,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
   :root{
-    --bg:#0C0B13; --panel:#161522; --panel-2:#1D1B2C; --line:#262438;
-    --ink:#F1EEE6; --muted:#8E89A0; --accent:#9D7BFF; --accent-ink:#14101F;
+    --bg:#060B11; --panel:#0C141D; --panel-2:#111C27; --line:#1C2C3B;
+    --ink:#F1EEE6; --muted:#8E89A0; --accent:#2DD9F0; --accent-ink:#03222B;
     --clean:#3DDC97; --caution:#FFB454; --explicit:#FF5468;
-    --deckA:#9D7BFF; --deckB:#41D6C3;
+    --deckA:#3EC7FF; --deckB:#3DF59E;
     --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
     color-scheme:dark;
   }
@@ -41,7 +41,9 @@
     padding:14px 0 10px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:linear-gradient(var(--bg) 82%,transparent); z-index:20;
   }
-  .brand{display:flex; flex-direction:column; gap:2px; margin-right:auto}
+  .brand{display:flex; align-items:center; gap:11px; margin-right:auto}
+  .brand-txt{display:flex; flex-direction:column; gap:2px}
+  .logomark{width:36px; height:36px; flex:none; filter:drop-shadow(0 0 7px rgba(62,199,255,.45))}
   .wordmark{font-weight:800; font-size:19px; letter-spacing:.06em; text-transform:uppercase; line-height:1}
   .wordmark em{font-style:normal; color:var(--accent)}
   .tagline{font-size:11.5px; color:var(--muted); letter-spacing:.02em}
@@ -56,10 +58,10 @@
   #firstHint{
     display:flex; gap:12px; align-items:center; justify-content:space-between;
     margin-top:12px; padding:10px 14px; border-radius:11px; font-size:13px;
-    background:rgba(157,123,255,.1); border:1px solid rgba(157,123,255,.35);
+    background:rgba(62,199,255,.1); border:1px solid rgba(62,199,255,.35);
   }
   #firstHint[hidden]{display:none}
-  #firstHint button{font-weight:700; color:var(--accent); flex:none; padding:4px 10px; border:1px solid rgba(157,123,255,.4); border-radius:7px}
+  #firstHint button{font-weight:700; color:var(--accent); flex:none; padding:4px 10px; border:1px solid rgba(62,199,255,.4); border-radius:7px}
 
   /* ---------- tab bar ---------- */
   nav.tabs{
@@ -97,7 +99,7 @@
     border:1px solid var(--line); border-radius:6px; padding:2px 8px;
   }
   .chip.good{color:var(--clean); border-color:rgba(61,220,151,.35)}
-  .chip.accent{color:var(--accent); border-color:rgba(157,123,255,.4)}
+  .chip.accent{color:var(--accent); border-color:rgba(62,199,255,.4)}
   .btn{
     display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
     padding:8px 14px; border-radius:9px; border:1px solid var(--line); background:var(--panel-2);
@@ -570,52 +572,67 @@
 
   /* ============ v1.0 premium polish layer ============ */
   #frame{background:
-    radial-gradient(1000px 520px at 10% -6%, rgba(157,123,255,.09), transparent 62%),
-    radial-gradient(900px 500px at 96% 6%, rgba(65,214,195,.055), transparent 60%),
-    radial-gradient(700px 700px at 50% 115%, rgba(157,123,255,.05), transparent 65%),
+    radial-gradient(1000px 520px at 10% -6%, rgba(62,199,255,.09), transparent 62%),
+    radial-gradient(900px 500px at 96% 6%, rgba(61,245,158,.055), transparent 60%),
+    radial-gradient(700px 700px at 50% 115%, rgba(62,199,255,.05), transparent 65%),
     #0C0B13}
-  header.top{background:linear-gradient(rgba(13,12,21,.97) 78%, transparent)}
+  header.top{background:linear-gradient(rgba(6,11,17,.97) 78%, transparent)}
   .wordmark{font-size:21px; letter-spacing:.09em;
-    background:linear-gradient(94deg,#F5F2EA 25%,#C3B1FF 68%,#5FE0CC);
+    background:linear-gradient(94deg,#EAF6F1 22%,#63D8FF 60%,#3DF59E);
     -webkit-background-clip:text; background-clip:text; color:transparent}
   .wordmark em{color:transparent}
   .tagline{letter-spacing:.04em}
 
   .card,.deck,.mixer{
-    background:linear-gradient(180deg,#1B1A29 0%,#151422 55%,#131220 100%);
-    border-color:rgba(255,255,255,.075);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.38);
+    background:linear-gradient(180deg,#0F1922 0%,#0B141D 55%,#0A121A 100%) padding-box, linear-gradient(155deg, rgba(62,199,255,.45), rgba(28,44,59,.18) 42%, rgba(61,245,158,.38)) border-box;
+    border-color:transparent;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.42), 0 0 14px rgba(62,199,255,.05);
   }
-  .chstrip{background:linear-gradient(180deg,#211F31,#1A1929); box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
+  .deck,.mixer{position:relative}
+  /* thin LED corner brackets */
+  .deck::after,.mixer::after{
+    content:""; position:absolute; inset:5px; border-radius:10px; pointer-events:none; z-index:1;
+    --led:var(--dk,var(--accent));
+    background-image:
+      linear-gradient(var(--led),var(--led)),linear-gradient(var(--led),var(--led)),
+      linear-gradient(var(--led),var(--led)),linear-gradient(var(--led),var(--led)),
+      linear-gradient(var(--led),var(--led)),linear-gradient(var(--led),var(--led)),
+      linear-gradient(var(--led),var(--led)),linear-gradient(var(--led),var(--led));
+    background-repeat:no-repeat;
+    background-size:16px 1.5px,16px 1.5px,16px 1.5px,16px 1.5px,1.5px 16px,1.5px 16px,1.5px 16px,1.5px 16px;
+    background-position:top left,top right,bottom left,bottom right,top left,top right,bottom left,bottom right;
+    opacity:.75; filter:drop-shadow(0 0 4px var(--led));
+  }
+  .chstrip{background:linear-gradient(180deg,#14212C,#0F1A24); box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
   .wave-main,.wave-over{box-shadow:inset 0 0 0 1px rgba(255,255,255,.045), inset 0 3px 10px rgba(0,0,0,.55)}
   .deck-tag{background:linear-gradient(155deg, color-mix(in srgb, var(--dk), #fff 28%), var(--dk) 60%, color-mix(in srgb, var(--dk), #000 20%));
     box-shadow:0 2px 9px color-mix(in srgb, var(--dk), transparent 55%), inset 0 1px 1px rgba(255,255,255,.35)}
 
-  .btn,.dbtn,.hc,.pad,.qbtn,.pfl{background:linear-gradient(180deg,#242236,#1B1A28)}
+  .btn,.dbtn,.hc,.pad,.qbtn,.pfl{background:linear-gradient(180deg,#152330,#0F1A24)}
   .btn,.dbtn,.hc,.pad,.modes button,.sorts button,.cratechips button,nav.tabs button,.qbtn,.pfl,.songopt{
     transition:background .16s,border-color .16s,color .16s,transform .07s,box-shadow .16s}
   .btn:hover,.dbtn:hover:not(:disabled),.hc:hover:not(:disabled),.pad:hover{
-    border-color:rgba(157,123,255,.55); box-shadow:0 3px 12px rgba(0,0,0,.35)}
+    border-color:rgba(62,199,255,.55); box-shadow:0 3px 12px rgba(0,0,0,.35)}
   .btn:active,.dbtn:active:not(:disabled),.hc:active:not(:disabled),.pad:active,.qbtn:active{transform:translateY(1px)}
-  .btn.primary{background:linear-gradient(180deg,#B394FF,#9D7BFF 70%,#8B66F5);
-    box-shadow:0 3px 14px rgba(157,123,255,.4), inset 0 1px 0 rgba(255,255,255,.3)}
+  .btn.primary{background:linear-gradient(180deg,#63D8FF,#2DB9F0 70%,#17A3E8);
+    box-shadow:0 3px 14px rgba(62,199,255,.4), inset 0 1px 0 rgba(255,255,255,.3)}
   .modes{box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
-  .modes button[aria-pressed="true"]{background:linear-gradient(180deg,#B394FF,#9D7BFF);
-    box-shadow:0 2px 10px rgba(157,123,255,.45)}
+  .modes button[aria-pressed="true"]{background:linear-gradient(180deg,#63D8FF,#2DB9F0);
+    box-shadow:0 2px 10px rgba(62,199,255,.45)}
   .sorts button[aria-pressed="true"],.cratechips button[aria-pressed="true"]:not(.cleanonly){
-    background:linear-gradient(180deg,#B394FF,#9D7BFF); box-shadow:0 2px 8px rgba(157,123,255,.35)}
+    background:linear-gradient(180deg,#63D8FF,#2DB9F0); box-shadow:0 2px 8px rgba(62,199,255,.35)}
 
-  nav.tabs{background:#100F19; border-top:1px solid rgba(255,255,255,.06)}
+  nav.tabs{background:#0A1219; border-top:1px solid rgba(255,255,255,.06)}
   nav.tabs button[aria-current="page"]{
-    background:linear-gradient(180deg,#282542,#1D1B2C);
+    background:linear-gradient(180deg,#16303F,#101C28);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 4px 14px rgba(0,0,0,.3)}
 
   .librow,.song-row{transition:border-color .15s, background .15s}
   .librow:hover,.song-row:hover{background:linear-gradient(180deg,#201E30,#181725)}
-  .matchb.hot{box-shadow:0 0 12px rgba(157,123,255,.3)}
+  .matchb.hot{box-shadow:0 0 12px rgba(62,199,255,.3)}
   .searchbar input,.livelib-head input{transition:border-color .15s, box-shadow .15s}
   .searchbar input:focus,.livelib-head input:focus,.note-add input:focus,.evfield:focus,.light-conn input:focus{
-    border-color:rgba(157,123,255,.6); box-shadow:0 0 0 3px rgba(157,123,255,.16); outline:none}
+    border-color:rgba(62,199,255,.6); box-shadow:0 0 0 3px rgba(62,199,255,.16); outline:none}
   #toast{box-shadow:0 6px 24px rgba(0,0,0,.5)}
   .alertbar{box-shadow:0 6px 18px rgba(0,0,0,.3)}
   .guest-link .qr{box-shadow:0 4px 16px rgba(0,0,0,.4)}
@@ -653,8 +670,17 @@
 <div id="app">
   <header class="top">
     <div class="brand">
-      <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v1.0 preview</div>
+      <svg class="logomark" viewBox="0 0 40 40" aria-hidden="true">
+        <defs><linearGradient id="saltlg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3EC7FF"/><stop offset="1" stop-color="#3DF59E"/>
+        </linearGradient></defs>
+        <path d="M20 3 34 11v18L20 37 6 29V11Z" fill="none" stroke="url(#saltlg)" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M25.4 14.6c-1.3-1.5-3.2-2.2-5.3-2.2-2.9 0-5.2 1.4-5.2 3.7 0 4.8 10.6 2.5 10.6 7.3 0 2.5-2.5 4-5.6 4-2.3 0-4.4-.8-5.8-2.4" fill="none" stroke="url(#saltlg)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-txt">
+        <div class="wordmark">Salt<em>.</em></div>
+        <div class="tagline">Know every track before it drops. · v1.1 preview</div>
+      </div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -1492,7 +1518,7 @@ function waveFor(s){
   }
   s._wave=arr; return arr;
 }
-const DECK_RGB = {A:"157,123,255", B:"65,214,195"};
+const DECK_RGB = {A:"62,199,255", B:"61,245,158"};
 
 /* auto section (phrase) detection from the energy envelope — Rekordbox-style
    Intro/Verse/Chorus/Drop/Break/Outro markers, works on demo + imported audio */
