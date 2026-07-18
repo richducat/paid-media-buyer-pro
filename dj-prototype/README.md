@@ -10,7 +10,9 @@ A booth tool for working DJs: know every track before it drops.
 - **Live performance screen** — dual decks with spinning, scratchable platters
   (33⅓ RPM, drag to scrub), frequency-layered scrolling waveforms with beat
   grid, seekable track overview, hot cues, 4/8/16-beat loops, beat jump,
-  keylock, pitch faders, per-deck SYNC, crossfader with VU meters.
+  keylock, pitch faders, per-deck SYNC, ECHO/FILT effects, crossfader with
+  VU meters, and a synthesized preview beat (Web Audio) that follows each
+  deck's BPM and key with volume riding the crossfader.
 - **Explicit radar** — flagged lyric moments render as red/amber zones on the
   waveforms; a countdown warning bar fires when a flag is under 15 seconds
   out; CLEAN swaps a deck to the clean edit. Wedding / Corporate / Club event
@@ -27,7 +29,7 @@ A booth tool for working DJs: know every track before it drops.
   then best match), and one-tap smartest-next-track (key/BPM match,
   room-safe, not already played).
 - **Emcee suite** — pronunciations, timeline (first item pinned to the Live
-  screen), shoutouts, do-not-play list, and an automatic set log.
+  screen), shoutouts, do-not-play list, and an automatic set log with one-tap export.
 
 ## Architecture
 

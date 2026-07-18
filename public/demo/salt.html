@@ -37,7 +37,14 @@
     height:100vh; height:100dvh; background:var(--bg);
   }
   .framed #frame{height:740px; margin:12px auto; border:1px solid var(--line); border-radius:18px}
-  #scroller{flex:1 1 0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 20px}
+  #scroller{
+    flex:1 1 0; min-height:0; overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch; padding:0 16px 20px;
+    scrollbar-width:thin; scrollbar-color:#2E2C3E transparent;
+  }
+  #scroller::-webkit-scrollbar{width:8px; height:8px}
+  #scroller::-webkit-scrollbar-thumb{background:#2E2C3E; border-radius:4px}
+  #scroller::-webkit-scrollbar-track{background:transparent}
   header.top{
     display:flex; align-items:center; gap:12px; flex-wrap:wrap;
     padding:14px 0 10px; border-bottom:1px solid var(--line);
@@ -136,6 +143,10 @@
   .jog-disc{
     position:absolute; inset:8px; border-radius:50%; will-change:transform;
     background:
+      radial-gradient(circle at center, transparent 0 39%, rgba(255,255,255,.055) 39.5% 41.5%, transparent 42.2%),
+      radial-gradient(circle at center, transparent 0 55%, rgba(0,0,0,.5) 55.2% 55.9%, transparent 56.4%),
+      radial-gradient(circle at center, transparent 0 66%, rgba(0,0,0,.5) 66.2% 66.9%, transparent 67.4%),
+      radial-gradient(circle at center, transparent 0 78%, rgba(0,0,0,.5) 78.2% 78.9%, transparent 79.4%),
       repeating-radial-gradient(circle at center, rgba(255,255,255,.045) 0 1px, transparent 1px 3px),
       radial-gradient(circle at center, #1C1B29 0 26%, #131220 27% 62%, #0B0A13 88%, #060510 100%);
     box-shadow:
@@ -158,22 +169,24 @@
   .jog-dot{
     position:absolute; left:50%; top:8.5%; width:12px; height:12px; margin-left:-6px; border-radius:50%;
     background:var(--dk); border:2px solid rgba(255,255,255,.85);
-    box-shadow:0 1px 3px rgba(0,0,0,.6);
+    box-shadow:0 1px 3px rgba(0,0,0,.6), inset 1px 1px 1.5px rgba(255,255,255,.55);
   }
   .jog-label{
     position:absolute; inset:0; margin:auto; width:38%; height:38%; border-radius:50%;
-    display:grid; place-items:center; align-content:center; text-align:center; gap:1px;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    padding:15% 0 13%; box-sizing:border-box; text-align:center;
     font-family:var(--mono); font-size:15px; font-weight:800; line-height:1;
     color:rgba(255,255,255,.92);
     box-shadow:
       inset 0 0 0 2px rgba(0,0,0,.35), inset 0 0 0 5px rgba(255,255,255,.08),
       inset 0 1px 4px rgba(255,255,255,.22), 0 0 0 2px rgba(0,0,0,.55), 0 0 12px rgba(0,0,0,.5);
   }
-  .jog-label small{font-size:7.5px; letter-spacing:.12em; font-weight:700; color:rgba(255,255,255,.72)}
+  .jog-label small{font-size:7.5px; letter-spacing:.1em; font-weight:700; color:rgba(255,255,255,.72)}
+  /* spindle: flat-capped shaft sitting in a punched hole */
   .jog-label::after{
-    content:""; position:absolute; width:10px; height:10px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #EAE8F2, #8B8898 45%, #2E2D3A 90%);
-    box-shadow:0 0 0 2px rgba(0,0,0,.55);
+    content:""; position:absolute; top:50%; left:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%;
+    background:radial-gradient(circle at 40% 32%, #DDDBE8 0 28%, #77758A 62%, #34333F 95%);
+    box-shadow:0 0 0 3px #0A0912, 0 0 0 4px rgba(255,255,255,.07), inset 0 -1px 2px rgba(0,0,0,.5);
   }
   /* fixed sheen — the light stays put while the record spins beneath it */
   .jog::after{
@@ -182,26 +195,37 @@
       transparent 0deg, rgba(255,255,255,.09) 26deg, transparent 60deg,
       transparent 178deg, rgba(255,255,255,.055) 206deg, transparent 242deg);
   }
-  /* tonearm — parks off the record when empty, tracks inward as the song plays */
+  /* tonearm — parks off the record, rests near the edge when loaded,
+     drops onto the groove and tracks inward while playing */
   .jog-arm{
-    position:absolute; top:-6px; right:-8px; width:34px; height:118px; pointer-events:none;
-    transform-origin:17px 17px; z-index:2; transition:transform .4s ease;
+    position:absolute; top:-6px; right:-8px; width:36px; height:120px; pointer-events:none;
+    transform-origin:18px 18px; z-index:2; transition:transform .35s ease;
   }
   .jog-arm::before{
-    content:""; position:absolute; top:0; right:2px; width:32px; height:32px; border-radius:50%;
+    content:""; position:absolute; top:1px; right:3px; width:32px; height:32px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #4C4B5A, #23222E 62%, #121118);
     box-shadow:0 3px 8px rgba(0,0,0,.6), inset 0 1px 2px rgba(255,255,255,.22);
   }
+  .jog-arm::after{
+    content:""; position:absolute; top:-4px; right:13px; width:15px; height:12px; border-radius:3px;
+    background:linear-gradient(180deg,#5C5B72,#2B2A38);
+    box-shadow:0 2px 4px rgba(0,0,0,.55);
+  }
   .jog-arm i{
-    position:absolute; top:28px; left:50%; width:5px; height:64px; margin-left:-2.5px; border-radius:3px;
+    position:absolute; top:29px; left:50%; width:5px; height:66px; margin-left:-2.5px; border-radius:3px;
     background:linear-gradient(90deg,#55546A,#918FA4 45%,#3C3B4A);
     box-shadow:0 2px 5px rgba(0,0,0,.55);
+    transform:rotate(7deg); transform-origin:top center;
   }
-  .jog-arm::after{
-    content:""; position:absolute; top:90px; left:50%; width:11px; height:24px; margin-left:-5.5px;
-    border-radius:3px 3px 6px 6px;
+  .jog-arm i::before{
+    content:""; position:absolute; bottom:-21px; left:-4px; width:13px; height:24px;
+    border-radius:3px 3px 6px 6px; transform:rotate(9deg);
     background:linear-gradient(90deg,#2E2D3A,#4E4D5E 50%,#232230);
     box-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  .jog-arm i::after{
+    content:""; position:absolute; bottom:-24px; left:1px; width:3px; height:6px;
+    background:#C9C7D6; border-radius:1px; transform:rotate(9deg);
   }
   @media (prefers-reduced-motion:reduce){ .jog-arm{transition:none} }
   .wave-col{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
@@ -222,14 +246,14 @@
   .pitch{display:flex; align-items:center; gap:7px; flex:1; min-width:120px}
   .pitch input{flex:1; accent-color:var(--dk); min-width:70px}
   .pitch span{font-size:11px; color:var(--muted); width:52px; text-align:right}
-  .hotcues{display:flex; gap:6px; align-items:center}
+  .hotcues{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
   .hc{
     height:26px; min-width:40px; padding:0 8px; border-radius:6px; border:1px dashed var(--line);
-    font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--muted);
+    font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--muted); white-space:nowrap;
   }
-  .hc.set{border-style:solid; border-color:var(--dk); color:var(--dk)}
+  .hc.set, .hc[aria-pressed="true"]{border-style:solid; border-color:var(--dk); color:var(--dk)}
   .hc:disabled{opacity:.35; cursor:default}
-  .hc-lab{font-size:9px; letter-spacing:.12em; color:var(--muted); margin-left:auto}
+  .hc-lab{font-size:9px; letter-spacing:.12em; color:var(--muted); margin-left:auto; white-space:nowrap}
 
   /* ---------- LIVE: mixer ---------- */
   .mixer{
@@ -246,9 +270,10 @@
   .xfade-lab{display:flex; justify-content:space-between; width:100%; font-family:var(--mono); font-size:10px; color:var(--muted)}
   .onair{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-align:center}
   .onair b{color:var(--ink)}
-  .mixer .dbtn{width:100%; height:30px; font-size:10px}
+  .mixer .dbtn{width:100%; height:30px; font-size:10px; white-space:nowrap; padding:0 6px}
   .dbtn.amx[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
   .dbtn.klk[aria-pressed="true"]{color:var(--dk); border-color:var(--dk)}
+  .dbtn.snd[aria-pressed="true"]{background:var(--clean); border-color:var(--clean); color:var(--accent-ink)}
 
   /* ---------- LIVE: alert + status ---------- */
   .alertbar{
@@ -458,9 +483,22 @@
     .vu{width:9px}
     .xfade-wrap{flex:1}
     .onair{flex:none}
-    .mixer .dbtn{width:auto; flex:1}
-    .jog{width:86px; height:86px}
-    .jog-label{width:36px; height:36px; font-size:10px}
+    .mixer{row-gap:8px}
+    .mixer .dbtn{width:auto; flex:1 1 auto}
+    .xfade-wrap{flex:1 1 100%; order:5}
+    .xfade-wrap input{height:30px}
+    .jog{width:140px; height:140px}
+    .jog-disc{inset:6px}
+    .jog::after{inset:6px}
+    .jog-label{font-size:11px}
+    .jog-label small{font-size:6.5px}
+    .jog-dot{width:9px; height:9px; margin-left:-4.5px}
+    .jog-arm{width:26px; height:88px; transform-origin:13px 13px; top:-4px; right:-5px}
+    .jog-arm::before{width:24px; height:24px; right:1px}
+    .jog-arm::after{top:-3px; right:9px; width:11px; height:9px}
+    .jog-arm i{top:22px; height:48px; width:4px; margin-left:-2px}
+    .jog-arm i::before{bottom:-16px; left:-3px; width:10px; height:18px}
+    .jog-arm i::after{bottom:-18px; left:0; width:2px; height:5px}
     .wave-main{height:74px}
   }
   @media (min-width:700px){
@@ -481,7 +519,7 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.3 preview</div>
+      <div class="tagline">Know every track before it drops. · v0.4 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -625,10 +663,10 @@ const DEFAULT_NOTES = [
 ];
 
 /* ---------- state ---------- */
-function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false, cues:[null,null,null], loop:null, keylock:true, logged:false}; }
+function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false, cues:[null,null,null], loop:null, keylock:true, fx:{echo:false, filt:false}, logged:false}; }
 const state = {
-  mode:"wedding", view:"live", search:"", libSort:"match", crate:"all", cleanOnly:false, mixSrc:null,
-  decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false,
+  mode:"wedding", view:"live", search:"", libSort:"match", crate:"all", cleanOnly:false, compatOnly:false, mixSrc:null,
+  decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false, soundOn:false,
   requestsOpen:true, requests:[], queue:[], played:[], notes:loadNotes(),
 };
 let reqCounter = 0;
@@ -657,6 +695,7 @@ function loadSession(){
     if(["match","bpm","az"].includes(p.libSort)) state.libSort=p.libSort;
     if(GENRES.some(g=>g[0]===p.crate)) state.crate=p.crate;
     state.cleanOnly=!!p.cleanOnly;
+    state.compatOnly=!!p.compatOnly;
     state.automix=!!p.automix;
   }catch(e){}
 }
@@ -664,7 +703,7 @@ function saveSession(){
   try{
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       mode:state.mode, queue:state.queue, played:state.played,
-      libSort:state.libSort, crate:state.crate, cleanOnly:state.cleanOnly, automix:state.automix,
+      libSort:state.libSort, crate:state.crate, cleanOnly:state.cleanOnly, compatOnly:state.compatOnly, automix:state.automix,
     }));
   }catch(e){}
 }
@@ -675,6 +714,9 @@ const song = id => SONGS.find(s=>s.id===id);
 const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const initials = t => t.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 const artStyle = s => `background:linear-gradient(135deg,hsl(${s.hue} 45% 38%),hsl(${(s.hue+40)%360} 55% 22%))`;
+/* rotation-invariant version for the spinning record label, so its
+   lighting doesn't appear to swing around as the vinyl turns */
+const artStyleRadial = s => `background:radial-gradient(circle at 50% 42%,hsl(${s.hue} 50% 44%),hsl(${(s.hue+40)%360} 55% 24%) 75%)`;
 const sec = t => { const m=/^(\d+):(\d{2})$/.exec(t); return m ? (+m[1])*60+(+m[2]) : NaN; };
 const fmt = s => { s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
 const strictMode = () => state.mode!=="club";
@@ -746,10 +788,13 @@ function matchesFor(src){
 }
 function filterSongs(){
   const q=state.search.trim().toLowerCase();
+  const oa=onAir();
+  const src=(state.compatOnly && oa) ? song(state.decks[oa].songId) : null;
   return SONGS.filter(s=>
     (!q || s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q)) &&
     (state.crate==="all" || s.genre===state.crate) &&
-    (!state.cleanOnly || s.rating==="clean" || s.clean));
+    (!state.cleanOnly || s.rating==="clean" || s.clean) &&
+    (!src || s.id===src.id || scoreFor(src,s)>=50));
 }
 
 /* ---------- deck engine ---------- */
@@ -770,6 +815,7 @@ function loadToDeck(dk, id, opts){
   const wantClean = opts && "clean" in opts ? opts.clean
     : (strictMode() && s.rating!=="clean" && s.clean);
   state.decks[dk] = Object.assign(deckInit(), {songId:id, clean:!!wantClean && s.clean});
+  applyFx(dk);   // fresh track: reset echo/filter on the audio chain too
   toast(`Deck ${dk}: ${s.title}${state.decks[dk].clean?" (clean edit)":""}`);
   render();
 }
@@ -855,6 +901,94 @@ function addPlayed(id){
   state.played.push({id, at:new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})});
   state.played=state.played.slice(-60);
   saveSession();
+}
+
+/* ---------- preview sound engine ----------
+   Synthesized placeholder beat (kick/hat/bass/stab) that follows each
+   deck's effective BPM and musical key — NOT the real recordings. */
+const NOTE_FREQ={"C":65.41,"C♯":69.30,"D♭":69.30,"D":73.42,"D♯":77.78,"E♭":77.78,"E":82.41,"F":87.31,"F♯":92.50,"G♭":92.50,"G":98.00,"G♯":103.83,"A♭":103.83,"A":110.00,"A♯":116.54,"B♭":116.54,"B":123.47};
+function rootFreq(s){ const m=/^([A-G][♯♭]?)/.exec(s.key); return (m&&NOTE_FREQ[m[1]])||110; }
+const audio={ctx:null, master:null, decks:{}};
+function ensureAudio(){
+  if(audio.ctx) return true;
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C) return false;
+  try{
+    audio.ctx=new C();
+    audio.master=audio.ctx.createGain();
+    audio.master.gain.value=0;
+    audio.master.connect(audio.ctx.destination);
+    for(const dk of ["A","B"]){
+      const ctx=audio.ctx;
+      const gain=ctx.createGain(); gain.gain.value=0;
+      const filter=ctx.createBiquadFilter(); filter.type="lowpass"; filter.frequency.value=18000; filter.Q.value=0.8;
+      const delay=ctx.createDelay(1.5), fb=ctx.createGain(); fb.gain.value=0;
+      filter.connect(gain);
+      filter.connect(delay); delay.connect(fb); fb.connect(delay); fb.connect(gain);
+      gain.connect(audio.master);
+      audio.decks[dk]={gain, filter, delay, fb, next:0, beat:0};
+    }
+  }catch(e){ audio.ctx=null; return false; }
+  return true;
+}
+function sKick(a,t){ const ctx=audio.ctx, o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="sine"; o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(45,t+0.11);
+  g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.24);
+  o.connect(g); g.connect(a.filter); o.start(t); o.stop(t+0.26); }
+function sHat(a,t){ const ctx=audio.ctx, len=0.06,
+  buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*len),ctx.sampleRate), ch=buf.getChannelData(0);
+  for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/ch.length,2);
+  const src=ctx.createBufferSource(); src.buffer=buf;
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=7000;
+  const g=ctx.createGain(); g.gain.value=0.22;
+  src.connect(hp); hp.connect(g); g.connect(a.filter); src.start(t); }
+function sBass(a,t,f,len){ const ctx=audio.ctx, o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="triangle"; o.frequency.value=f;
+  g.gain.setValueAtTime(0.001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.02); g.gain.exponentialRampToValueAtTime(0.001,t+len);
+  o.connect(g); g.connect(a.filter); o.start(t); o.stop(t+len+0.05); }
+function sStab(a,t,f,minor){ const ctx=audio.ctx;
+  [f, f*(minor?1.189:1.26), f*1.498].forEach(fr=>{ const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type="sawtooth"; o.frequency.value=fr;
+    g.gain.setValueAtTime(0.055,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    o.connect(g); g.connect(a.filter); o.start(t); o.stop(t+0.32); }); }
+function scheduleDeck(dk){
+  const a=audio.decks[dk], d=state.decks[dk], s=song(d.songId), ctx=audio.ctx;
+  if(!a) return;
+  if(!s||!d.playing){ a.next=0; return; }
+  const spb=60/effBpm(dk), now=ctx.currentTime;
+  if(!a.next || a.next<now-0.1){ a.next=now+0.06; a.beat=Math.round(d.pos/(60/s.bpm)); }
+  const root=rootFreq(s), minor=s.cam.endsWith("A");
+  while(a.next<now+0.18){
+    const t=a.next, b=a.beat;
+    sKick(a,t);
+    sHat(a,t+spb/2);
+    sBass(a,t,root,spb*0.45);
+    if(b%2===1) sBass(a,t+spb/2, root*(minor?1.189:1.26), spb*0.3);
+    if(b%8===4) sStab(a,t, root*2, minor);
+    a.next+=spb; a.beat++;
+  }
+  a.delay.delayTime.value=Math.min(1.4, spb*0.75);
+}
+function applyFx(dk){
+  if(!audio.ctx) return;
+  const a=audio.decks[dk], d=state.decks[dk], t=audio.ctx.currentTime;
+  if(!a) return;
+  a.fb.gain.setTargetAtTime(d.fx.echo?0.42:0, t, 0.05);
+  a.filter.frequency.setTargetAtTime(d.fx.filt?650:18000, t, 0.08);
+}
+function toggleSound(){
+  if(!state.soundOn){
+    if(!ensureAudio()){ toast("Audio isn't supported in this viewer"); return; }
+    if(audio.ctx.state==="suspended") audio.ctx.resume();
+    state.soundOn=true;
+    applyFx("A"); applyFx("B");
+    toast("Preview beat on — synthesized placeholder, not the real songs");
+  } else {
+    state.soundOn=false;
+    toast("Sound off");
+  }
+  if(audio.master) audio.master.gain.setTargetAtTime(state.soundOn?0.85:0, audio.ctx.currentTime, 0.05);
+  render();
 }
 
 /* seeded per-song waveform: [low, mid, high] per quarter-second */
@@ -978,14 +1112,18 @@ function updateDynamic(dk){
   const ja=$("#jogarm-"+dk);
   if(!s){
     pos.textContent="0:00"; rem.textContent="-0:00"; flag.textContent="";
-    if(ja) ja.style.transform="rotate(20deg)";       // parked off the platter
+    if(ja) ja.style.transform="rotate(24deg)";       // parked on the arm rest
     return;
   }
   pos.textContent=fmt(d.pos);
   rem.textContent="-"+fmt(sec(s.dur)-d.pos);
   const jd=$("#jogdisc-"+dk);
   if(jd) jd.style.transform="rotate("+((d.pos/1.8*360)%360).toFixed(1)+"deg)";  // 33⅓ RPM
-  if(ja) ja.style.transform="rotate("+(0-(d.pos/sec(s.dur))*14).toFixed(2)+"deg)";  // needle tracks inward
+  if(ja){
+    // paused: hovering at the record edge; playing: needle down, tracking inward
+    const arm = d.playing ? 2-(d.pos/sec(s.dur))*15 : 15;
+    ja.style.transform="rotate("+arm.toFixed(2)+"deg)";
+  }
   let next=null;
   if(strictMode() && !d.clean){
     for(const m of s.moments){
@@ -1019,12 +1157,16 @@ function updateAlert(){
 }
 function updateVU(){
   for(const dk of ["A","B"]){
-    const el=$("#vu-"+dk); if(!el) continue;
     const d=state.decks[dk], s=song(d.songId);
+    const weight = dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50);
+    if(audio.ctx && audio.decks[dk]){
+      audio.decks[dk].gain.gain.setTargetAtTime(
+        (s&&d.playing?0.9:0)*weight, audio.ctx.currentTime, 0.06);
+    }
+    const el=$("#vu-"+dk); if(!el) continue;
     let lvl=0;
     if(s && d.playing){
       const wave=waveFor(s), i=Math.min(wave.length-1, Math.floor(d.pos*4));
-      const weight = dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50);
       lvl=wave[i][0]*weight;
     }
     el.style.height=Math.round(lvl*100)+"%";
@@ -1061,6 +1203,7 @@ function advance(){
     }
   }
   runAutomix(dt);
+  if(state.soundOn && audio.ctx){ scheduleDeck("A"); scheduleDeck("B"); }
   if(state.view==="live") redrawLive(false);
 }
 /* Automix: as the on-air track runs out, prep the other deck (queue first,
@@ -1230,7 +1373,7 @@ function deckHtml(dk){
       <div class="jog" data-jog="${dk}" title="Drag to scratch / seek" aria-label="Turntable platter deck ${dk}">
         <div class="jog-disc" id="jogdisc-${dk}">
           <div class="jog-dot"></div>
-          <div class="jog-label" style="${s?artStyle(s):"background:var(--panel-2)"}">${s?initials(s.title):"—"}<small>33⅓ RPM</small></div>
+          <div class="jog-label" style="${s?artStyleRadial(s):"background:var(--panel-2)"}"><b>${s?initials(s.title):"—"}</b><small>33⅓ RPM</small></div>
         </div>
         <div class="jog-arm" id="jogarm-${dk}" aria-hidden="true"><i></i></div>
       </div>
@@ -1260,7 +1403,9 @@ function deckHtml(dk){
         title="${d.loop&&d.loop.beats===n?"Exit loop":n+"-beat loop from the playhead"}">L${n}</button>`).join("")}
       <button class="hc" data-bjump="${dk}:-4" ${s?"":"disabled"} title="Jump back 4 beats">«4</button>
       <button class="hc" data-bjump="${dk}:4" ${s?"":"disabled"} title="Jump forward 4 beats">4»</button>
-      <span class="hc-lab">CUES · LOOP · JUMP</span>
+      <button class="hc" data-fxecho="${dk}" aria-pressed="${d.fx.echo}" ${s?"":"disabled"} title="Beat-synced echo (needs SOUND on)">ECHO</button>
+      <button class="hc" data-fxfilt="${dk}" aria-pressed="${d.fx.filt}" ${s?"":"disabled"} title="Low-pass filter sweep (needs SOUND on)">FILT</button>
+      <span class="hc-lab">CUES·LOOP·FX</span>
     </div>
   </section>`;
 }
@@ -1268,6 +1413,7 @@ function crateChips(){
   return `<div class="cratechips" role="group" aria-label="Filter crates">
     ${GENRES.map(([id,label])=>`<button data-crate="${id}" aria-pressed="${state.crate===id}">${label}</button>`).join("")}
     <button class="cleanonly" data-cleanonly aria-pressed="${state.cleanOnly}">✓ Clean-safe only</button>
+    <button data-compat aria-pressed="${state.compatOnly}" title="Only tracks that mix well with the on-air deck">♪ In-key only</button>
   </div>`;
 }
 function liveLibRows(){
@@ -1313,6 +1459,7 @@ function viewLive(){
           <div class="xfade-lab"><span>A</span><span>B</span></div>
         </div>
         <div class="onair" id="onairLabel"></div>
+        <button class="dbtn snd" data-sound aria-pressed="${state.soundOn}" title="Synthesized preview beat that follows each deck's BPM and key">SOUND</button>
         <button class="dbtn amx" data-automix aria-pressed="${state.automix}" title="Hands-free: syncs, starts and blends the next track as the current one ends">AUTOMIX</button>
         <button class="dbtn sug" data-suggest title="Load the best next track: key/BPM match, safe for this room, not yet played">SUGGEST</button>
       </div>
@@ -1441,7 +1588,8 @@ function openHelp(){
       <li><b>🎤 Emcee notes</b><span>Pronunciations, timeline, shoutouts and the do-not-play list. Your next timeline cue stays pinned to the Live screen.</span></li>
       <li><b>🏛 Event modes</b><span>Wedding / Corporate / Club switch every safety verdict in the app — the same crate reads differently per room.</span></li>
       <li><b>🤖 Automix + Suggest</b><span>Need a bathroom break? <b>AUTOMIX</b> syncs, starts and blends the next track (queue first, then best match) as the current one runs out. <b>SUGGEST</b> loads the smartest next track in one tap — key/BPM-matched, room-safe, not played yet.</span></li>
-      <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
+      <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, ECHO and FILT effects, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
+      <li><b>🔊 Sound</b><span>Hit <b>SOUND</b> in the mixer and the decks play a synthesized preview beat that follows each track's BPM and key — volume rides the crossfader, and ECHO/FILT process it live. It's a placeholder groove, not the real recordings.</span></li>
       <li><b>⌨ Keys</b><span><span class="kbd">Space</span> play/pause on-air deck · <span class="kbd">1</span>/<span class="kbd">2</span> toggle decks · <span class="kbd">Esc</span> close panels.</span></li>
     </ul>
     <p class="footnote">Preview build with simulated audio and demo metadata. The commercial version plugs in real audio analysis and licensed lyric data.</p>`;
@@ -1584,7 +1732,8 @@ function viewEmcee(){
         </form>
       </div>`).join("")}
     <div class="card note-card">
-      <h3><span class="dot" style="background:var(--deckB)"></span>Set log · ${state.played.length} played</h3>
+      <h3 style="display:flex; align-items:center"><span class="dot" style="background:var(--deckB)"></span>Set log · ${state.played.length} played
+        ${state.played.length?`<button class="chip" data-exportlog style="margin-left:auto">Export</button>`:""}</h3>
       ${state.played.length?`<ul class="setlog">${state.played.slice().reverse().map(p=>{
         const s=song(p.id); return `<li><span class="t">${esc(p.at)}</span><span>${s?esc(s.title):esc(p.id)}</span>
           <span class="song-artist" style="margin-left:auto">${s?esc(s.artist):""}</span></li>`;}).join("")}</ul>`
@@ -1643,6 +1792,27 @@ document.addEventListener("click", e=>{
       render(); return;
     }
     if(el.hasAttribute("data-suggest")){ doSuggest(); return; }
+    if(el.hasAttribute("data-sound")){ toggleSound(); return; }
+    if(d.fxecho){ const dd=state.decks[d.fxecho]; dd.fx.echo=!dd.fx.echo; applyFx(d.fxecho);
+      toast(`Deck ${d.fxecho}: echo ${dd.fx.echo?"on":"off"}${state.soundOn?"":" (turn SOUND on to hear it)"}`); render(); return; }
+    if(d.fxfilt){ const dd=state.decks[d.fxfilt]; dd.fx.filt=!dd.fx.filt; applyFx(d.fxfilt);
+      toast(`Deck ${d.fxfilt}: filter ${dd.fx.filt?"closed":"open"}${state.soundOn?"":" (turn SOUND on to hear it)"}`); render(); return; }
+    if(el.hasAttribute("data-compat")){ state.compatOnly=!state.compatOnly; saveSession(); render(); return; }
+    if(el.hasAttribute("data-exportlog")){
+      const lines=state.played.map(p=>{const s=song(p.id); return p.at+"  "+(s?s.title+" — "+s.artist:p.id);});
+      const txt="Salt set log — Rivera Wedding\n\n"+lines.join("\n")+"\n";
+      let downloaded=false;
+      try{
+        const b=new Blob([txt],{type:"text/plain"}), u=URL.createObjectURL(b), a2=document.createElement("a");
+        a2.href=u; a2.download="salt-set-log.txt"; document.body.appendChild(a2); a2.click(); a2.remove();
+        setTimeout(()=>URL.revokeObjectURL(u),3000);
+        downloaded=true; toast("Set log downloaded");
+      }catch(err){}
+      if(!downloaded && navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(()=>toast("Set log copied to clipboard"),()=>{});
+      }
+      return;
+    }
     if(d.sort){ state.libSort=d.sort; saveSession(); render(); return; }
     if(d.crate){ state.crate=d.crate; saveSession(); render(); return; }
     if(el.hasAttribute("data-cleanonly")){ state.cleanOnly=!state.cleanOnly; saveSession(); render(); return; }
