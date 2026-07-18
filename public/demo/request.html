@@ -4,8 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Request a song — Salt</title>
+<title>Salt Requests — Song Requests for DJs</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+<!-- Installable app (PWA) -->
+<link rel="manifest" href="/demo/manifest.webmanifest">
+<meta name="theme-color" content="#060B11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Salt Requests">
+<link rel="apple-touch-icon" href="/demo/icons/apple-touch-180.png">
 <style>
   :root{
     --bg:#060B11; --panel:#0C141D; --panel-2:#111C27; --line:#1C2C3B;
@@ -71,12 +79,37 @@
   .statuschip.no{color:var(--muted)}
   .again{margin-top:22px; background:none; border:1px solid var(--line); border-radius:10px; color:var(--muted); padding:10px 18px; font:inherit; font-weight:600; cursor:pointer}
   .foot{color:var(--muted); font-size:11.5px; margin-top:26px; text-align:center}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  #installBtn{
+    background:linear-gradient(120deg,#3EC7FF,#3DF59E); color:#03222B; border:0; border-radius:99px;
+    font:inherit; font-weight:800; font-size:13px; padding:8px 15px; cursor:pointer;
+    box-shadow:0 4px 16px rgba(62,199,255,.3);
+  }
+  #venueGate h1{margin-top:22px}
+  #venueCode{
+    width:100%; box-sizing:border-box; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:15px; color:var(--ink); font:inherit; font-size:24px; font-weight:800; letter-spacing:.18em; text-align:center; text-transform:uppercase;
+  }
+  #venueGo{
+    width:100%; margin-top:16px; padding:15px 0; border:0; border-radius:14px; cursor:pointer;
+    background:var(--accent); color:var(--accent-ink); font:inherit; font-size:17px; font-weight:800;
+  }
   @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 </head>
 <body>
 <div id="wrap">
-  <div class="wordmark">Salt<em>.</em></div>
+  <div class="topbar">
+    <div class="wordmark">Salt<em>.</em></div>
+    <button id="installBtn" hidden>⤓ Install app</button>
+  </div>
+  <div id="venueGate" hidden>
+    <h1>Where are you? 🎧</h1>
+    <p class="sub">Enter the venue or DJ code shown on the booth to start requesting.</p>
+    <label class="lab" for="venueCode">Venue / DJ code</label>
+    <input type="text" id="venueCode" maxlength="12" placeholder="e.g. AB12" autocapitalize="characters" autocomplete="off">
+    <button id="venueGo" type="button">Start requesting →</button>
+  </div>
   <div id="main">
     <h1>Request a song 🎵</h1>
     <p class="sub">Send it straight to the DJ booth. No app needed.</p>
@@ -124,9 +157,29 @@
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const initials=t=>t.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
-const ROOM=(new URLSearchParams(location.search).get("room")||"MAIN").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12)||"MAIN";
+const params=new URLSearchParams(location.search);
+const ROOM=(params.get("room")||"MAIN").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12)||"MAIN";
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone || params.get("src")==="pwa";
+// Installed app opened with no specific venue → ask for the venue/DJ code first.
+if(standalone && !params.get("room")){
+  $("#main").hidden=true;
+  $("#venueGate").hidden=false;
+  const go=()=>{ const c=$("#venueCode").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12); if(c) location.search="?room="+c; };
+  $("#venueGo").addEventListener("click", go);
+  $("#venueCode").addEventListener("keydown", e=>{ if(e.key==="Enter") go(); });
+}
 if(ROOM!=="MAIN") document.querySelector(".sub").textContent="Send it straight to the DJ booth. No app needed. · Room "+ROOM;
 let catalog=[], picked=null, tip=0, sentId=null, pollTimer=null;
+
+// PWA: register the service worker and wire the install button.
+if("serviceWorker" in navigator) navigator.serviceWorker.register("/demo/sw.js").catch(()=>{});
+let deferredPrompt=null;
+addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredPrompt=e; const b=$("#installBtn"); if(b) b.hidden=false; });
+document.getElementById("installBtn").addEventListener("click", async()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $("#installBtn").hidden=true;
+});
+addEventListener("appinstalled", ()=>{ const b=$("#installBtn"); if(b) b.hidden=true; });
 
 function renderList(){
   const q=$("#q").value.trim().toLowerCase();

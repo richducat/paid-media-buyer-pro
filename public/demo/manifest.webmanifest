@@ -1,0 +1,17 @@
+{
+  "name": "Salt Requests — Song Requests for DJs",
+  "short_name": "Salt Requests",
+  "description": "Request songs straight to the DJ booth. Scan the venue's code, pick a track, add a tip, and watch your request go live.",
+  "start_url": "/demo/request.html?src=pwa",
+  "scope": "/demo/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060B11",
+  "theme_color": "#060B11",
+  "categories": ["music", "entertainment", "lifestyle"],
+  "icons": [
+    { "src": "/demo/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/demo/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/demo/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
