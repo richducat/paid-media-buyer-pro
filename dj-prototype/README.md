@@ -26,11 +26,12 @@ A booth tool for working DJs: know every track before it drops.
   seconds; accepting queues the track (clean edit auto-selected in strict
   modes) and PATCHes the status back so the guest sees accepted/declined
   live. Up Next auto-loads when a deck runs out.
-- **Library import** — audio files decode in-browser and get real BPM
-  detection, true waveforms and actual deck playback (scratching and FX
-  included); Serato .crate, Rekordbox .xml (real BPM + key → Camelot) and
-  .m3u playlists import their metadata. Imported tracks are marked
-  "Not scanned" until lyric analysis exists.
+- **Library import + analysis** — audio files decode in-browser and get real
+  BPM detection, musical key detection (chromagram + Krumhansl profiles →
+  Camelot), true waveforms and actual deck playback; Serato .crate,
+  Rekordbox .xml and .m3u playlists import their metadata. A 🎤 Listen tool
+  detects BPM/key from the room mic, and TAP gives tap-tempo. Imported
+  tracks are marked "Not scanned" until lyric analysis exists.
 - **Automix + Suggest** — hands-free blending as tracks run out (queue first,
   then best match), and one-tap smartest-next-track (key/BPM match,
   room-safe, not already played).
@@ -50,8 +51,12 @@ A booth tool for working DJs: know every track before it drops.
 - **Battle-mixer strip** — per-channel 3-band EQ with full-kill (real biquad
   shelves/peaking on the audio chain), channel faders, headphone-cue
   buttons, crossfader, and master volume.
-- **Emcee suite** — pronunciations, timeline (first item pinned to the Live
-  screen), shoutouts, do-not-play list, and an automatic set log with one-tap export.
+- **Explicit report** — one-tap whole-library report grouping every track by
+  rating with its flagged moments and clean-edit availability.
+- **Events & business** — multiple events with venue/date, per-event emcee
+  notes (pronunciations, timeline, shoutouts, do-not-play), package options,
+  and one-tap generated invoice and contract documents; automatic set log
+  with export.
 
 ## Architecture
 
