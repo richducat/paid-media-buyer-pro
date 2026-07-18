@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="description" content="Salt — DJ set intelligence: live turntables with real audio import, explicit-lyric warnings, BPM/key mix matching, guest request rooms, emcee notes.">
+<meta name="description" content="Salt — DJ set intelligence: turntables with real audio, track sections, beat-synced light shows, explicit-lyric radar, guest request rooms.">
 <title>Salt — DJ Set Intelligence (Demo)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
 </head>
@@ -68,7 +68,7 @@
     flex:none; z-index:30; background:#14131E; border-top:1px solid var(--line);
     padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
   }
-  nav.tabs .row{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; max-width:640px; margin:0 auto}
+  nav.tabs .row{display:grid; grid-template-columns:repeat(6,1fr); gap:5px; max-width:720px; margin:0 auto}
   nav.tabs button{
     display:flex; flex-direction:column; align-items:center; gap:3px;
     padding:7px 4px 6px; border-radius:10px; color:var(--muted); font-size:11.5px; font-weight:600;
@@ -274,6 +274,9 @@
   .dbtn.amx[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
   .dbtn.klk[aria-pressed="true"]{color:var(--dk); border-color:var(--dk)}
   .dbtn.snd[aria-pressed="true"]{background:var(--clean); border-color:var(--clean); color:var(--accent-ink)}
+  .dbtn.cns[aria-pressed="true"]{background:var(--explicit); border-color:var(--explicit); color:#fff}
+  .dbtn.rec[aria-pressed="true"]{background:var(--explicit); border-color:var(--explicit); color:#fff; animation:recpulse 1s steps(2) infinite}
+  @keyframes recpulse{50%{opacity:.55}}
 
   /* ---------- LIVE: alert + status ---------- */
   .alertbar{
@@ -296,6 +299,24 @@
     border:1px solid var(--line); color:var(--muted);
   }
   .qbtn:hover{color:var(--ink); border-color:var(--accent)}
+
+  #rigCanvas{width:100%; height:340px; display:block; background:#040309; border-radius:14px; border:1px solid var(--line)}
+  #rigCanvas:fullscreen{border-radius:0; border:0}
+  .light-ctl{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap}
+  .light-conn{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px}
+  .light-conn input{
+    flex:1; min-width:180px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    padding:8px 11px; color:var(--ink); font-size:13px;
+  }
+  @media (max-width:900px){ #rigCanvas{height:220px} }
+
+  .pads{display:flex; gap:7px; margin-top:12px; flex-wrap:wrap}
+  .pad{
+    flex:1; min-width:110px; height:40px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); font-size:11.5px; font-weight:800; letter-spacing:.04em; white-space:nowrap;
+  }
+  .pad:active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+  .pads .dbtn.rec{flex:1; min-width:110px; height:40px}
 
   /* ---------- LIVE: library ---------- */
   .livelib-head{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center}
@@ -467,7 +488,185 @@
   .setlog li:first-child{border-top:0}
   .setlog .t{font-family:var(--mono); color:var(--muted); flex:none; width:74px; font-size:12px}
 
-  /* ---------- toast ---------- */
+  /* ---------- sampler pads (synthesized, routed to master) ---------- */
+function padGain(len, vol){
+  const ctx=audio.ctx, g=ctx.createGain(), t=ctx.currentTime;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+len);
+  g.connect(audio.master);
+  return {g, t};
+}
+const PADS={
+  airhorn(){ const {g,t}=padGain(0.95, 0.5);
+    for(const det of [0,4]){ const o=audio.ctx.createOscillator(); o.type="sawtooth";
+      o.frequency.setValueAtTime(415+det,t);
+      o.frequency.setValueAtTime(405+det,t+0.16);
+      o.frequency.linearRampToValueAtTime(330+det,t+0.55);
+      o.connect(g); o.start(t); o.stop(t+0.95); } },
+  siren(){ const {g,t}=padGain(1.8, 0.22); const o=audio.ctx.createOscillator(); o.type="square";
+    o.frequency.setValueAtTime(620,t);
+    o.frequency.linearRampToValueAtTime(1150,t+0.45);
+    o.frequency.linearRampToValueAtTime(620,t+0.9);
+    o.frequency.linearRampToValueAtTime(1150,t+1.35);
+    o.frequency.linearRampToValueAtTime(620,t+1.8);
+    o.connect(g); o.start(t); o.stop(t+1.8); },
+  applause(){ const ctx=audio.ctx, {g,t}=padGain(1.7, 0.65);
+    const len=1.6, buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*len),ctx.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){ const env=Math.min(1,i/2000)*(1-i/ch.length); ch[i]=(Math.random()*2-1)*env*(0.4+0.6*Math.random()); }
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2400; bp.Q.value=0.6;
+    src.connect(bp); bp.connect(g); src.start(t); },
+  rewind(){ const ctx=audio.ctx, {g,t}=padGain(0.7, 0.4); const o=ctx.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(900,t);
+    o.frequency.exponentialRampToValueAtTime(65,t+0.6);
+    o.connect(g); o.start(t); o.stop(t+0.7); },
+};
+function playPad(name){
+  if(!state.soundOn){ toast("Turn SOUND on first"); return; }
+  if(!ensureAudio() || !PADS[name]) return;
+  if(audio.ctx.state==="suspended") audio.ctx.resume();
+  PADS[name]();
+}
+
+/* ---------- set recorder: captures the real master output ---------- */
+let recorder=null, recChunks=[], recDest=null;
+function toggleRec(){
+  if(recorder){ try{ recorder.stop(); }catch(e){} return; }
+  if(!state.soundOn){ toast("Turn SOUND on first — REC captures the master output"); return; }
+  if(!window.MediaRecorder || !ensureAudio()){ toast("Recording isn't supported in this viewer"); return; }
+  try{
+    if(!recDest){ recDest=audio.ctx.createMediaStreamDestination(); audio.master.connect(recDest); }
+    const mime=["audio/webm","audio/mp4"].find(m=>MediaRecorder.isTypeSupported(m));
+    recorder=new MediaRecorder(recDest.stream, mime?{mimeType:mime}:undefined);
+    recChunks=[];
+    recorder.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
+    recorder.onstop=()=>{
+      const type=(recorder&&recorder.mimeType)||"audio/webm";
+      recorder=null;
+      const blob=new Blob(recChunks,{type});
+      try{
+        const u=URL.createObjectURL(blob), a=document.createElement("a");
+        a.href=u; a.download="salt-set-recording."+(type.includes("mp4")?"m4a":"webm");
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(u),3000);
+        toast("Set recording saved");
+      }catch(e){ toast("Recording finished"); }
+      render();
+    };
+    recorder.start(1000);
+    toast("Recording the master output — hit REC again to stop & save");
+    render();
+  }catch(e){ recorder=null; toast("Recording isn't supported in this viewer"); }
+}
+
+/* ---------- light show engine ---------- */
+let lightPhase=0, lightNetLast=0;
+function hslToRgb(h){
+  const f=(n)=>{ const k=(n+h/30)%12; const c=0.85; const l=0.5;
+    const a=c*Math.min(l,1-l); return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))); };
+  return [f(0),f(8),f(4)];
+}
+function lightProgram(){
+  if(state.lights.program!=="auto") return state.lights.program;
+  const oa=onAir(); const s=oa?song(state.decks[oa].songId):null;
+  const e=s?s.energy:5;
+  return e>=9?"strobe":e>=7?"pulse":"wash";
+}
+function drawRig(){
+  const cv=$("#rigCanvas"); if(!cv) return;
+  sizeCanvas(cv);
+  const ctx=cv.getContext("2d"), W=cv.width, H=cv.height;
+  const oa=onAir(); const d=oa?state.decks[oa]:null; const s=d?song(d.songId):null;
+  const playing=!!(d&&d.playing);
+  const prog=lightProgram();
+  const I=state.lights.intensity*(playing?1:0.3);
+  const baseHue=s?s.hue:270;
+  const beat=lightPhase%1, bar=Math.floor(lightPhase)%4;
+  ctx.fillStyle="#040309"; ctx.fillRect(0,0,W,H);
+  if(prog!=="off"){
+    // floor wash
+    const wash = prog==="pulse" ? (1-beat)*I : prog==="wash" ? (0.55+0.35*Math.sin(lightPhase*0.7))*I : 0.35*I;
+    const grd=ctx.createLinearGradient(0,H*0.55,0,H);
+    grd.addColorStop(0,"rgba(0,0,0,0)");
+    grd.addColorStop(1,`hsla(${(baseHue+bar*12)%360} 75% 45% / ${wash*0.6})`);
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+    // truss line
+    ctx.fillStyle="rgba(142,137,160,.25)"; ctx.fillRect(0,H*0.09,W,2);
+    // 8 par cans with beams
+    for(let i=0;i<8;i++){
+      const x=(i+0.5)/8*W, hue=(baseHue+(i%2?45:0)+bar*15)%360;
+      let flash;
+      if(prog==="strobe") flash=(Math.floor(lightPhase*4)+i)%2 ? 1:0.05;
+      else if(prog==="pulse") flash=(i%4===bar?1:0.3)*(1-beat*0.7);
+      else flash=0.5+0.5*Math.sin(lightPhase*0.9+i*0.8);
+      const a=Math.max(0,flash*I);
+      const bw=W*0.055;
+      const bg=ctx.createLinearGradient(0,H*0.1,0,H*0.95);
+      bg.addColorStop(0,`hsla(${hue} 90% 65% / ${a*0.5})`);
+      bg.addColorStop(1,`hsla(${hue} 90% 55% / 0)`);
+      ctx.fillStyle=bg;
+      ctx.beginPath();
+      ctx.moveTo(x-bw*0.25,H*0.1); ctx.lineTo(x+bw*0.25,H*0.1);
+      ctx.lineTo(x+bw*1.6,H*0.95); ctx.lineTo(x-bw*1.6,H*0.95);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle=`hsla(${hue} 95% 70% / ${Math.min(1,a)})`;
+      ctx.beginPath(); ctx.arc(x,H*0.1,W*0.012,0,7); ctx.fill();
+    }
+    // 2 moving heads sweeping from the corners
+    for(const side of [0,1]){
+      const px=side?W*0.94:W*0.06, hue=(baseHue+180+side*30)%360;
+      const ang=(side?-1:1)*(0.45+0.35*Math.sin(lightPhase*(prog==="strobe"?1.3:0.45)+side*2));
+      const len=H*1.05, ex=px+Math.sin(ang)*len*(side?-1:1), ey=H*0.06+Math.cos(ang)*len;
+      const mg=ctx.createLinearGradient(px,H*0.06,ex,ey);
+      mg.addColorStop(0,`hsla(${hue} 95% 70% / ${0.5*I})`);
+      mg.addColorStop(1,`hsla(${hue} 95% 60% / 0)`);
+      ctx.strokeStyle=mg; ctx.lineWidth=W*0.02; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(px,H*0.06); ctx.lineTo(ex,ey); ctx.stroke();
+    }
+    // strobe blast
+    if(prog==="strobe" && Math.floor(lightPhase*8)%4===0){
+      ctx.fillStyle=`rgba(255,255,255,${0.22*I})`; ctx.fillRect(0,0,W,H);
+    }
+  } else {
+    ctx.fillStyle="rgba(142,137,160,.4)";
+    ctx.font=`600 ${Math.round(H*0.05)}px sans-serif`; ctx.textAlign="center";
+    ctx.fillText("BLACKOUT", W/2, H/2); ctx.textAlign="left";
+  }
+  const st=$("#lightStatus");
+  if(st){
+    const bpmTxt=oa&&effBpm(oa)?effBpm(oa).toFixed(1)+" BPM":"idle";
+    st.textContent=`${prog.toUpperCase()} · ${bpmTxt}${playing?"":" · start a deck to sync"}`;
+  }
+}
+function sendLightNet(){
+  const L=state.lights, now=performance.now();
+  if(!L.wled.on && !L.lifx.on) return;
+  if(now-lightNetLast<500) return;
+  lightNetLast=now;
+  const oa=onAir(); const s=oa?song(state.decks[oa].songId):null;
+  const hue=s?s.hue:270, prog=lightProgram(), on=prog!=="off";
+  const bri=Math.round(254*state.lights.intensity*(on?1:0));
+  if(L.wled.on && L.wled.ip){
+    if(location.protocol==="https:"){ L.wled.status="blocked: open Salt over http/file for LAN lights"; }
+    else try{
+      fetch(`http://${L.wled.ip.replace(/[^A-Za-z0-9.:-]/g,"")}/json/state`,{
+        method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"},
+        body:JSON.stringify({on, bri, seg:[{col:[hslToRgb(hue)]}]}),
+      });
+      L.wled.status="sending beats → "+L.wled.ip;
+    }catch(e){ L.wled.status="error: "+e.message; }
+  }
+  if(L.lifx.on && L.lifx.token){
+    fetch("https://api.lifx.com/v1/lights/all/state",{
+      method:"PUT",
+      headers:{"Authorization":"Bearer "+L.lifx.token, "Content-Type":"application/json"},
+      body:JSON.stringify({power:on?"on":"off", color:`hue:${hue} saturation:0.85`, brightness:state.lights.intensity, duration:0.4, fast:true}),
+    }).then(r=>{ L.lifx.status=r.ok||r.status===202?"connected — sending":"HTTP "+r.status; },
+      ()=>{ L.lifx.status="unreachable (network/CORS)"; });
+  }
+}
+
+/* ---------- toast ---------- */
   #toast{
     position:absolute; left:50%; transform:translateX(-50%) translateY(8px);
     bottom:calc(84px + env(safe-area-inset-bottom,0px)); z-index:50;
@@ -520,7 +719,7 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.5 preview</div>
+      <div class="tagline">Know every track before it drops. · v0.6 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -669,12 +868,16 @@ const DEFAULT_NOTES = [
 ];
 
 /* ---------- state ---------- */
-function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false, cues:[null,null,null], loop:null, keylock:true, fx:{echo:false, filt:false}, logged:false}; }
+function deckInit(){ return {songId:null, playing:false, pos:0, pitch:0, clean:false, cues:[null,null,null], loop:null, keylock:true, fx:{echo:false, filt:false}, censoring:false, logged:false}; }
 const state = {
   mode:"wedding", view:"live", search:"", libSort:"match", crate:"all", cleanOnly:false, compatOnly:false, mixSrc:null,
   decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false, soundOn:false,
   requestsOpen:true, requests:[], queue:[], played:[], notes:loadNotes(),
   room:"MAIN",
+  lights:{program:"auto", intensity:0.8,
+    wled:{ip:"", on:false, status:"not connected"},
+    lifx:{token:"", on:false, status:"not connected"},
+  },
 };
 state.room=loadRoom();
 let reqCounter = 0;
@@ -715,6 +918,12 @@ function loadSession(){
     state.cleanOnly=!!p.cleanOnly;
     state.compatOnly=!!p.compatOnly;
     state.automix=!!p.automix;
+    if(p.lights){
+      if(["auto","pulse","wash","strobe","off"].includes(p.lights.program)) state.lights.program=p.lights.program;
+      if(typeof p.lights.intensity==="number") state.lights.intensity=Math.max(0,Math.min(1,p.lights.intensity));
+      if(p.lights.wled){ state.lights.wled.ip=String(p.lights.wled.ip||"").slice(0,60); state.lights.wled.on=!!p.lights.wled.on; }
+      if(p.lights.lifx){ state.lights.lifx.token=String(p.lights.lifx.token||"").slice(0,120); state.lights.lifx.on=!!p.lights.lifx.on; }
+    }
   }catch(e){}
 }
 function saveSession(){
@@ -722,6 +931,9 @@ function saveSession(){
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       mode:state.mode, queue:state.queue, played:state.played,
       libSort:state.libSort, crate:state.crate, cleanOnly:state.cleanOnly, compatOnly:state.compatOnly, automix:state.automix,
+      lights:{program:state.lights.program, intensity:state.lights.intensity,
+        wled:{ip:state.lights.wled.ip, on:state.lights.wled.on},
+        lifx:{token:state.lights.lifx.token, on:state.lights.lifx.on}},
     }));
   }catch(e){}
 }
@@ -1216,6 +1428,40 @@ function waveFor(s){
 }
 const DECK_RGB = {A:"157,123,255", B:"65,214,195"};
 
+/* auto section (phrase) detection from the energy envelope — Rekordbox-style
+   Intro/Verse/Chorus/Drop/Break/Outro markers, works on demo + imported audio */
+function sectionsFor(s){
+  if(s._sections) return s._sections;
+  const wave=waveFor(s), n=wave.length, win=16;
+  const sm=[];
+  for(let i=0;i<n;i++){
+    let t=0,c=0;
+    for(let j=Math.max(0,i-win/2); j<Math.min(n,i+win/2); j++){ t+=wave[j][0]; c++; }
+    sm.push(t/c);
+  }
+  const segs=[]; let start=0, lvlSum=sm[0], cnt=1;
+  for(let i=1;i<n;i++){
+    const avg=lvlSum/cnt;
+    if(Math.abs(sm[i]-avg)>0.16 && (i-start)>=60){
+      segs.push({i0:start, i1:i, lvl:avg});
+      start=i; lvlSum=sm[i]; cnt=1;
+    } else { lvlSum+=sm[i]; cnt++; }
+  }
+  segs.push({i0:start, i1:n, lvl:lvlSum/Math.max(1,cnt)});
+  const maxLvl=Math.max(...segs.map(x=>x.lvl))||1;
+  let chorusCt=0, verseCt=0;
+  s._sections=segs.map((g,ix)=>{
+    let label;
+    if(ix===0) label="Intro";
+    else if(ix===segs.length-1) label="Outro";
+    else if(g.lvl>maxLvl*0.85) label=(++chorusCt%2)?"Chorus":"Drop";
+    else if(g.lvl<maxLvl*0.5) label="Break";
+    else label="Verse "+(++verseCt);
+    return {t0:g.i0/4, t1:g.i1/4, lvl:g.lvl/maxLvl, label};
+  });
+  return s._sections;
+}
+
 function sizeCanvas(cv){
   const dpr=Math.min(2, window.devicePixelRatio||1);
   const w=cv.clientWidth, h=cv.clientHeight;
@@ -1271,6 +1517,18 @@ function drawMain(dk){
       ctx.fillRect(x0,0,2,H); ctx.fillRect(x1-2,0,2,H);
     }
   }
+  // section boundaries + labels
+  const secs=sectionsFor(s);
+  ctx.font=`600 ${Math.round(H*0.11)}px ${getComputedStyle(document.body).fontFamily}`;
+  ctx.textAlign="left";
+  for(const g of secs){
+    const x=(g.t0-t0)*pxSec;
+    if(x>-2 && x<W){
+      if(g.t0>0){ ctx.fillStyle="rgba(241,238,230,.28)"; for(let y=0;y<H;y+=8) ctx.fillRect(x,y,1,4); }
+      ctx.fillStyle="rgba(241,238,230,.55)";
+      if((g.t1-g.t0)*pxSec>50) ctx.fillText(g.label.toUpperCase(), x+4, H*0.95);
+    }
+  }
   // hot cue markers
   for(let i=0;i<3;i++){
     const c=d.cues[i]; if(c===null) continue;
@@ -1281,6 +1539,12 @@ function drawMain(dk){
     ctx.font=`bold ${H*0.16}px ${getComputedStyle(document.body).fontFamily}`;
     ctx.textAlign="left";
     ctx.fillText(String(i+1), x+3, H*0.18);
+  }
+  if(d.censoring){
+    ctx.fillStyle="rgba(255,84,104,.3)"; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="rgba(255,255,255,.85)";
+    ctx.font=`800 ${Math.round(H*0.2)}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign="center"; ctx.fillText("CENSORED", W/2, H*0.3); ctx.textAlign="left";
   }
   ctx.fillStyle="#F1EEE6";
   ctx.fillRect(W/2-1,0,2,H);
@@ -1299,6 +1563,11 @@ function drawOver(dk){
     ctx.fillStyle = t<d.pos ? `rgba(${rgb},.85)` : "rgba(142,137,160,.35)";
     const h=wave[i][0]*H*0.85;
     ctx.fillRect(x, mid-h/2, Math.max(1,W/wave.length*step-0.5), h);
+  }
+  // section bands along the top edge
+  for(const g of sectionsFor(s)){
+    ctx.fillStyle=`rgba(${rgb},${0.25+0.55*g.lvl})`;
+    ctx.fillRect(g.t0/dur*W, 0, Math.max(1,(g.t1-g.t0)/dur*W-1), H*0.16);
   }
   for(const m of s.moments){
     if(m.cat==="Note") continue;
@@ -1365,10 +1634,10 @@ function updateAlert(){
 function updateVU(){
   for(const dk of ["A","B"]){
     const d=state.decks[dk], s=song(d.songId);
-    const weight = dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50);
+    const weight = (dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50)) * (d.censoring?0:1);
     if(audio.ctx && audio.decks[dk]){
       audio.decks[dk].gain.gain.setTargetAtTime(
-        (s&&d.playing?0.9:0)*weight, audio.ctx.currentTime, 0.06);
+        (s&&d.playing?0.9:0)*weight, audio.ctx.currentTime, d.censoring?0.015:0.06);
     }
     const el=$("#vu-"+dk); if(!el) continue;
     let lvl=0;
@@ -1411,7 +1680,12 @@ function advance(){
   }
   runAutomix(dt);
   if(state.soundOn && audio.ctx){ scheduleDeck("A"); scheduleDeck("B"); }
+  const oa=onAir();
+  const lb=oa && state.decks[oa].playing ? (effBpm(oa)||110) : 0;
+  lightPhase += dt*(lb? lb/60 : 0.5);
+  sendLightNet();
   if(state.view==="live") redrawLive(false);
+  if(state.view==="lights") drawRig();
 }
 /* Automix: as the on-air track runs out, prep the other deck (queue first,
    then best suggestion), sync it, start it, and glide the crossfader over. */
@@ -1521,6 +1795,184 @@ function spawnRequest(initial){
   }
 }
 
+/* ---------- sampler pads (synthesized, routed to master) ---------- */
+function padGain(len, vol){
+  const ctx=audio.ctx, g=ctx.createGain(), t=ctx.currentTime;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+len);
+  g.connect(audio.master);
+  return {g, t};
+}
+const PADS={
+  airhorn(){ const {g,t}=padGain(0.95, 0.5);
+    for(const det of [0,4]){ const o=audio.ctx.createOscillator(); o.type="sawtooth";
+      o.frequency.setValueAtTime(415+det,t);
+      o.frequency.setValueAtTime(405+det,t+0.16);
+      o.frequency.linearRampToValueAtTime(330+det,t+0.55);
+      o.connect(g); o.start(t); o.stop(t+0.95); } },
+  siren(){ const {g,t}=padGain(1.8, 0.22); const o=audio.ctx.createOscillator(); o.type="square";
+    o.frequency.setValueAtTime(620,t);
+    o.frequency.linearRampToValueAtTime(1150,t+0.45);
+    o.frequency.linearRampToValueAtTime(620,t+0.9);
+    o.frequency.linearRampToValueAtTime(1150,t+1.35);
+    o.frequency.linearRampToValueAtTime(620,t+1.8);
+    o.connect(g); o.start(t); o.stop(t+1.8); },
+  applause(){ const ctx=audio.ctx, {g,t}=padGain(1.7, 0.65);
+    const len=1.6, buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*len),ctx.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){ const env=Math.min(1,i/2000)*(1-i/ch.length); ch[i]=(Math.random()*2-1)*env*(0.4+0.6*Math.random()); }
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2400; bp.Q.value=0.6;
+    src.connect(bp); bp.connect(g); src.start(t); },
+  rewind(){ const ctx=audio.ctx, {g,t}=padGain(0.7, 0.4); const o=ctx.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(900,t);
+    o.frequency.exponentialRampToValueAtTime(65,t+0.6);
+    o.connect(g); o.start(t); o.stop(t+0.7); },
+};
+function playPad(name){
+  if(!state.soundOn){ toast("Turn SOUND on first"); return; }
+  if(!ensureAudio() || !PADS[name]) return;
+  if(audio.ctx.state==="suspended") audio.ctx.resume();
+  PADS[name]();
+}
+
+/* ---------- set recorder: captures the real master output ---------- */
+let recorder=null, recChunks=[], recDest=null;
+function toggleRec(){
+  if(recorder){ try{ recorder.stop(); }catch(e){} return; }
+  if(!state.soundOn){ toast("Turn SOUND on first — REC captures the master output"); return; }
+  if(!window.MediaRecorder || !ensureAudio()){ toast("Recording isn't supported in this viewer"); return; }
+  try{
+    if(!recDest){ recDest=audio.ctx.createMediaStreamDestination(); audio.master.connect(recDest); }
+    const mime=["audio/webm","audio/mp4"].find(m=>MediaRecorder.isTypeSupported(m));
+    recorder=new MediaRecorder(recDest.stream, mime?{mimeType:mime}:undefined);
+    recChunks=[];
+    recorder.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
+    recorder.onstop=()=>{
+      const type=(recorder&&recorder.mimeType)||"audio/webm";
+      recorder=null;
+      const blob=new Blob(recChunks,{type});
+      try{
+        const u=URL.createObjectURL(blob), a=document.createElement("a");
+        a.href=u; a.download="salt-set-recording."+(type.includes("mp4")?"m4a":"webm");
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(u),3000);
+        toast("Set recording saved");
+      }catch(e){ toast("Recording finished"); }
+      render();
+    };
+    recorder.start(1000);
+    toast("Recording the master output — hit REC again to stop & save");
+    render();
+  }catch(e){ recorder=null; toast("Recording isn't supported in this viewer"); }
+}
+
+/* ---------- light show engine ---------- */
+let lightPhase=0, lightNetLast=0;
+function hslToRgb(h){
+  const f=(n)=>{ const k=(n+h/30)%12; const c=0.85; const l=0.5;
+    const a=c*Math.min(l,1-l); return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))); };
+  return [f(0),f(8),f(4)];
+}
+function lightProgram(){
+  if(state.lights.program!=="auto") return state.lights.program;
+  const oa=onAir(); const s=oa?song(state.decks[oa].songId):null;
+  const e=s?s.energy:5;
+  return e>=9?"strobe":e>=7?"pulse":"wash";
+}
+function drawRig(){
+  const cv=$("#rigCanvas"); if(!cv) return;
+  sizeCanvas(cv);
+  const ctx=cv.getContext("2d"), W=cv.width, H=cv.height;
+  const oa=onAir(); const d=oa?state.decks[oa]:null; const s=d?song(d.songId):null;
+  const playing=!!(d&&d.playing);
+  const prog=lightProgram();
+  const I=state.lights.intensity*(playing?1:0.3);
+  const baseHue=s?s.hue:270;
+  const beat=lightPhase%1, bar=Math.floor(lightPhase)%4;
+  ctx.fillStyle="#040309"; ctx.fillRect(0,0,W,H);
+  if(prog!=="off"){
+    // floor wash
+    const wash = prog==="pulse" ? (1-beat)*I : prog==="wash" ? (0.55+0.35*Math.sin(lightPhase*0.7))*I : 0.35*I;
+    const grd=ctx.createLinearGradient(0,H*0.55,0,H);
+    grd.addColorStop(0,"rgba(0,0,0,0)");
+    grd.addColorStop(1,`hsla(${(baseHue+bar*12)%360} 75% 45% / ${wash*0.6})`);
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+    // truss line
+    ctx.fillStyle="rgba(142,137,160,.25)"; ctx.fillRect(0,H*0.09,W,2);
+    // 8 par cans with beams
+    for(let i=0;i<8;i++){
+      const x=(i+0.5)/8*W, hue=(baseHue+(i%2?45:0)+bar*15)%360;
+      let flash;
+      if(prog==="strobe") flash=(Math.floor(lightPhase*4)+i)%2 ? 1:0.05;
+      else if(prog==="pulse") flash=(i%4===bar?1:0.3)*(1-beat*0.7);
+      else flash=0.5+0.5*Math.sin(lightPhase*0.9+i*0.8);
+      const a=Math.max(0,flash*I);
+      const bw=W*0.055;
+      const bg=ctx.createLinearGradient(0,H*0.1,0,H*0.95);
+      bg.addColorStop(0,`hsla(${hue} 90% 65% / ${a*0.5})`);
+      bg.addColorStop(1,`hsla(${hue} 90% 55% / 0)`);
+      ctx.fillStyle=bg;
+      ctx.beginPath();
+      ctx.moveTo(x-bw*0.25,H*0.1); ctx.lineTo(x+bw*0.25,H*0.1);
+      ctx.lineTo(x+bw*1.6,H*0.95); ctx.lineTo(x-bw*1.6,H*0.95);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle=`hsla(${hue} 95% 70% / ${Math.min(1,a)})`;
+      ctx.beginPath(); ctx.arc(x,H*0.1,W*0.012,0,7); ctx.fill();
+    }
+    // 2 moving heads sweeping from the corners
+    for(const side of [0,1]){
+      const px=side?W*0.94:W*0.06, hue=(baseHue+180+side*30)%360;
+      const ang=(side?-1:1)*(0.45+0.35*Math.sin(lightPhase*(prog==="strobe"?1.3:0.45)+side*2));
+      const len=H*1.05, ex=px+Math.sin(ang)*len*(side?-1:1), ey=H*0.06+Math.cos(ang)*len;
+      const mg=ctx.createLinearGradient(px,H*0.06,ex,ey);
+      mg.addColorStop(0,`hsla(${hue} 95% 70% / ${0.5*I})`);
+      mg.addColorStop(1,`hsla(${hue} 95% 60% / 0)`);
+      ctx.strokeStyle=mg; ctx.lineWidth=W*0.02; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(px,H*0.06); ctx.lineTo(ex,ey); ctx.stroke();
+    }
+    // strobe blast
+    if(prog==="strobe" && Math.floor(lightPhase*8)%4===0){
+      ctx.fillStyle=`rgba(255,255,255,${0.22*I})`; ctx.fillRect(0,0,W,H);
+    }
+  } else {
+    ctx.fillStyle="rgba(142,137,160,.4)";
+    ctx.font=`600 ${Math.round(H*0.05)}px sans-serif`; ctx.textAlign="center";
+    ctx.fillText("BLACKOUT", W/2, H/2); ctx.textAlign="left";
+  }
+  const st=$("#lightStatus");
+  if(st){
+    const bpmTxt=oa&&effBpm(oa)?effBpm(oa).toFixed(1)+" BPM":"idle";
+    st.textContent=`${prog.toUpperCase()} · ${bpmTxt}${playing?"":" · start a deck to sync"}`;
+  }
+}
+function sendLightNet(){
+  const L=state.lights, now=performance.now();
+  if(!L.wled.on && !L.lifx.on) return;
+  if(now-lightNetLast<500) return;
+  lightNetLast=now;
+  const oa=onAir(); const s=oa?song(state.decks[oa].songId):null;
+  const hue=s?s.hue:270, prog=lightProgram(), on=prog!=="off";
+  const bri=Math.round(254*state.lights.intensity*(on?1:0));
+  if(L.wled.on && L.wled.ip){
+    if(location.protocol==="https:"){ L.wled.status="blocked: open Salt over http/file for LAN lights"; }
+    else try{
+      fetch(`http://${L.wled.ip.replace(/[^A-Za-z0-9.:-]/g,"")}/json/state`,{
+        method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"},
+        body:JSON.stringify({on, bri, seg:[{col:[hslToRgb(hue)]}]}),
+      });
+      L.wled.status="sending beats → "+L.wled.ip;
+    }catch(e){ L.wled.status="error: "+e.message; }
+  }
+  if(L.lifx.on && L.lifx.token){
+    fetch("https://api.lifx.com/v1/lights/all/state",{
+      method:"PUT",
+      headers:{"Authorization":"Bearer "+L.lifx.token, "Content-Type":"application/json"},
+      body:JSON.stringify({power:on?"on":"off", color:`hue:${hue} saturation:0.85`, brightness:state.lights.intensity, duration:0.4, fast:true}),
+    }).then(r=>{ L.lifx.status=r.ok||r.status===202?"connected — sending":"HTTP "+r.status; },
+      ()=>{ L.lifx.status="unreachable (network/CORS)"; });
+  }
+}
+
 /* ---------- toast ---------- */
 let toastTimer=null;
 function toast(msg){
@@ -1535,6 +1987,7 @@ const TABS=[
   {id:"crates", label:"Crates", icon:"M4 7h16M4 7v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7M4 7l2-3h12l2 3M10 11h4"},
   {id:"mix", label:"Mix", icon:"M7 4v16M7 14h.01M17 4v16M17 9h.01M4 14h6M14 9h6"},
   {id:"requests", label:"Requests", icon:"M21 12a8 8 0 0 1-8 8H4l2.5-2.5A8 8 0 1 1 21 12ZM9 10h6M9 13h4"},
+  {id:"lights", label:"Lights", icon:"M9 18h6M10 21h4M12 3a6 6 0 0 1 6 6c0 2.2-1.2 3.4-2.2 4.6-.6.7-.8 1.4-.8 2.4H9c0-1-.2-1.7-.8-2.4C7.2 12.4 6 11.2 6 9a6 6 0 0 1 6-6Z"},
   {id:"emcee", label:"Emcee", icon:"M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM6 11a6 6 0 0 0 12 0M12 17v4"},
 ];
 function renderTabs(){
@@ -1557,8 +2010,10 @@ function render(){
   else if(state.view==="crates") v.innerHTML=viewCrates();
   else if(state.view==="mix") v.innerHTML=viewMix();
   else if(state.view==="requests") v.innerHTML=viewRequests();
+  else if(state.view==="lights") v.innerHTML=viewLights();
   else v.innerHTML=viewEmcee();
   if(state.view==="live") redrawLive(true);
+  if(state.view==="lights") drawRig();
 }
 
 /* ---------- LIVE view ---------- */
@@ -1601,6 +2056,7 @@ function deckHtml(dk){
       <button class="dbtn" data-sync="${dk}" ${s?"":"disabled"}>SYNC</button>
       <button class="dbtn cleanb" data-clean="${dk}" aria-pressed="${d.clean}" ${s&&s.clean?"":"disabled"} title="${s&&s.clean?"Toggle clean edit":"No clean edit available"}">CLEAN</button>
       <button class="dbtn klk" data-keylock="${dk}" aria-pressed="${d.keylock}" ${s?"":"disabled"} title="Keylock: pitch changes tempo, not key">KLOCK</button>
+      <button class="dbtn cns" data-censor="${dk}" aria-pressed="${d.censoring}" ${s?"":"disabled"} title="Hold to mute a dirty word — pairs with the explicit radar countdown">CENSOR</button>
       <label class="pitch"><input type="range" min="-8" max="8" step="0.1" value="${d.pitch}" data-pitch="${dk}" aria-label="Pitch deck ${dk}">
         <span class="num" id="dpitchval-${dk}">${d.pitch>0?"+":""}${d.pitch.toFixed(1)}%</span></label>
     </div>
@@ -1684,6 +2140,13 @@ function viewLive(){
             <button class="qbtn" data-qload="B:${i}" aria-label="Load to deck B">B</button>
             <button class="qbtn" data-qdel="${i}" aria-label="Remove from queue">×</button></span>`;}).join("")}
       </div>`:""}
+    </div>
+    <div class="pads">
+      <button class="pad" data-pad="airhorn">📯 AIR HORN</button>
+      <button class="pad" data-pad="siren">🚨 SIREN</button>
+      <button class="pad" data-pad="applause">👏 APPLAUSE</button>
+      <button class="pad" data-pad="rewind">⏪ REWIND</button>
+      <button class="dbtn rec" data-rec aria-pressed="${!!recorder}" title="Record the master output to an audio file">${recorder?"■ STOP & SAVE":"● REC SET"}</button>
     </div>
     <div class="livelib-head">
       <input id="liveSearch" type="search" placeholder="Search crates…" value="${esc(state.search)}" aria-label="Search songs">
@@ -1797,6 +2260,10 @@ function openHelp(){
       <li><b>🎤 Emcee notes</b><span>Pronunciations, timeline, shoutouts and the do-not-play list. Your next timeline cue stays pinned to the Live screen.</span></li>
       <li><b>🏛 Event modes</b><span>Wedding / Corporate / Club switch every safety verdict in the app — the same crate reads differently per room.</span></li>
       <li><b>🤖 Automix + Suggest</b><span>Need a bathroom break? <b>AUTOMIX</b> syncs, starts and blends the next track (queue first, then best match) as the current one runs out. <b>SUGGEST</b> loads the smartest next track in one tap — key/BPM-matched, room-safe, not played yet.</span></li>
+      <li><b>🎼 Sections</b><span>Every track is auto-segmented into Intro / Verse / Chorus / Drop / Break / Outro from its energy — labels on the deck waveform, bands on the overview — so you always know where you are and where to mix out.</span></li>
+      <li><b>💡 Lights</b><span>The Lights tab runs a beat-synced show that follows the on-air track's BPM, energy and color — fullscreen it onto a projector, or stream it to real WLED fixtures / LIFX bulbs with their free APIs.</span></li>
+      <li><b>🎛 Sampler + REC</b><span>Air horn, siren, applause, rewind pads — and ● REC records your actual master output to an audio file.</span></li>
+      <li><b>🤫 Censor</b><span>Hold <b>CENSOR</b> on a deck to duck a dirty word the radar warned you about — the Serato censor move, wired to actual lyric intelligence.</span></li>
       <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, ECHO and FILT effects, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
       <li><b>📀 Your music</b><span>Hit <b>＋ Import</b> in the library: audio files get real BPM detection and true waveforms and play on the decks (scratch, FX and all); Serato .crate, Rekordbox .xml and .m3u playlists import with their metadata — Rekordbox brings real BPM and key.</span></li>
       <li><b>🔊 Sound</b><span>Hit <b>SOUND</b> in the mixer and the decks play a synthesized preview beat that follows each track's BPM and key — volume rides the crossfader, and ECHO/FILT process it live. It's a placeholder groove, not the real recordings.</span></li>
@@ -1927,6 +2394,51 @@ function viewRequests(){
   }
 }
 
+/* ---------- lights view ---------- */
+function viewLights(){
+  const L=state.lights;
+  const httpsNote = location.protocol==="https:" ?
+    `<p class="footnote">⚠ LAN fixtures (WLED) can't be reached from an https page — browsers block it. At the gig, run the offline Salt file over http or use the future desktop build; LIFX Cloud works from anywhere.</p>` : "";
+  return `
+    <h2 class="view-title">Light show — beat-synced to the on-air deck</h2>
+    <canvas id="rigCanvas" aria-label="Light show preview"></canvas>
+    <div class="light-ctl">
+      <div class="sorts" role="group" aria-label="Light program">
+        ${["auto","pulse","wash","strobe","off"].map(pr=>`
+          <button data-lprog="${pr}" aria-pressed="${L.program===pr}">${pr==="off"?"Blackout":cap(pr)}</button>`).join("")}
+      </div>
+      <label class="pitch" style="flex:1; min-width:150px">
+        <span style="width:auto">DIM</span>
+        <input type="range" min="0" max="1" step="0.05" value="${L.intensity}" id="lightsIntensity" aria-label="Light intensity">
+      </label>
+      <button class="btn" data-projector title="Fullscreen the rig — plug a projector or TV into the booth laptop">⛶ Projector</button>
+      <span class="chip num" id="lightStatus"></span>
+    </div>
+    <h2 class="view-title">Real fixtures — free APIs</h2>
+    <div class="card note-card">
+      <h3><span class="dot" style="background:var(--clean)"></span>WLED <span class="song-artist" style="font-weight:400; text-transform:none; letter-spacing:0">— open-source LED controller (local network)</span></h3>
+      <div class="light-conn">
+        <input type="text" placeholder="WLED IP, e.g. 192.168.1.44" value="${esc(L.wled.ip)}" data-lightfield="wled" aria-label="WLED IP address">
+        <button class="btn ${L.wled.on?"primary":""}" data-lighttoggle="wled">${L.wled.on?"Streaming":"Connect"}</button>
+        <span class="chip">${esc(L.wled.status)}</span>
+      </div>
+    </div>
+    <div class="card note-card">
+      <h3><span class="dot" style="background:var(--accent)"></span>LIFX Cloud <span class="song-artist" style="font-weight:400; text-transform:none; letter-spacing:0">— free API token from cloud.lifx.com</span></h3>
+      <div class="light-conn">
+        <input type="password" placeholder="LIFX API token" value="${esc(L.lifx.token)}" data-lightfield="lifx" aria-label="LIFX API token">
+        <button class="btn ${L.lifx.on?"primary":""}" data-lighttoggle="lifx">${L.lifx.on?"Streaming":"Connect"}</button>
+        <span class="chip">${esc(L.lifx.status)}</span>
+      </div>
+    </div>
+    <div class="card note-card">
+      <h3><span class="dot" style="background:var(--caution)"></span>Philips Hue</h3>
+      <p class="footnote" style="margin-top:4px">Hue's free local API doesn't accept browser calls (no CORS on the bridge) — Hue support ships with the Salt desktop companion. The colors and beat engine here already drive it.</p>
+    </div>
+    ${httpsNote}
+    <p class="footnote">Colors follow the on-air track, tempo follows its BPM, and the program follows its energy in Auto. Tokens/IPs are stored only in this browser.</p>`;
+}
+
 /* ---------- emcee view ---------- */
 function viewEmcee(){
   return `
@@ -2020,6 +2532,22 @@ document.addEventListener("click", e=>{
     }
     if(el.hasAttribute("data-suggest")){ doSuggest(); return; }
     if(el.hasAttribute("data-sound")){ toggleSound(); return; }
+    if(d.pad){ playPad(d.pad); return; }
+    if(d.lprog){ state.lights.program=d.lprog; saveSession(); render(); return; }
+    if(el.hasAttribute("data-projector")){
+      const cv=$("#rigCanvas");
+      if(cv && cv.requestFullscreen) cv.requestFullscreen().catch(()=>toast("Fullscreen blocked in this viewer"));
+      else toast("Fullscreen not available here");
+      return;
+    }
+    if(d.lighttoggle){
+      const c=state.lights[d.lighttoggle];
+      if(!c.on && d.lighttoggle==="wled" && !state.lights.wled.ip){ toast("Enter the WLED IP first"); return; }
+      if(!c.on && d.lighttoggle==="lifx" && !state.lights.lifx.token){ toast("Paste your LIFX token first"); return; }
+      c.on=!c.on; c.status=c.on?"connecting…":"not connected";
+      lightNetLast=0; saveSession(); render(); return;
+    }
+    if(el.hasAttribute("data-rec")){ toggleRec(); return; }
     if(d.fxecho){ const dd=state.decks[d.fxecho]; dd.fx.echo=!dd.fx.echo; applyFx(d.fxecho);
       toast(`Deck ${d.fxecho}: echo ${dd.fx.echo?"on":"off"}${state.soundOn?"":" (turn SOUND on to hear it)"}`); render(); return; }
     if(d.fxfilt){ const dd=state.decks[d.fxfilt]; dd.fx.filt=!dd.fx.filt; applyFx(d.fxfilt);
@@ -2125,6 +2653,9 @@ document.addEventListener("input", e=>{
     return;
   }
   if(t.id==="xfade"){ state.xfade=+t.value; updateVU(); return; }
+  if(t.id==="lightsIntensity"){ state.lights.intensity=+t.value; saveSession(); return; }
+  if(t.dataset && t.dataset.lightfield==="wled"){ state.lights.wled.ip=t.value.trim().slice(0,60); saveSession(); return; }
+  if(t.dataset && t.dataset.lightfield==="lifx"){ state.lights.lifx.token=t.value.trim().slice(0,120); saveSession(); return; }
 });
 document.addEventListener("change", e=>{
   if(e.target.id==="xfade" && state.view==="live"){
@@ -2141,6 +2672,14 @@ function jogAngle(e, el){
   return Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2));
 }
 document.addEventListener("pointerdown", e=>{
+  const cb=e.target.closest("[data-censor]");
+  if(cb && !cb.disabled){
+    const dk=cb.dataset.censor;
+    state.decks[dk].censoring=true;
+    cb.setAttribute("aria-pressed","true");
+    updateVU(); drawDeck(dk);
+    return;
+  }
   const j=e.target.closest("[data-jog]"); if(!j) return;
   const dk=j.dataset.jog;
   if(!state.decks[dk].songId) return;
@@ -2161,8 +2700,18 @@ document.addEventListener("pointermove", e=>{
   d.pos=Math.max(0, Math.min(sec(s.dur), d.pos + da/(2*Math.PI)*1.8));
   drawDeck(scratch.dk); updateDynamic(scratch.dk);
 });
-document.addEventListener("pointerup", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; });
-document.addEventListener("pointercancel", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; });
+function endCensor(){
+  for(const dk of ["A","B"]){
+    if(state.decks[dk].censoring){
+      state.decks[dk].censoring=false;
+      const b=document.querySelector(`[data-censor="${dk}"]`);
+      if(b) b.setAttribute("aria-pressed","false");
+      updateVU(); drawDeck(dk);
+    }
+  }
+}
+document.addEventListener("pointerup", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; endCensor(); });
+document.addEventListener("pointercancel", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; endCensor(); });
 
 /* ---------- boot ---------- */
 loadSession();
@@ -2175,7 +2724,7 @@ pollRequests();
 pollTimer=setInterval(pollRequests, 5000);
 
 /* test/debug hook */
-window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, importFiles, SONGS, get serverMode(){return serverMode}};
+window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, importFiles, SONGS, sectionsFor, get serverMode(){return serverMode}};
 </script>
 
 </body>

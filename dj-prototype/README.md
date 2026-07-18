@@ -34,6 +34,18 @@ A booth tool for working DJs: know every track before it drops.
 - **Automix + Suggest** — hands-free blending as tracks run out (queue first,
   then best match), and one-tap smartest-next-track (key/BPM match,
   room-safe, not already played).
+- **Sections (phrase analysis)** — every track is auto-segmented into
+  Intro / Verse / Chorus / Drop / Break / Outro from its energy profile,
+  labeled on the deck waveforms and banded on the overviews (Rekordbox-style,
+  and it works on imported audio too).
+- **Light show** — a beat-synced rig (par cans, movers, strobe, floor wash)
+  that follows the on-air track's BPM, energy and color; fullscreens onto a
+  projector, and streams to real fixtures via the free WLED (LAN) and LIFX
+  Cloud APIs. Hue is documented as desktop-companion territory (its local
+  API blocks browsers).
+- **Censor, sampler, set recording** — hold CENSOR to duck flagged lyrics,
+  four synthesized sampler pads (air horn / siren / applause / rewind), and
+  REC captures the actual master output to a downloadable audio file.
 - **Emcee suite** — pronunciations, timeline (first item pinned to the Live
   screen), shoutouts, do-not-play list, and an automatic set log with one-tap export.
 
