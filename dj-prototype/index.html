@@ -567,6 +567,80 @@
     .overlay{align-items:center}
     .sheet{border-radius:20px; border-bottom:1px solid var(--line)}
   }
+
+  /* ============ v1.0 premium polish layer ============ */
+  #frame{background:
+    radial-gradient(1000px 520px at 10% -6%, rgba(157,123,255,.09), transparent 62%),
+    radial-gradient(900px 500px at 96% 6%, rgba(65,214,195,.055), transparent 60%),
+    radial-gradient(700px 700px at 50% 115%, rgba(157,123,255,.05), transparent 65%),
+    #0C0B13}
+  header.top{background:linear-gradient(rgba(13,12,21,.97) 78%, transparent)}
+  .wordmark{font-size:21px; letter-spacing:.09em;
+    background:linear-gradient(94deg,#F5F2EA 25%,#C3B1FF 68%,#5FE0CC);
+    -webkit-background-clip:text; background-clip:text; color:transparent}
+  .wordmark em{color:transparent}
+  .tagline{letter-spacing:.04em}
+
+  .card,.deck,.mixer{
+    background:linear-gradient(180deg,#1B1A29 0%,#151422 55%,#131220 100%);
+    border-color:rgba(255,255,255,.075);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.38);
+  }
+  .chstrip{background:linear-gradient(180deg,#211F31,#1A1929); box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
+  .wave-main,.wave-over{box-shadow:inset 0 0 0 1px rgba(255,255,255,.045), inset 0 3px 10px rgba(0,0,0,.55)}
+  .deck-tag{background:linear-gradient(155deg, color-mix(in srgb, var(--dk), #fff 28%), var(--dk) 60%, color-mix(in srgb, var(--dk), #000 20%));
+    box-shadow:0 2px 9px color-mix(in srgb, var(--dk), transparent 55%), inset 0 1px 1px rgba(255,255,255,.35)}
+
+  .btn,.dbtn,.hc,.pad,.qbtn,.pfl{background:linear-gradient(180deg,#242236,#1B1A28)}
+  .btn,.dbtn,.hc,.pad,.modes button,.sorts button,.cratechips button,nav.tabs button,.qbtn,.pfl,.songopt{
+    transition:background .16s,border-color .16s,color .16s,transform .07s,box-shadow .16s}
+  .btn:hover,.dbtn:hover:not(:disabled),.hc:hover:not(:disabled),.pad:hover{
+    border-color:rgba(157,123,255,.55); box-shadow:0 3px 12px rgba(0,0,0,.35)}
+  .btn:active,.dbtn:active:not(:disabled),.hc:active:not(:disabled),.pad:active,.qbtn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(180deg,#B394FF,#9D7BFF 70%,#8B66F5);
+    box-shadow:0 3px 14px rgba(157,123,255,.4), inset 0 1px 0 rgba(255,255,255,.3)}
+  .modes{box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+  .modes button[aria-pressed="true"]{background:linear-gradient(180deg,#B394FF,#9D7BFF);
+    box-shadow:0 2px 10px rgba(157,123,255,.45)}
+  .sorts button[aria-pressed="true"],.cratechips button[aria-pressed="true"]:not(.cleanonly){
+    background:linear-gradient(180deg,#B394FF,#9D7BFF); box-shadow:0 2px 8px rgba(157,123,255,.35)}
+
+  nav.tabs{background:#100F19; border-top:1px solid rgba(255,255,255,.06)}
+  nav.tabs button[aria-current="page"]{
+    background:linear-gradient(180deg,#282542,#1D1B2C);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 4px 14px rgba(0,0,0,.3)}
+
+  .librow,.song-row{transition:border-color .15s, background .15s}
+  .librow:hover,.song-row:hover{background:linear-gradient(180deg,#201E30,#181725)}
+  .matchb.hot{box-shadow:0 0 12px rgba(157,123,255,.3)}
+  .searchbar input,.livelib-head input{transition:border-color .15s, box-shadow .15s}
+  .searchbar input:focus,.livelib-head input:focus,.note-add input:focus,.evfield:focus,.light-conn input:focus{
+    border-color:rgba(157,123,255,.6); box-shadow:0 0 0 3px rgba(157,123,255,.16); outline:none}
+  #toast{box-shadow:0 6px 24px rgba(0,0,0,.5)}
+  .alertbar{box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .guest-link .qr{box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  .pad{border-bottom-width:3px}
+  .verdict{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+
+  /* machined sliders replace native browser ranges */
+  input[type=range]{-webkit-appearance:none; appearance:none; background:transparent; --fill:var(--accent); height:22px; cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:5px; border-radius:3px;
+    background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(142,137,160,.22));
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.05)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; border-radius:50%; margin-top:-5px;
+    background:var(--fill);
+    background:radial-gradient(circle at 35% 30%, #fff 0 8%, color-mix(in srgb, var(--fill), #fff 25%) 30%, var(--fill) 60%, color-mix(in srgb, var(--fill), #000 40%));
+    box-shadow:0 2px 5px rgba(0,0,0,.6), 0 0 9px color-mix(in srgb, var(--fill), transparent 55%)}
+  input[type=range]::-moz-range-track{height:5px; border-radius:3px; background:rgba(142,137,160,.22);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+  input[type=range]::-moz-range-thumb{width:15px; height:15px; border:0; border-radius:50%; background:var(--fill);
+    box-shadow:0 2px 5px rgba(0,0,0,.6)}
+  .pitch input{--fill:var(--dk)}
+  .eqrow input{--fill:#A5A1B8}
+  .eqrow.vol input{--fill:var(--accent)}
+  .eqrow.master input{--fill:var(--clean)}
+  .eqrow input::-webkit-slider-runnable-track{height:4px}
+  .eqrow input::-webkit-slider-thumb{width:12px; height:12px; margin-top:-4px}
   @media (prefers-reduced-motion:reduce){
     *{animation:none!important; transition:none!important}
   }
@@ -580,7 +654,7 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.9 preview</div>
+      <div class="tagline">Know every track before it drops. · v1.0 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
