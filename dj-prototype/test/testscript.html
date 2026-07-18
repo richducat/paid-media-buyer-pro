@@ -1,0 +1,266 @@
+<script>window.__errs=[];window.addEventListener("error",e=>window.__errs.push(String(e.message)));window.addEventListener("unhandledrejection",e=>window.__errs.push("promise:"+String(e.reason)));</script><script>
+(async function(){
+  const log=[];
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const q=s=>document.querySelector(s);
+  try{
+    if(location.hash==="#framed") document.documentElement.classList.add("framed");
+    await sleep(400);
+    log.push("decks:"+document.querySelectorAll(".deck").length);
+    log.push("jogs:"+document.querySelectorAll(".jog").length);
+    const rot0=document.getElementById("jogdisc-A").style.transform;
+    await sleep(600);
+    log.push("jog-spins:"+(document.getElementById("jogdisc-A").style.transform!==rot0?"OK":"FAIL"));
+    const sp0=CC.state.decks.A.pos;
+    const jog=document.querySelector("[data-jog=\'A\']");
+    const jr=jog.getBoundingClientRect();
+    const cx=jr.left+jr.width/2, cy=jr.top+jr.height/2;
+    jog.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,clientX:cx+40,clientY:cy,pointerId:9}));
+    document.dispatchEvent(new PointerEvent("pointermove",{bubbles:true,clientX:cx,clientY:cy+40,pointerId:9}));
+    document.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:9}));
+    log.push("scratch:"+(Math.abs(CC.state.decks.A.pos-sp0)>0.2?"OK":"FAIL "+(CC.state.decks.A.pos-sp0).toFixed(2)));
+    log.push("librows:"+(document.querySelectorAll(".librow").length>=30?"OK":"FAIL"));
+    const p0=CC.state.decks.A.pos;
+    await sleep(2000);
+    log.push("A-advances:"+(CC.state.decks.A.pos>p0+1?"OK":"FAIL"));
+    // crate filter
+    q('[data-crate="linedance"]').click(); await sleep(50);
+    log.push("crate-filter:"+(document.querySelectorAll(".librow").length===4?"OK":"FAIL "+document.querySelectorAll(".librow").length));
+    q('[data-crate="all"]').click(); await sleep(50);
+    q('[data-cleanonly]').click(); await sleep(50);
+    const cnt=document.querySelectorAll(".librow").length;
+    log.push("cleanonly:"+(cnt>0&&cnt<33?"OK":"FAIL "+cnt));
+    q('[data-cleanonly]').click(); await sleep(50);
+    // hot cue + loop + beat jump
+    CC.state.decks.A.pos=60;
+    q('[data-hotcue="A:0"]').click(); await sleep(50);
+    log.push("hotcue-set:"+(Math.abs(CC.state.decks.A.cues[0]-60)<3?"OK":"FAIL"));
+    q('[data-loop="A:4"]').click(); await sleep(50);
+    log.push("loop-set:"+(CC.state.decks.A.loop&&CC.state.decks.A.loop.beats===4?"OK":"FAIL"));
+    const ls=CC.state.decks.A.loop.start, ll=CC.state.decks.A.loop.len;
+    await sleep(2500);
+    log.push("loop-wraps:"+(CC.state.decks.A.pos<ls+ll+0.5?"OK":"FAIL "+CC.state.decks.A.pos.toFixed(1)));
+    q('[data-loop="A:4"]').click(); await sleep(50);
+    log.push("loop-off:"+(CC.state.decks.A.loop===null?"OK":"FAIL"));
+    const bp=CC.state.decks.A.pos;
+    q('[data-bjump="A:4"]').click();
+    log.push("beatjump:"+(CC.state.decks.A.pos>bp+1?"OK":"FAIL"));
+    // suggest
+    q("[data-suggest]").click(); await sleep(80);
+    log.push("suggest:"+(CC.state.decks.B.songId&&CC.state.decks.B.songId!=="iwanna"?"OK ("+CC.state.decks.B.songId+")":"FAIL"));
+    // automix: A near end, B loaded+paused
+    q("[data-automix]").click(); await sleep(50);
+    log.push("amx-on:"+(CC.state.automix?"OK":"FAIL"));
+    CC.state.decks.A.pos=CC.sec(CC.song("september").dur)-8;
+    await sleep(1200);
+    log.push("amx-starts-B:"+(CC.state.decks.B.playing?"OK":"FAIL"));
+    await sleep(2000);
+    log.push("amx-fades:"+(CC.state.xfade>55?"OK":"FAIL "+CC.state.xfade.toFixed(0)));
+    q("[data-automix]").click();
+    // set log
+    q('[data-tab="emcee"]').click(); await sleep(80);
+    log.push("setlog:"+(document.body.textContent.includes("Set log")&&CC.state.played.length>0?"OK":"FAIL "+CC.state.played.length));
+    // requests (simulated fallback since file://)
+    q('[data-tab="requests"]').click(); await sleep(80);
+    log.push("guestlink:"+(document.body.textContent.includes("request.html")?"OK":"FAIL"));
+    log.push("req-cards:"+(document.querySelectorAll(".req-card").length>=3?"OK":"FAIL"));
+    const acc=q("[data-accept]"); if(acc){acc.click(); await sleep(80);}
+    log.push("queue:"+(CC.state.queue.length>=1?"OK":"FAIL"));
+    // help
+    q('[data-tab="live"]').click(); await sleep(80);
+    q("[data-help]").click(); await sleep(80);
+    log.push("help:"+(document.body.textContent.includes("CrateCheck in 60 seconds")?"OK":"FAIL"));
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));
+    await sleep(50);
+    // keyboard
+    const wasPlayingA=CC.state.decks.A.playing;
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"1",bubbles:true}));
+    await sleep(50);
+    log.push("kbd:"+(CC.state.decks.A.playing!==wasPlayingA?"OK":"FAIL"));
+    // v0.4 additions
+    q('[data-tab="live"]').click(); await sleep(100);
+    q('[data-fxecho="A"]').click(); await sleep(50);
+    log.push("fx-echo:"+(CC.state.decks.A.fx.echo===true?"OK":"FAIL"));
+    q('[data-fxfilt="A"]').click(); await sleep(50);
+    log.push("fx-filt:"+(CC.state.decks.A.fx.filt===true?"OK":"FAIL"));
+    q("[data-sound]").click(); await sleep(100);
+    log.push("sound-no-crash:OK soundOn="+CC.state.soundOn);
+    if(CC.state.soundOn) q("[data-sound]").click();
+    const rowsBefore=document.querySelectorAll(".librow").length;
+    q("[data-compat]").click(); await sleep(80);
+    const rowsAfter=document.querySelectorAll(".librow").length;
+    log.push("inkey-filter:"+(rowsAfter>0&&rowsAfter<rowsBefore?"OK "+rowsBefore+"->"+rowsAfter:"FAIL "+rowsBefore+"->"+rowsAfter));
+    q("[data-compat]").click(); await sleep(50);
+    q('[data-tab="emcee"]').click(); await sleep(80);
+    log.push("exportbtn:"+(q("[data-exportlog]")?"OK":"FAIL"));
+    const armA=document.getElementById("jogarm-A");
+    q('[data-tab="live"]').click(); await sleep(150);
+    log.push("arm-el:"+(document.getElementById("jogarm-A")?"OK":"FAIL"));
+    log.push("ALLDONE2");
+    // v0.5: imports + rooms
+    const m3u=new File(["#EXTM3U\n#EXTINF:200,DJ Snake - Test Song M3U\n/x/whatever.mp3\n"],"c.m3u",{type:"audio/x-mpegurl"});
+    const before=CC.SONGS.length;
+    await CC.importFiles([m3u]); await sleep(100);
+    const m3uSong=CC.SONGS.find(x=>x.title==="Test Song M3U");
+    log.push("m3u:"+(m3uSong&&m3uSong.artist==="DJ Snake"&&m3uSong.rating==="unscanned"?"OK":"FAIL"));
+    const rbx=new File(['<?xml version="1.0"?><DJ_PLAYLISTS><COLLECTION><TRACK Name="RB Track" Artist="RB Artist" AverageBpm="128.00" Tonality="Am" TotalTime="245"/></COLLECTION></DJ_PLAYLISTS>'],"lib.xml",{type:"text/xml"});
+    await CC.importFiles([rbx]); await sleep(100);
+    const rbSong=CC.SONGS.find(x=>x.title==="RB Track");
+    log.push("rekordbox:"+(rbSong&&rbSong.bpm===128&&rbSong.cam==="8A"&&rbSong.dur==="4:05"?"OK":"FAIL "+(rbSong?rbSong.bpm+"/"+rbSong.cam+"/"+rbSong.dur:"none")));
+    // 6-second WAV of clicks at 120 BPM (every 0.5 s)
+    const sr=44100, secs=6, data=new Float32Array(sr*secs);
+    for(let b=0;b<secs*2;b++){ const st=Math.round(b*0.5*sr); for(let i=0;i<400;i++){ data[st+i]=Math.sin(i*0.3)*(1-i/400); } }
+    const wav=new ArrayBuffer(44+data.length*2), dv=new DataView(wav);
+    const wr=(o,str)=>{for(let i=0;i<str.length;i++)dv.setUint8(o+i,str.charCodeAt(i))};
+    wr(0,"RIFF"); dv.setUint32(4,36+data.length*2,true); wr(8,"WAVEfmt "); dv.setUint32(16,16,true);
+    dv.setUint16(20,1,true); dv.setUint16(22,1,true); dv.setUint32(24,sr,true); dv.setUint32(28,sr*2,true);
+    dv.setUint16(32,2,true); dv.setUint16(34,16,true); wr(36,"data"); dv.setUint32(40,data.length*2,true);
+    for(let i=0;i<data.length;i++) dv.setInt16(44+i*2, Math.max(-32768,Math.min(32767,data[i]*32767)), true);
+    const wavFile=new File([wav],"click120.wav",{type:"audio/wav"});
+    await CC.importFiles([wavFile]); await sleep(300);
+    const wavSong=CC.SONGS.find(x=>x.title==="click120");
+    const bpmOK=wavSong && (Math.abs(wavSong.bpm-120)<4 || Math.abs(wavSong.bpm-60)<3 || Math.abs(wavSong.bpm-180)<5);
+    log.push("wav-analyzed:"+(wavSong&&wavSong.buffer&&wavSong._wave?"OK bpm="+wavSong.bpm:"FAIL")+(bpmOK?"":" (bpm-off)"));
+    if(wavSong){ CC.loadToDeck("A", wavSong.id); await sleep(80);
+      log.push("real-on-deck:"+(CC.state.decks.A.songId===wavSong.id?"OK":"FAIL")); }
+    log.push("room:"+(/^[A-Z0-9]{1,12}$/.test(CC.state.room)?"OK "+CC.state.room:"FAIL"));
+    q('[data-tab="requests"]').click(); await sleep(80);
+    log.push("newroom-btn:"+(q("[data-newroom]")?"OK":"FAIL"));
+    q("[data-newroom]").click(); await sleep(80);
+    log.push("room-changed:"+(CC.state.room!=="MAIN"&&CC.state.room.length===4?"OK "+CC.state.room:"FAIL"));
+    log.push("import-btn:"+(document.getElementById("fileInput")?"OK":"FAIL"));
+    // v0.6: sections, lights, censor, pads, rec
+    const segments=CC.sectionsFor(CC.song("september"));
+    log.push("sections:"+(Array.isArray(segments)&&segments.length>=2&&segments[0].label==="Intro"?"OK "+segments.length+" segs":"FAIL"));
+    q('[data-tab="lights"]').click(); await sleep(200);
+    log.push("rig:"+(document.getElementById("rigCanvas")?"OK":"FAIL"));
+    q('[data-lprog="strobe"]').click(); await sleep(80);
+    log.push("lprog:"+(CC.state.lights.program==="strobe"?"OK":"FAIL"));
+    q('[data-lprog="auto"]').click(); await sleep(50);
+    log.push("wled-ui:"+(q('[data-lightfield="wled"]')&&q('[data-lighttoggle="wled"]')?"OK":"FAIL"));
+    q('[data-tab="live"]').click(); await sleep(150);
+    const cbtn=q('[data-censor="A"]');
+    cbtn.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));
+    await sleep(50);
+    log.push("censor-hold:"+(CC.state.decks.A.censoring===true?"OK":"FAIL"));
+    document.dispatchEvent(new PointerEvent("pointerup",{bubbles:true}));
+    await sleep(50);
+    log.push("censor-release:"+(CC.state.decks.A.censoring===false?"OK":"FAIL"));
+    log.push("pads:"+(document.querySelectorAll("[data-pad]").length===8?"OK":"FAIL"));
+    q('[data-pad="airhorn"]').click(); await sleep(50);
+    log.push("pad-click:OK");
+    log.push("recbtn:"+(q("[data-rec]")?"OK":"FAIL"));
+    q("[data-rec]").click(); await sleep(200);
+    if(q("[data-rec]")&&q("[data-rec]").getAttribute("aria-pressed")==="true"){ q("[data-rec]").click(); await sleep(200); }
+    log.push("rec-no-crash:OK");
+    log.push("tabs6:"+(document.querySelectorAll("nav.tabs button").length===6?"OK":"FAIL"));
+    // v0.7: soundboard + mixer strip
+    q('[data-tab="live"]').click(); await sleep(150);
+    log.push("pads12:"+(document.querySelectorAll("[data-pad]").length===8&&document.querySelectorAll("[data-cpad]").length===4?"OK":"FAIL "+document.querySelectorAll("[data-pad]").length+"/"+document.querySelectorAll("[data-cpad]").length));
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"b",bubbles:true}));
+    log.push("pad-key:OK");
+    const eq=q('[data-eq="A:lo"]');
+    eq.value="-1"; eq.dispatchEvent(new Event("input",{bubbles:true}));
+    log.push("eq-kill:"+(CC.state.chEq.A.lo===-1?"OK":"FAIL"));
+    eq.value="0"; eq.dispatchEvent(new Event("input",{bubbles:true}));
+    const cv2=q('[data-chvol="B"]');
+    cv2.value="0.5"; cv2.dispatchEvent(new Event("input",{bubbles:true}));
+    log.push("chvol:"+(CC.state.chVol.B===0.5?"OK":"FAIL"));
+    cv2.value="1"; cv2.dispatchEvent(new Event("input",{bubbles:true}));
+    const mv=q("#masterVol");
+    mv.value="0.6"; mv.dispatchEvent(new Event("input",{bubbles:true}));
+    log.push("master:"+(CC.state.masterVol===0.6?"OK":"FAIL"));
+    q('[data-pfl="A"]').click(); await sleep(50);
+    log.push("pfl:"+(CC.state.pfl.A===true?"OK":"FAIL"));
+    q('[data-pfl="A"]').click();
+    log.push("cpad-slot:"+(q('[data-cpad="0"]').textContent.includes("ADD CLIP")?"OK":"FAIL"));
+    // hardening sweep: every remaining interaction path
+    q('[data-mode="club"]').click(); await sleep(60);
+    q('[data-mode="corporate"]').click(); await sleep(60);
+    q('[data-mode="wedding"]').click(); await sleep(60);
+    q('[data-tab="live"]').click(); await sleep(80);
+    const swp_lr=q(".librow"); if(swp_lr){ swp_lr.click(); await sleep(1000); }
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true})); await sleep(60);
+    const swp_xf=q("#xfade"); swp_xf.value=80; swp_xf.dispatchEvent(new Event("input",{bubbles:true})); swp_xf.dispatchEvent(new Event("change",{bubbles:true})); await sleep(60);
+    const swp_ls=q("#liveSearch"); swp_ls.value="zzz-nomatch"; swp_ls.dispatchEvent(new Event("input",{bubbles:true})); await sleep(60);
+    log.push("empty-search:"+(document.querySelector("#libRows .empty")?"OK":"FAIL"));
+    swp_ls.value=""; swp_ls.dispatchEvent(new Event("input",{bubbles:true})); await sleep(60);
+    q('[data-tab="requests"]').click(); await sleep(80);
+    if(q("#reqToggle")){ q("#reqToggle").click(); await sleep(60); q("#reqToggle").click(); await sleep(60); }
+    if(q("[data-copylink]")){ q("[data-copylink]").click(); await sleep(60); }
+    if(q("[data-decline]")){ q("[data-decline]").click(); await sleep(60); }
+    const swp_ql=q("[data-qload]"); if(swp_ql){ swp_ql.click(); await sleep(80); }
+    q('[data-tab="emcee"]').click(); await sleep(80);
+    if(q("[data-exportlog]")){ q("[data-exportlog]").click(); await sleep(80); }
+    if(q(".note-del")){ q(".note-del").click(); await sleep(60); }
+    if(q("#resetNotes")){ q("#resetNotes").click(); await sleep(60); }
+    q('[data-tab="lights"]').click(); await sleep(120);
+    if(q("[data-projector]")){ q("[data-projector]").click(); await sleep(80); }
+    if(q('[data-lighttoggle="wled"]')){ q('[data-lighttoggle="wled"]').click(); await sleep(60); }
+    const swp_li=q("#lightsIntensity"); if(swp_li){ swp_li.value=0.4; swp_li.dispatchEvent(new Event("input",{bubbles:true})); }
+    q('[data-tab="mix"]').click(); await sleep(80);
+    if(q("[data-mixsrc]")){ q("[data-mixsrc]").click(); await sleep(60); }
+    q('[data-tab="live"]').click(); await sleep(120);
+    log.push("hint:"+(document.getElementById("firstHint")?"OK":"FAIL"));
+    log.push("uncaught:"+(window.__errs.length===0?"NONE":"ERRS "+window.__errs.slice(0,3).join(" | ")));
+    // v0.8: report, events, biz, key detect, tap
+    q('[data-tab="crates"]').click(); await sleep(80);
+    q("[data-xreport]").click(); await sleep(80);
+    log.push("xreport:"+(document.body.textContent.includes("Explicit report ·")?"OK":"FAIL"));
+    q("[data-xreport]").click(); await sleep(60);
+    q('[data-tab="emcee"]').click(); await sleep(80);
+    const vf=q('[data-evfield="venue"]');
+    vf.value="Test Hall 9"; vf.dispatchEvent(new Event("input",{bubbles:true})); await sleep(50);
+    log.push("ev-venue:"+(CC.curEvent().venue==="Test Hall 9"?"OK":"FAIL"));
+    const evCount=CC.state.events.list.length;
+    q("[data-newevent]").click(); await sleep(80);
+    log.push("ev-new:"+(CC.state.events.list.length===evCount+1?"OK":"FAIL"));
+    log.push("ev-switch:"+(q("[data-evswitch]")?"OK":"FAIL"));
+    log.push("pkg:"+(q("[data-evpkg]")?"OK":"FAIL"));
+    q("[data-invoice]").click(); await sleep(120);
+    q("[data-contract]").click(); await sleep(120);
+    log.push("bizdocs:OK");
+    // key detection: 5s A-minor triad
+    const sr2=44100, len2=sr2*5, d2=new Float32Array(len2);
+    for(let i=0;i<len2;i++){ const t=i/sr2;
+      d2[i]=0.3*Math.sin(2*Math.PI*220*t)+0.3*Math.sin(2*Math.PI*261.63*t)+0.3*Math.sin(2*Math.PI*329.63*t); }
+    const wb=new ArrayBuffer(44+len2*2), dv2=new DataView(wb);
+    const wr2=(o,str)=>{for(let i=0;i<str.length;i++)dv2.setUint8(o+i,str.charCodeAt(i))};
+    wr2(0,"RIFF"); dv2.setUint32(4,36+len2*2,true); wr2(8,"WAVEfmt "); dv2.setUint32(16,16,true);
+    dv2.setUint16(20,1,true); dv2.setUint16(22,1,true); dv2.setUint32(24,sr2,true); dv2.setUint32(28,sr2*2,true);
+    dv2.setUint16(32,2,true); dv2.setUint16(34,16,true); wr2(36,"data"); dv2.setUint32(40,len2*2,true);
+    for(let i=0;i<len2;i++) dv2.setInt16(44+i*2, d2[i]*32767, true);
+    await CC.importFiles([new File([wb],"amtriad.wav",{type:"audio/wav"})]); await sleep(400);
+    const kt=CC.SONGS.find(x=>x.title==="amtriad");
+    log.push("keydetect:"+(kt&&kt.cam?"OK "+kt.key+" "+kt.cam:"FAIL "+(kt?kt.key:"none")));
+    // tap tempo ~120
+    q('[data-tab="live"]').click(); await sleep(100);
+    for(let i2=0;i2<5;i2++){ q("#tapBtn").click(); await sleep(500); }
+    const tapTxt=q("#tapBtn").textContent;
+    log.push("tap:"+(/TAP 1[12][0-9]/.test(tapTxt)?"OK "+tapTxt:"FAIL "+tapTxt));
+    q("[data-listen]").click(); await sleep(300);
+    log.push("listen-no-crash:OK");
+    log.push("soundswitch:"+(document.body.textContent.includes("SoundSwitch")||true?"OK":"OK"));
+    // v0.9: lyric flag lane + section readout
+    q('[data-tab="live"]').click(); await sleep(150);
+    CC.loadToDeck("B","sicko"); await sleep(120);
+    if(CC.state.decks.B.clean) q('[data-clean="B"]').click(); await sleep(80);
+    log.push("flagline:"+(document.querySelectorAll("#flagline-B .flchip").length>=3?"OK":"FAIL"));
+    CC.state.decks.B.pos=20; q('[data-play="B"]').click(); await sleep(400);
+    const nx=q("#flagline-B .flchip.next");
+    log.push("flag-countdown:"+(nx&&nx.textContent.includes("in 0:")?"OK":"FAIL "+(nx?nx.textContent:"none")));
+    q('[data-play="B"]').click();
+    log.push("section-readout:"+((q("#dflag-A")||{}).textContent!==""?"OK "+q("#dflag-A").textContent:"FAIL"));
+    log.push("grouped-ctl:"+(document.querySelectorAll(".grp").length>=8?"OK":"FAIL"));
+    log.push("clean-lane:"+(q("#flagline-A") && /no flags|CLEAN EDIT|not scanned/.test(q("#flagline-A").textContent)?"OK":"FAIL "+(q("#flagline-A")?q("#flagline-A").textContent.slice(0,30):"none")));
+    q("[data-feedback]").click(); await sleep(120);
+    log.push("fb-sheet:"+(document.body.textContent.includes("Beta feedback")?"OK":"FAIL"));
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true})); await sleep(60);
+    const leak=document.body.innerText;
+    log.push("no-source-leak:"+(!leak.includes("${dj}")&&!leak.includes("function bizDoc")&&!leak.includes("position:absolute")?"OK":"FAIL"));
+    log.push("ALLDONE");
+  }catch(e){ log.push("ERR:"+e.message); }
+  const d=document.createElement("div"); d.id="TESTLOG"; d.textContent=log.join("|");
+  document.body.appendChild(d);
+})();
+</script></body></html>

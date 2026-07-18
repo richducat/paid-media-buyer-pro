@@ -55,6 +55,13 @@
     color:var(--muted); font-weight:800; font-size:14px;
   }
   .helpbtn:hover{color:var(--accent); border-color:var(--accent)}
+  .helpbtn.beta{color:var(--deckB); border-color:rgba(61,245,158,.4)}
+  .fb-area{
+    width:100%; min-height:110px; box-sizing:border-box; margin-top:12px; resize:vertical;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    padding:11px 13px; color:var(--ink); font:inherit; font-size:14px;
+  }
+  .fb-area:focus{border-color:rgba(62,199,255,.6); box-shadow:0 0 0 3px rgba(62,199,255,.16); outline:none}
   #firstHint{
     display:flex; gap:12px; align-items:center; justify-content:space-between;
     margin-top:12px; padding:10px 14px; border-radius:11px; font-size:13px;
@@ -775,9 +782,10 @@
       </svg>
       <div class="brand-txt">
         <div class="wordmark">Salt<em>.</em></div>
-        <div class="tagline">Know every track before it drops. · v1.2 preview</div>
+        <div class="tagline">Know every track before it drops. · v1.3 beta</div>
       </div>
     </div>
+    <button class="helpbtn beta" data-feedback aria-label="Send beta feedback" title="Beta — tell us what's broken or brilliant">β</button>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
   </header>
@@ -2678,6 +2686,43 @@ function openHelp(){
     <p class="footnote">Preview build with simulated audio and demo metadata. The commercial version plugs in real audio analysis and licensed lyric data.</p>`;
   $("#frame").appendChild(ov);
 }
+function openFeedback(){
+  closeSheet();
+  const ov=document.createElement("div");
+  ov.className="overlay"; ov.id="sheetOverlay";
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Beta feedback">
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-title">Beta feedback</div>
+        <div class="sheet-sub">Two sentences is plenty — what broke, what's confusing, what's missing?</div>
+      </div>
+      <button class="close-x" data-close aria-label="Close">×</button>
+    </div>
+    <input class="evfield" id="fbName" placeholder="Your name (optional)" style="width:100%; box-sizing:border-box; margin-top:14px">
+    <textarea class="fb-area" id="fbMsg" placeholder="e.g. On my iPhone the pitch slider is hard to grab…"></textarea>
+    <div class="sheet-actions">
+      <button class="btn primary" data-fbsend>Send feedback</button>
+    </div>
+    <p class="footnote">Goes straight to the Salt team. Sending works on the live site; in offline copies it saves to your clipboard instead.</p>
+  </div>`;
+  $("#frame").appendChild(ov);
+}
+async function sendFeedback(){
+  const msg=($("#fbMsg")||{}).value?$("#fbMsg").value.trim():"";
+  if(!msg){ toast("Write a little something first"); return; }
+  const payload={name:($("#fbName")||{}).value||"", msg, where:state.view+" · "+location.href.slice(0,120)};
+  try{
+    const r=await fetch("/api/dj/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error();
+    closeSheet(); toast("Thank you — feedback sent ✓");
+  }catch(e){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText("Salt beta feedback: "+msg).then(
+        ()=>{ closeSheet(); toast("Offline copy — feedback copied to clipboard, paste it to Rich"); },
+        ()=>toast("Couldn't send from this viewer — use the live site"));
+    } else toast("Couldn't send from this viewer — use the live site");
+  }
+}
 function closeSheet(){
   clearTimeout(scanTimer);
   const ov=$("#sheetOverlay"); if(ov) ov.remove();
@@ -2925,6 +2970,8 @@ document.addEventListener("click", e=>{
     if(d.tab){ closeSheet(); state.view=d.tab; render(); $("#scroller").scrollTo({top:0}); return; }
     if(d.mode){ state.mode=d.mode; saveSession(); render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
     if(el.hasAttribute("data-help")){ openHelp(); return; }
+    if(el.hasAttribute("data-feedback")){ openFeedback(); return; }
+    if(el.hasAttribute("data-fbsend")){ sendFeedback(); return; }
     if(el.hasAttribute("data-hidehint")){
       $("#firstHint").hidden=true;
       try{ localStorage.setItem("salt.hint.v1","1"); }catch(err){}
