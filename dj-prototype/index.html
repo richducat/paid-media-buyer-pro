@@ -24,7 +24,7 @@
   /* ---------- shell ---------- */
   #frame{
     position:relative; overflow:hidden; display:flex; flex-direction:column;
-    max-width:1180px; margin:0 auto; width:100%;
+    max-width:1900px; margin:0 auto; width:100%;
     height:100vh; height:100dvh; background:var(--bg);
   }
   .framed #frame{height:740px; margin:12px auto; border:1px solid var(--line); border-radius:18px}
@@ -322,10 +322,14 @@
   }
   .queue-item .art{width:24px; height:24px; font-size:8px; border-radius:5px}
   .qbtn{
-    font-family:var(--mono); font-size:10.5px; font-weight:800; width:22px; height:22px; border-radius:5px;
-    border:1px solid var(--line); color:var(--muted);
+    font-family:var(--mono); font-size:12px; font-weight:800; width:26px; height:26px; border-radius:6px;
+    border:1px solid #2A3D50; color:var(--ink);
   }
-  .qbtn:hover{color:var(--ink); border-color:var(--accent)}
+  .qbtn[data-qload^="A"]{color:var(--deckA); border-color:rgba(62,199,255,.5)}
+  .qbtn[data-qload^="B"]{color:var(--deckB); border-color:rgba(61,245,158,.5)}
+  .qbtn[data-qdel]{color:var(--explicit); border-color:rgba(255,84,104,.45)}
+  .qbtn:hover{border-color:var(--accent)}
+  .queue-item{font-size:13px}
 
   #rigCanvas{width:100%; height:340px; display:block; background:#040309; border-radius:14px; border:1px solid var(--line)}
   #rigCanvas:fullscreen{border-radius:0; border:0}
@@ -658,6 +662,71 @@
   .eqrow.master input{--fill:var(--clean)}
   .eqrow input::-webkit-slider-runnable-track{height:4px}
   .eqrow input::-webkit-slider-thumb{width:12px; height:12px; margin-top:-4px}
+  /* ---------- large-screen scale-up ---------- */
+  @media (min-width:1500px){
+    #scroller{padding:0 32px 32px}
+    body{font-size:16px}
+    .live-decks{grid-template-columns:1fr 280px 1fr; gap:18px}
+    .deck{padding:14px 18px 16px}
+    .jog{width:252px; height:252px}
+    .jog-label{font-size:19px}
+    .jog-label small{font-size:9px}
+    .jog-dot{width:15px; height:15px; margin-left:-7.5px}
+    .jog-arm{width:44px; height:152px; transform-origin:22px 22px; top:-8px; right:-10px}
+    .jog-arm::before{width:40px; height:40px}
+    .jog-arm::after{top:-5px; right:16px; width:18px; height:14px}
+    .jog-arm i{top:36px; height:86px; width:6px; margin-left:-3px}
+    .jog-arm i::before{bottom:-27px; left:-5px; width:16px; height:30px}
+    .jog-arm i::after{bottom:-30px; left:2px; width:4px; height:7px}
+    .wave-main{height:132px}
+    .wave-over{height:30px}
+    .deck-times{font-size:13px}
+    .deck-title{font-size:17px}
+    .deck-artist{font-size:13px}
+    .deck-bpm b{font-size:27px}
+    .deck-bpm .kk{font-size:18px}
+    .deck-bpm span{font-size:10.5px}
+    .dbtn{height:42px; min-width:56px; font-size:12.5px}
+    .dbtn.play{width:64px; font-size:17px}
+    .hc{height:32px; min-width:48px; font-size:12px}
+    .grp{font-size:10px}
+    .flagline{min-height:28px}
+    .flchip{font-size:12px; padding:3px 10px}
+    .fl-note{font-size:11px}
+    .pill{font-size:11.5px}
+    .vu-pair{height:88px}
+    .mixer .dbtn{height:36px; font-size:11px}
+    .onair{font-size:11px}
+    .eqrow span{font-size:9.5px; width:26px}
+    .ch-lab{font-size:11px}
+    .pad{height:54px; font-size:12.5px}
+    .pads .dbtn.rec{height:54px}
+    .librow{padding:12px 15px}
+    .song-title{font-size:16px}
+    .song-artist{font-size:13px}
+    .song-bpmkey{font-size:13.5px}
+    .matchb{width:52px; height:38px; font-size:13.5px}
+    .loadbtns button{width:40px; height:40px; font-size:13.5px}
+    .queue-item{font-size:14px}
+    .queue-item .art{width:30px; height:30px; font-size:9.5px}
+    .qbtn{width:30px; height:30px; font-size:13px}
+    .searchbar input,.livelib-head input{padding:12px 16px; font-size:16px}
+    .sorts button,.cratechips button{font-size:13px; padding:8px 14px}
+    .btn{font-size:14px; padding:10px 17px}
+    .chip{font-size:12.5px}
+    h2.view-title{font-size:13.5px}
+    nav.tabs button{font-size:12.5px; padding:9px 4px 8px}
+    nav.tabs button svg{width:23px; height:23px}
+    nav.tabs .row{max-width:820px}
+    #rigCanvas{height:480px}
+    .sheet{max-width:780px}
+    .wordmark{font-size:24px}
+    .tagline{font-size:12.5px}
+    .logomark{width:42px; height:42px}
+    .req-card{padding:16px 18px}
+    .note-card{padding:18px}
+    .statgrid .stat b{font-size:20px}
+  }
   @media (prefers-reduced-motion:reduce){
     *{animation:none!important; transition:none!important}
   }
