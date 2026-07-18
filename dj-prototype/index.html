@@ -418,6 +418,7 @@
   .switch[aria-pressed="true"] .track{background:rgba(61,220,151,.25)}
   .switch[aria-pressed="true"] .track::after{transform:translateX(16px); background:var(--clean)}
   .guest-link{padding:12px 14px; margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px}
+  .guest-link .qr{border-radius:10px; background:#fff; padding:5px; flex:none}
   .guest-link code{
     font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--panel-2);
     padding:4px 9px; border-radius:7px; word-break:break-all;
@@ -510,7 +511,7 @@
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.4 preview</div>
+      <div class="tagline">Know every track before it drops. · v0.5 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -524,6 +525,7 @@
 </nav>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<input id="fileInput" type="file" multiple accept="audio/*,.m3u,.m3u8,.xml,.crate" hidden>
 </div>
 
 <script>
@@ -609,7 +611,10 @@ const SONGS = [
   {id:"electric", title:"Electric Boogie (Electric Slide)", artist:"Marcia Griffiths", bpm:110, cam:"4B", key:"A♭ maj", energy:6, dur:"4:20", hue:170, genre:"linedance", rating:"clean", clean:false, moments:[]},
 ];
 
-const GENRES=[["all","All"],["hiphop","Hip-hop"],["pop","Pop"],["throwback","Throwbacks"],["rock","Rock"],["linedance","Line dance"]];
+const GENRES=[["all","All"],["hiphop","Hip-hop"],["pop","Pop"],["throwback","Throwbacks"],["rock","Rock"],["linedance","Line dance"],["imported","Imported"]];
+
+/* musical key name -> Camelot, for Rekordbox/Serato metadata imports */
+const KEY_TO_CAM={"C":"8B","Am":"8A","G":"9B","Em":"9A","D":"10B","Bm":"10A","A":"11B","F#m":"11A","Gbm":"11A","E":"12B","C#m":"12A","Dbm":"12A","B":"1B","G#m":"1A","Abm":"1A","F#":"2B","Gb":"2B","D#m":"2A","Ebm":"2A","C#":"3B","Db":"3B","A#m":"3A","Bbm":"3A","G#":"4B","Ab":"4B","Fm":"4A","D#":"5B","Eb":"5B","Cm":"5A","A#":"6B","Bb":"6B","Gm":"6A","F":"7B","Dm":"7A"};
 
 const MODES = [
   {id:"wedding", label:"Wedding"},
@@ -632,6 +637,7 @@ const REQUEST_POOL = [
 
 const NOTES_KEY = "salt.notes.v1";
 const SESSION_KEY = "salt.session.v1";
+const ROOM_KEY = "salt.room.v1";
 const API = "/api/dj/requests";
 const GUEST_PATH = "/demo/request.html";
 const DEPLOYED_GUEST_URL = "https://paidmediapro.eb28.co/demo/request.html";
@@ -659,10 +665,22 @@ const state = {
   mode:"wedding", view:"live", search:"", libSort:"match", crate:"all", cleanOnly:false, compatOnly:false, mixSrc:null,
   decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false, soundOn:false,
   requestsOpen:true, requests:[], queue:[], played:[], notes:loadNotes(),
+  room:"MAIN",
 };
+state.room=loadRoom();
 let reqCounter = 0;
 let scanTimer = null;
 let serverMode = false;
+function genRoom(){
+  const chars="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let c=""; for(let i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+function loadRoom(){
+  try{ const r=localStorage.getItem(ROOM_KEY); if(r&&/^[A-Z0-9]{1,12}$/.test(r)) return r; }catch(e){}
+  return "MAIN";
+}
+function saveRoom(){ try{ localStorage.setItem(ROOM_KEY, state.room); }catch(e){} }
 let simStarted = false;
 let pollTimer = null;
 
@@ -719,9 +737,10 @@ function ago(ts){
   return Math.round(m/60)+" h ago";
 }
 
-const RATING_LABEL = {clean:"Clean", caution:"Caution", explicit:"Explicit"};
+const RATING_LABEL = {clean:"Clean", caution:"Caution", explicit:"Explicit", unscanned:"Not scanned"};
 
 function verdictFor(s, mode){
+  if(s.rating==="unscanned") return {cls:"caution", head:"Lyrics not scanned yet.", sub:"Imported track — the commercial version runs lyric analysis automatically. Treat as unknown until reviewed."};
   if(s.rating==="clean") return {cls:"clean", head:"Safe for any room.", sub:"No flagged content found in this track."};
   if(mode==="club"){
     if(s.rating==="explicit") return {cls:"caution", head:"Fine for this room — flagged content noted.", sub:"Club mode: explicit tracks allowed. Flags shown so you're never surprised."};
@@ -741,6 +760,7 @@ function verdictFor(s, mode){
 /* ---------- camelot + bpm matching ---------- */
 function parseCam(c){ return {n:parseInt(c,10), l:c.slice(-1)}; }
 function keyScore(a,b){
+  if(!a.cam || !b.cam) return {s:0, label:null};
   const A=parseCam(a.cam), B=parseCam(b.cam);
   if(A.n===B.n && A.l===B.l) return {s:50, label:"Same key"};
   if(A.n===B.n) return {s:44, label:"Relative major/minor"};
@@ -751,6 +771,7 @@ function keyScore(a,b){
   return {s:0, label:null};
 }
 function bpmScore(a,b){
+  if(!a.bpm || !b.bpm) return {s:0, label:"BPM —"};
   let best={pct:1e9, cand:b.bpm, mode:"straight"};
   for(const [cand,mode] of [[b.bpm,"straight"],[b.bpm*2,"double-time"],[b.bpm/2,"half-time"]]){
     const pct=Math.abs(a.bpm-cand)/a.bpm;
@@ -789,7 +810,7 @@ function filterSongs(){
 }
 
 /* ---------- deck engine ---------- */
-function effBpm(dk){ const d=state.decks[dk], s=song(d.songId); return s ? s.bpm*(1+d.pitch/100) : 0; }
+function effBpm(dk){ const d=state.decks[dk], s=song(d.songId); return s&&s.bpm ? s.bpm*(1+d.pitch/100) : 0; }
 function onAir(){
   const A=state.decks.A, B=state.decks.B;
   if(A.playing && !B.playing) return "A";
@@ -806,6 +827,7 @@ function loadToDeck(dk, id, opts){
   const wantClean = opts && "clean" in opts ? opts.clean
     : (strictMode() && s.rating!=="clean" && s.clean);
   state.decks[dk] = Object.assign(deckInit(), {songId:id, clean:!!wantClean && s.clean});
+  stopReal(dk);
   applyFx(dk);   // fresh track: reset echo/filter on the audio chain too
   toast(`Deck ${dk}: ${s.title}${state.decks[dk].clean?" (clean edit)":""}`);
   render();
@@ -814,23 +836,24 @@ function togglePlay(dk){
   const d=state.decks[dk]; if(!d.songId) return;
   d.playing=!d.playing;
   if(d.playing && d.pos>=sec(song(d.songId).dur)) d.pos=0;
+  syncReal(dk);
   render();
 }
 function cueDeck(dk){
   const d=state.decks[dk]; if(!d.songId) return;
-  d.pos=0; d.playing=false; render();
+  d.pos=0; d.playing=false; syncReal(dk); render();
 }
 function hotCue(dk,i,clear){
   const d=state.decks[dk]; if(!d.songId) return;
   if(clear){ d.cues[i]=null; }
   else if(d.cues[i]===null){ d.cues[i]=d.pos; toast(`Deck ${dk}: hot cue ${i+1} set at ${fmt(d.pos)}`); }
-  else { d.pos=d.cues[i]; }
+  else { d.pos=d.cues[i]; syncReal(dk); }
   render();
 }
 function syncDeck(dk){
   const other = dk==="A" ? "B" : "A";
   const d=state.decks[dk], s=song(d.songId), target=effBpm(other);
-  if(!s || !target){ toast("Nothing to sync to"); return; }
+  if(!s || !s.bpm || !target){ toast("Nothing to sync to — BPM unknown"); return; }
   let p=(target/s.bpm-1)*100;
   const clamped = Math.max(-8, Math.min(8, p));
   d.pitch = Math.round(clamped*10)/10;
@@ -846,7 +869,7 @@ function toggleClean(dk){
   render();
 }
 function setLoop(dk,beats){
-  const d=state.decks[dk], s=song(d.songId); if(!s) return;
+  const d=state.decks[dk], s=song(d.songId); if(!s||!s.bpm) return;
   const spb=60/s.bpm;
   if(d.loop && d.loop.beats===beats){ d.loop=null; toast(`Deck ${dk}: loop off`); }
   else{
@@ -854,11 +877,13 @@ function setLoop(dk,beats){
     d.loop={start, len:beats*spb, beats};
     toast(`Deck ${dk}: ${beats}-beat loop`);
   }
+  syncReal(dk);
   render();
 }
 function beatJump(dk,beats){
-  const d=state.decks[dk], s=song(d.songId); if(!s) return;
+  const d=state.decks[dk], s=song(d.songId); if(!s||!s.bpm) return;
   d.pos=Math.max(0, Math.min(sec(s.dur), d.pos+beats*(60/s.bpm)));
+  syncReal(dk);
   drawDeck(dk); updateDynamic(dk);
 }
 function toggleKeylock(dk){
@@ -917,7 +942,7 @@ function ensureAudio(){
       filter.connect(gain);
       filter.connect(delay); delay.connect(fb); fb.connect(delay); fb.connect(gain);
       gain.connect(audio.master);
-      audio.decks[dk]={gain, filter, delay, fb, next:0, beat:0};
+      audio.decks[dk]={gain, filter, delay, fb, next:0, beat:0, src:null};
     }
   }catch(e){ audio.ctx=null; return false; }
   return true;
@@ -942,10 +967,35 @@ function sStab(a,t,f,minor){ const ctx=audio.ctx;
     o.type="sawtooth"; o.frequency.value=fr;
     g.gain.setValueAtTime(0.055,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
     o.connect(g); g.connect(a.filter); o.start(t); o.stop(t+0.32); }); }
+/* real imported audio: one BufferSource per play/seek, routed through the
+   same filter/echo/gain chain as the synth so FX and crossfader apply */
+function stopReal(dk){
+  const a=audio.decks[dk];
+  if(a && a.src){ try{ a.src.stop(); }catch(e){} try{ a.src.disconnect(); }catch(e){} a.src=null; }
+}
+function startReal(dk){
+  if(!audio.ctx) return;
+  const a=audio.decks[dk], d=state.decks[dk], s=song(d.songId);
+  stopReal(dk);
+  if(!a||!s||!s.buffer||!d.playing) return;
+  const src=audio.ctx.createBufferSource();
+  src.buffer=s.buffer;
+  src.playbackRate.value=1+d.pitch/100;
+  if(d.loop){ src.loop=true; src.loopStart=d.loop.start; src.loopEnd=Math.min(s.buffer.duration, d.loop.start+d.loop.len); }
+  src.connect(a.filter);
+  src.start(0, Math.max(0, Math.min(d.pos, s.buffer.duration-0.05)));
+  a.src=src;
+}
+/* call after anything that starts/stops/seeks a deck holding real audio */
+function syncReal(dk){
+  const s=song(state.decks[dk].songId);
+  if(!s||!s.buffer){ stopReal(dk); return; }
+  if(state.decks[dk].playing && audio.ctx) startReal(dk); else stopReal(dk);
+}
 function scheduleDeck(dk){
   const a=audio.decks[dk], d=state.decks[dk], s=song(d.songId), ctx=audio.ctx;
   if(!a) return;
-  if(!s||!d.playing){ a.next=0; return; }
+  if(!s||!d.playing||s.buffer||!s.bpm){ a.next=0; return; }
   const spb=60/effBpm(dk), now=ctx.currentTime;
   if(!a.next || a.next<now-0.1){ a.next=now+0.06; a.beat=Math.round(d.pos/(60/s.bpm)); }
   const root=rootFreq(s), minor=s.cam.endsWith("A");
@@ -973,12 +1023,167 @@ function toggleSound(){
     if(audio.ctx.state==="suspended") audio.ctx.resume();
     state.soundOn=true;
     applyFx("A"); applyFx("B");
-    toast("Preview beat on — synthesized placeholder, not the real songs");
+    syncReal("A"); syncReal("B");
+    toast("Sound on — imported tracks play for real, demo tracks play a synth beat");
   } else {
     state.soundOn=false;
     toast("Sound off");
   }
   if(audio.master) audio.master.gain.setTargetAtTime(state.soundOn?0.85:0, audio.ctx.currentTime, 0.05);
+  render();
+}
+
+/* ---------- library import: audio files + Serato / Rekordbox / M3U ---------- */
+let importCounter=0;
+function addImportedSong(meta){
+  const s=Object.assign({
+    id:"imp"+(++importCounter), title:"Untitled", artist:"Imported", bpm:0, cam:null, key:"—",
+    energy:6, dur:"3:30", hue:0, genre:"imported", rating:"unscanned", clean:false, moments:[],
+  }, meta);
+  s.hue=hash(s.title+s.artist)%360;
+  SONGS.push(s);
+  return s;
+}
+/* real waveform peaks + autocorrelation BPM estimate from decoded audio */
+function analyzeBuffer(ab){
+  const sr=ab.sampleRate, full=ab.getChannelData(0);
+  const ch=full.length>sr*180 ? full.subarray(0,sr*180) : full;
+  const n=Math.max(64, Math.round(ab.duration*4)), hop=Math.max(1,Math.floor(full.length/n));
+  const raw=[]; let maxLo=1e-9, maxHi=1e-9;
+  for(let i=0;i<n;i++){
+    const st=i*hop, en=Math.min(full.length, st+hop), step=Math.max(1,Math.floor((en-st)/300));
+    let s0=0,s1=0,prev=0,cnt=0;
+    for(let j=st;j<en;j+=step){ const v=full[j]; s0+=Math.abs(v); s1+=Math.abs(v-prev); prev=v; cnt++; }
+    const lo=s0/(cnt||1), hi=s1/(cnt||1);
+    raw.push([lo,hi]);
+    if(lo>maxLo)maxLo=lo; if(hi>maxHi)maxHi=hi;
+  }
+  const wave=raw.map(([lo,hi])=>{
+    const L=Math.min(1,lo/maxLo), H=Math.min(1,hi/maxHi);
+    return [L, Math.min(1,(L+H)/2), H*0.8];
+  });
+  // onset envelope at ~sr/512 Hz, autocorrelated across 70-180 BPM
+  const hop2=512, m=Math.floor(ch.length/hop2), env=new Float32Array(m);
+  let prevE=0;
+  for(let i=0;i<m;i++){
+    let s=0; const st=i*hop2;
+    for(let j=0;j<hop2;j+=4) s+=Math.abs(ch[st+j]);
+    const e=s/(hop2/4);
+    env[i]=Math.max(0, e-prevE); prevE=e;
+  }
+  const fps=sr/hop2;
+  let bestBpm=0, bestScore=0;
+  for(let bpm=70;bpm<=180;bpm+=0.5){
+    const lag=fps*60/bpm;
+    let sc=0, cnt=0;
+    for(let i=0;i+lag<m;i+=7){ sc+=env[i]*env[Math.round(i+lag)]; cnt++; }
+    sc/=(cnt||1);
+    if(sc>bestScore){ bestScore=sc; bestBpm=bpm; }
+  }
+  let meanLo=0; for(const [lo] of raw) meanLo+=lo;
+  meanLo/=(raw.length*maxLo);
+  const energy=Math.max(3, Math.min(10, Math.round(meanLo*13)));
+  return {wave, bpm:Math.round(bestBpm), energy};
+}
+async function importAudioFile(file){
+  const buf=await file.arrayBuffer();
+  let ctx=audio.ctx;
+  if(!ctx){
+    const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    if(!OC) throw new Error("no audio support");
+    ctx=new OC(1,44100,44100);
+  }
+  const ab=await ctx.decodeAudioData(buf.slice(0));
+  const an=analyzeBuffer(ab);
+  const name=file.name.replace(/\.[^.]+$/,"");
+  const s=addImportedSong({title:name, artist:"Imported audio", bpm:an.bpm, energy:an.energy, dur:fmt(ab.duration)});
+  s._wave=an.wave; s.buffer=ab;
+  return s;
+}
+function importM3U(text){
+  let added=0, pendingTitle=null, pendingArtist=null;
+  for(const line of text.split(/\r?\n/)){
+    const l=line.trim(); if(!l) continue;
+    const inf=/^#EXTINF:[^,]*,(.*)$/.exec(l);
+    if(inf){
+      const parts=inf[1].split(" - ");
+      if(parts.length>1){ pendingArtist=parts[0].trim(); pendingTitle=parts.slice(1).join(" - ").trim(); }
+      else { pendingTitle=inf[1].trim(); pendingArtist=null; }
+      continue;
+    }
+    if(l.startsWith("#")) continue;
+    const base=l.split(/[\\/]/).pop().replace(/\.[^.]+$/,"");
+    addImportedSong({title:pendingTitle||base, artist:pendingArtist||"From playlist"});
+    pendingTitle=pendingArtist=null;
+    if(++added>=100) break;
+  }
+  return added;
+}
+function importRekordbox(text){
+  const doc=new DOMParser().parseFromString(text,"text/xml");
+  let added=0;
+  for(const t of doc.querySelectorAll("TRACK")){
+    const title=t.getAttribute("Name"); if(!title) continue;
+    const tonality=(t.getAttribute("Tonality")||"").trim();
+    const cam=/^\d{1,2}[AB]$/.test(tonality) ? tonality : (KEY_TO_CAM[tonality]||null);
+    const secs=parseInt(t.getAttribute("TotalTime")||"0",10);
+    addImportedSong({
+      title, artist:t.getAttribute("Artist")||"From Rekordbox",
+      bpm:Math.round(parseFloat(t.getAttribute("AverageBpm")||"0"))||0,
+      cam, key:tonality||"—", dur:secs?fmt(secs):"0:00",
+    });
+    if(++added>=100) break;
+  }
+  return added;
+}
+function importSeratoCrate(buf){
+  // Serato .crate: sequence of [4-char tag][u32 length][payload]; track paths
+  // live in 'otrk' records as 'ptrk' UTF-16BE strings.
+  const dv=new DataView(buf); let added=0;
+  const tag=o=>String.fromCharCode(dv.getUint8(o),dv.getUint8(o+1),dv.getUint8(o+2),dv.getUint8(o+3));
+  function walk(start,end){
+    let o=start;
+    while(o+8<=end && added<100){
+      const t=tag(o), len=dv.getUint32(o+4);
+      if(len>end-o-8) break;
+      if(t==="otrk") walk(o+8,o+8+len);
+      else if(t==="ptrk"){
+        let path="";
+        for(let i=o+8;i+1<o+8+len;i+=2) path+=String.fromCharCode(dv.getUint16(i));
+        const base=path.split(/[\\/]/).pop();
+        if(base){ addImportedSong({title:base.replace(/\.[^.]+$/,""), artist:"From Serato crate"}); added++; }
+      }
+      o+=8+len;
+    }
+  }
+  walk(0, dv.byteLength);
+  return added;
+}
+async function importFiles(files){
+  const list=Array.from(files).slice(0,12);
+  if(!list.length) return;
+  toast(`Importing ${list.length} file${list.length>1?"s":""}…`);
+  let audioAdded=0, listAdded=0, failed=0;
+  for(const f of list){
+    const ext=(f.name.split(".").pop()||"").toLowerCase();
+    try{
+      if(ext==="m3u"||ext==="m3u8") listAdded+=importM3U(await f.text());
+      else if(ext==="xml") listAdded+=importRekordbox(await f.text());
+      else if(ext==="crate") listAdded+=importSeratoCrate(await f.arrayBuffer());
+      else { await importAudioFile(f); audioAdded++; }
+    }catch(e){ failed++; }
+  }
+  if(audioAdded && !state.soundOn && ensureAudio()){
+    if(audio.ctx.state==="suspended") audio.ctx.resume();
+    state.soundOn=true;
+    if(audio.master) audio.master.gain.setTargetAtTime(0.85, audio.ctx.currentTime, 0.05);
+  }
+  const bits=[];
+  if(audioAdded) bits.push(audioAdded+" audio file"+(audioAdded>1?"s":"")+" analyzed (real BPM + waveform)");
+  if(listAdded) bits.push(listAdded+" tracks from playlists");
+  if(failed) bits.push(failed+" failed");
+  toast(bits.length?("Imported: "+bits.join(", ")):"Nothing importable found");
+  if(audioAdded||listAdded){ state.crate="imported"; saveSession(); }
   render();
 }
 
@@ -1019,10 +1224,12 @@ function drawMain(dk){
     ctx.textAlign="center"; ctx.fillText("NO TRACK LOADED", W/2, H/2+4); return; }
   const wave=waveFor(s), dur=sec(s.dur), bps=4, rgb=DECK_RGB[dk];
   const winSec=22, pxSec=W/winSec, t0=d.pos-winSec/2, mid=H/2;
-  const spb=60/s.bpm;
-  ctx.fillStyle="rgba(142,137,160,.12)";
-  for(let b=Math.max(0,Math.ceil(t0/spb)); b*spb<Math.min(dur,t0+winSec); b++){
-    ctx.fillRect((b*spb-t0)*pxSec, 0, 1, H);
+  if(s.bpm){
+    const spb=60/s.bpm;
+    ctx.fillStyle="rgba(142,137,160,.12)";
+    for(let b=Math.max(0,Math.ceil(t0/spb)); b*spb<Math.min(dur,t0+winSec); b++){
+      ctx.fillRect((b*spb-t0)*pxSec, 0, 1, H);
+    }
   }
   const bw=Math.max(1, pxSec/bps - 1);
   for(let i=Math.max(0,Math.floor(t0*bps)); i<Math.min(wave.length, Math.ceil((t0+winSec)*bps)); i++){
@@ -1184,7 +1391,7 @@ function advance(){
     if(!d.logged && d.pos>=15){ d.logged=true; addPlayed(s.id); }
     const dur=sec(s.dur);
     if(d.pos>=dur){
-      d.pos=dur; d.playing=false;
+      d.pos=dur; d.playing=false; stopReal(dk);
       if(state.queue.length){
         const nextId=state.queue.shift();
         saveSession();
@@ -1217,6 +1424,7 @@ function runAutomix(dt){
           const s2=song(od.songId);
           od.pitch=Math.round(Math.max(-8,Math.min(8,(effBpm(oa)/s2.bpm-1)*100))*10)/10;
           od.pos=0; od.logged=false; od.playing=true;
+          syncReal(other);
           amxFadeTarget = other==="A" ? 0 : 100;
           toast("Automix: blending to Deck "+other);
           render();
@@ -1266,7 +1474,7 @@ function mergeRemote(list){
 }
 async function pollRequests(){
   try{
-    const r=await fetch(API, {cache:"no-store"});
+    const r=await fetch(API+"?room="+state.room, {cache:"no-store"});
     if(!r.ok) throw new Error("http "+r.status);
     const data=await r.json();
     serverMode=true;
@@ -1280,7 +1488,7 @@ async function pushStatus(localId, status){
   if(!serverMode || !localId.startsWith("srv")) return;
   try{
     await fetch(API, {method:"PATCH", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:+localId.slice(3), status})});
+      body:JSON.stringify({id:+localId.slice(3), status, room:state.room})});
   }catch(e){}
 }
 function startSim(){
@@ -1356,8 +1564,8 @@ function deckHtml(dk){
       </div>
       ${s?`<span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>`:""}
       <div class="deck-bpm">
-        <div><b class="num" id="dbpmval-${dk}">${s?effBpm(dk).toFixed(1):"—"}</b><br><span>BPM</span></div>
-        <div><b class="num kk">${s?s.cam:"—"}</b><br><span>${s?esc(s.key):"Key"}</span></div>
+        <div><b class="num" id="dbpmval-${dk}">${s&&s.bpm?effBpm(dk).toFixed(1):"—"}</b><br><span>BPM</span></div>
+        <div><b class="num kk">${s&&s.cam?s.cam:"—"}</b><br><span>${s?esc(s.key):"Key"}</span></div>
       </div>
     </div>
     <div class="deck-mid">
@@ -1423,7 +1631,7 @@ function liveLibRows(){
         <div class="song-artist">${esc(s.artist)}</div>
       </div>
       <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
-      <span class="song-bpmkey">${s.bpm} <span class="k">BPM</span><br>${s.cam} <span class="k">${esc(s.key)}</span></span>
+      <span class="song-bpmkey">${s.bpm||"—"} <span class="k">BPM</span><br>${s.cam||"—"} <span class="k">${esc(s.key)}</span></span>
       <span class="matchb ${m===null?"":m>=75?"hot":m>=50?"warm":""}" title="Mix match vs on-air deck">${m===null?"—":m}</span>
       <span class="loadbtns">
         <button data-loada="${s.id}" aria-label="Load ${esc(s.title)} to deck A">A</button>
@@ -1475,6 +1683,7 @@ function viewLive(){
         <button data-sort="bpm" aria-pressed="${state.libSort==="bpm"}">BPM</button>
         <button data-sort="az" aria-pressed="${state.libSort==="az"}">A–Z</button>
       </div>
+      <button class="btn" data-import title="Add your own music: audio files (real BPM + waveform analysis), Serato .crate, Rekordbox .xml, or .m3u playlists">＋ Import</button>
     </div>
     ${crateChips()}
     <div id="libRows">${liveLibRows()}</div>
@@ -1491,7 +1700,7 @@ function songRow(s){
     </span>
     <span class="song-data">
       <span class="pill ${s.rating}">${RATING_LABEL[s.rating]}</span>
-      <span class="song-bpmkey">${s.bpm} <span class="k">BPM</span><br>${s.cam} <span class="k">${esc(s.key)}</span></span>
+      <span class="song-bpmkey">${s.bpm||"—"} <span class="k">BPM</span><br>${s.cam||"—"} <span class="k">${esc(s.key)}</span></span>
     </span>
   </button></li>`;
 }
@@ -1542,8 +1751,8 @@ function fillSheet(s){
     <div class="verdict ${v.cls}"><span aria-hidden="true">${v.cls==="clean"?"✓":v.cls==="caution"?"◐":"✕"}</span>
       <div>${esc(v.head)}<small>${esc(v.sub)}</small></div></div>
     <div class="statgrid">
-      <div class="stat"><b>${s.bpm}</b><span>BPM</span></div>
-      <div class="stat"><b>${s.cam}</b><span>${esc(s.key)}</span></div>
+      <div class="stat"><b>${s.bpm||"—"}</b><span>BPM</span></div>
+      <div class="stat"><b>${s.cam||"—"}</b><span>${esc(s.key)}</span></div>
       <div class="stat"><b>${s.energy}/10</b><span>Energy</span></div>
       <div class="stat"><b>${s.dur}</b><span>Length</span></div>
       <div class="stat"><b>${s.moments.filter(m=>m.cat!=="Note").length}</b><span>Flags</span></div>
@@ -1580,6 +1789,7 @@ function openHelp(){
       <li><b>🏛 Event modes</b><span>Wedding / Corporate / Club switch every safety verdict in the app — the same crate reads differently per room.</span></li>
       <li><b>🤖 Automix + Suggest</b><span>Need a bathroom break? <b>AUTOMIX</b> syncs, starts and blends the next track (queue first, then best match) as the current one runs out. <b>SUGGEST</b> loads the smartest next track in one tap — key/BPM-matched, room-safe, not played yet.</span></li>
       <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, ECHO and FILT effects, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
+      <li><b>📀 Your music</b><span>Hit <b>＋ Import</b> in the library: audio files get real BPM detection and true waveforms and play on the decks (scratch, FX and all); Serato .crate, Rekordbox .xml and .m3u playlists import with their metadata — Rekordbox brings real BPM and key.</span></li>
       <li><b>🔊 Sound</b><span>Hit <b>SOUND</b> in the mixer and the decks play a synthesized preview beat that follows each track's BPM and key — volume rides the crossfader, and ECHO/FILT process it live. It's a placeholder groove, not the real recordings.</span></li>
       <li><b>⌨ Keys</b><span><span class="kbd">Space</span> play/pause on-air deck · <span class="kbd">1</span>/<span class="kbd">2</span> toggle decks · <span class="kbd">Esc</span> close panels.</span></li>
     </ul>
@@ -1604,7 +1814,7 @@ function viewMix(){
   const ms=matchesFor(src);
   return `
     <div class="mix-src-chips" role="group" aria-label="Mix source deck">${chips}</div>
-    <h2 class="view-title">Mixes well with… ${esc(src.title)} <span class="num">(${src.bpm} BPM · ${src.cam})</span></h2>
+    <h2 class="view-title">Mixes well with… ${esc(src.title)} <span class="num">(${src.bpm||"—"} BPM · ${src.cam||"—"})</span></h2>
     <div class="card">
       ${ms.length?ms.map(m=>`
         <div class="match-row">
@@ -1626,7 +1836,8 @@ function viewMix(){
 
 /* ---------- requests view ---------- */
 function guestUrl(){
-  return serverMode ? location.origin+GUEST_PATH : DEPLOYED_GUEST_URL;
+  const base = serverMode ? location.origin+GUEST_PATH : DEPLOYED_GUEST_URL;
+  return state.room==="MAIN" ? base : base+"?room="+state.room;
 }
 function viewRequests(){
   const pending=state.requests.filter(r=>r.status==="pending");
@@ -1640,12 +1851,18 @@ function viewRequests(){
       </button>
     </div>
     <div class="card guest-link">
-      <span>Guests request from their phones:</span>
-      <code>${esc(guestUrl())}</code>
-      <button class="btn" data-copylink>Copy link</button>
-      ${serverMode
-        ? `<span class="chip good">● LIVE — synced across devices</span>`
-        : `<span class="chip">Simulated here — real on the deployed site</span>`}
+      ${serverMode?`<img class="qr" src="/api/dj/qr?text=${encodeURIComponent(guestUrl())}" width="96" height="96" alt="QR code for the guest request page">`:""}
+      <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:7px; align-items:flex-start">
+        <span>Guests request from their phones — room <b class="num">${esc(state.room)}</b>:</span>
+        <code>${esc(guestUrl())}</code>
+        <span style="display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn" data-copylink>Copy link</button>
+          <button class="btn" data-newroom title="Fresh room code for a new gig — its requests are separate">New room</button>
+          ${serverMode
+            ? `<span class="chip good">● LIVE — synced across devices</span>`
+            : `<span class="chip">Simulated here — real on the deployed site</span>`}
+        </span>
+      </div>
     </div>
     ${state.queue.length?`
       <h2 class="view-title">Up next · ${state.queue.length}</h2>
@@ -1741,6 +1958,7 @@ document.addEventListener("click", e=>{
     if(s){
       const r=seekCv.getBoundingClientRect();
       d.pos=Math.max(0, Math.min(1,(e.clientX-r.left)/r.width))*sec(s.dur);
+      syncReal(dk);
       drawDeck(dk); updateDynamic(dk);
     }
     return;
@@ -1752,6 +1970,15 @@ document.addEventListener("click", e=>{
     if(d.mode){ state.mode=d.mode; saveSession(); render(); toast(MODES.find(m=>m.id===d.mode).label+" mode — verdicts updated"); return; }
     if(el.hasAttribute("data-help")){ openHelp(); return; }
     if(el.hasAttribute("data-close")){ closeSheet(); return; }
+    if(el.hasAttribute("data-newroom")){
+      state.room=genRoom(); saveRoom();
+      state.requests=[];
+      pollRequests();
+      render();
+      toast("New room "+state.room+" — share the fresh link/QR with this crowd");
+      return;
+    }
+    if(el.hasAttribute("data-import")){ const fi=$("#fileInput"); if(fi) fi.click(); return; }
     if(el.hasAttribute("data-copylink")){
       const url=guestUrl();
       if(navigator.clipboard && navigator.clipboard.writeText){
@@ -1880,6 +2107,8 @@ document.addEventListener("input", e=>{
   }
   if(d.pitch){
     state.decks[d.pitch].pitch=parseFloat(t.value)||0;
+    const ra=audio.decks[d.pitch];
+    if(ra&&ra.src) ra.src.playbackRate.value=1+state.decks[d.pitch].pitch/100;
     const pv=$("#dpitchval-"+d.pitch), bv=$("#dbpmval-"+d.pitch);
     if(pv) pv.textContent=(state.decks[d.pitch].pitch>0?"+":"")+state.decks[d.pitch].pitch.toFixed(1)+"%";
     if(bv) bv.textContent=effBpm(d.pitch).toFixed(1);
@@ -1908,6 +2137,7 @@ document.addEventListener("pointerdown", e=>{
   if(!state.decks[dk].songId) return;
   e.preventDefault();
   scratch={dk, el:j, last:jogAngle(e,j)};
+  stopReal(dk);   // silence while scrubbing; resumes on release
   try{ j.setPointerCapture(e.pointerId); }catch(err){}
 });
 document.addEventListener("pointermove", e=>{
@@ -1922,8 +2152,8 @@ document.addEventListener("pointermove", e=>{
   d.pos=Math.max(0, Math.min(sec(s.dur), d.pos + da/(2*Math.PI)*1.8));
   drawDeck(scratch.dk); updateDynamic(scratch.dk);
 });
-document.addEventListener("pointerup", ()=>{ scratch=null; });
-document.addEventListener("pointercancel", ()=>{ scratch=null; });
+document.addEventListener("pointerup", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; });
+document.addEventListener("pointercancel", ()=>{ if(scratch){ syncReal(scratch.dk); } scratch=null; });
 
 /* ---------- boot ---------- */
 loadSession();
@@ -1936,5 +2166,5 @@ pollRequests();
 pollTimer=setInterval(pollRequests, 5000);
 
 /* test/debug hook */
-window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, get serverMode(){return serverMode}};
+window.CC={state, loadToDeck, song, sec, effBpm, onAir, mergeRemote, importFiles, SONGS, get serverMode(){return serverMode}};
 </script>

@@ -124,6 +124,8 @@
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const initials=t=>t.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const ROOM=(new URLSearchParams(location.search).get("room")||"MAIN").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12)||"MAIN";
+if(ROOM!=="MAIN") document.querySelector(".sub").textContent="Send it straight to the DJ booth. No app needed. · Room "+ROOM;
 let catalog=[], picked=null, tip=0, sentId=null, pollTimer=null;
 
 function renderList(){
@@ -179,7 +181,7 @@ async function send(){
   try{
     const r=await fetch("/api/dj/requests",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        name:$("#name").value, songId:picked||"", songText:$("#free").value, note:$("#note").value, tip,
+        name:$("#name").value, songId:picked||"", songText:$("#free").value, note:$("#note").value, tip, room:ROOM,
       })});
     if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||"Something went wrong");
     const data=await r.json();
@@ -194,7 +196,7 @@ async function send(){
 async function checkStatus(){
   if(sentId===null) return;
   try{
-    const r=await fetch("/api/dj/requests",{cache:"no-store"});
+    const r=await fetch("/api/dj/requests?room="+ROOM,{cache:"no-store"});
     const data=await r.json();
     const mine=(data.requests||[]).find(x=>x.id===sentId);
     if(!mine) return;

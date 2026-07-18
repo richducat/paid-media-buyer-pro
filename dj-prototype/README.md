@@ -20,11 +20,17 @@ A booth tool for working DJs: know every track before it drops.
 - **Mix intelligence** — BPM + Camelot key everywhere, a live Match % column
   ranked against the on-air deck, and a Mix tab that explains each
   recommendation (key relationship, tempo fit, energy delta).
-- **Real guest requests** — guests open the request page on their phones and
-  submit songs (with optional note + tip). Requests sync to the DJ screen
-  every few seconds; accepting queues the track (clean edit auto-selected in
-  strict modes) and PATCHes the status back so the guest sees
-  accepted/declined live. Up Next auto-loads when a deck runs out.
+- **Real guest requests with rooms + QR** — each gig gets its own room code;
+  the Requests tab shows a QR code and link guests scan to submit songs
+  (with optional note + tip). Requests sync to the DJ screen every few
+  seconds; accepting queues the track (clean edit auto-selected in strict
+  modes) and PATCHes the status back so the guest sees accepted/declined
+  live. Up Next auto-loads when a deck runs out.
+- **Library import** — audio files decode in-browser and get real BPM
+  detection, true waveforms and actual deck playback (scratching and FX
+  included); Serato .crate, Rekordbox .xml (real BPM + key → Camelot) and
+  .m3u playlists import their metadata. Imported tracks are marked
+  "Not scanned" until lyric analysis exists.
 - **Automix + Suggest** — hands-free blending as tracks run out (queue first,
   then best match), and one-tap smartest-next-track (key/BPM match,
   room-safe, not already played).
@@ -39,7 +45,8 @@ A booth tool for working DJs: know every track before it drops.
 | Deployed page | `public/demo/salt.html` | Generated from the file above (adds doctype/head) |
 | Guest request page | `public/demo/request.html` | Standalone; fetches `catalog.json` |
 | Song catalog | `public/demo/catalog.json` | Generated from the SONGS array in `index.html` |
-| Requests API | `src/app/api/dj/requests/route.ts` | GET / POST / PATCH, in-memory store |
+| Requests API | `src/app/api/dj/requests/route.ts` | GET / POST / PATCH, room-scoped in-memory store |
+| QR codes | `src/app/api/dj/qr/route.ts` | SVG QR for guest links (qrcode pkg) |
 
 The app polls `/api/dj/requests` (same origin). Where the API exists (the
 deployed site) requests are real and cross-device; anywhere else (artifact
