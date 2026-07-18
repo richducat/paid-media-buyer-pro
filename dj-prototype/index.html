@@ -105,7 +105,7 @@
   .playedmark{color:var(--clean); font-size:11px; font-weight:800; margin-left:5px; letter-spacing:.02em}
 
   /* ---------- LIVE: decks ---------- */
-  .live-decks{display:grid; grid-template-columns:1fr 128px 1fr; gap:12px; margin-top:14px; align-items:stretch}
+  .live-decks{display:grid; grid-template-columns:1fr 216px 1fr; gap:12px; margin-top:14px; align-items:stretch}
   .deck{
     background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 12px 12px;
     display:flex; flex-direction:column; gap:8px; min-width:0;
@@ -251,7 +251,19 @@
     background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 10px;
     display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:10px;
   }
-  .vu-pair{display:flex; gap:10px; align-items:flex-end; height:110px}
+  .chstrips{display:flex; gap:8px; width:100%}
+  .chstrip{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; background:var(--panel-2); border-radius:9px; padding:7px 7px 8px}
+  .ch-head{display:flex; align-items:center; justify-content:space-between}
+  .ch-lab{font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:.08em}
+  .pfl{width:24px; height:20px; border-radius:5px; border:1px solid var(--line); font-size:10px; display:grid; place-items:center}
+  .pfl[aria-pressed="true"]{background:var(--caution); border-color:var(--caution)}
+  .eqrow{display:flex; align-items:center; gap:5px}
+  .eqrow span{font-size:8px; letter-spacing:.08em; color:var(--muted); width:22px; font-weight:800; flex:none}
+  .eqrow input{flex:1; min-width:0; width:100%; accent-color:var(--muted); height:14px}
+  .eqrow.vol input{accent-color:var(--accent)}
+  .eqrow.master{width:100%}
+  .eqrow.master input{accent-color:var(--clean)}
+  .vu-pair{display:flex; gap:10px; align-items:flex-end; height:64px}
   .vu{width:12px; height:100%; background:#0F0E18; border-radius:4px; position:relative; overflow:hidden}
   .vu i{position:absolute; left:0; right:0; bottom:0; height:0%; border-radius:4px}
   .vu.a i{background:linear-gradient(180deg,var(--explicit),var(--deckA))}
@@ -301,13 +313,18 @@
   }
   @media (max-width:900px){ #rigCanvas{height:220px} }
 
-  .pads{display:flex; gap:7px; margin-top:12px; flex-wrap:wrap}
+  .pads{display:grid; grid-template-columns:repeat(auto-fit,minmax(96px,1fr)); gap:7px; margin-top:12px}
   .pad{
-    flex:1; min-width:110px; height:40px; border-radius:10px; border:1px solid var(--line);
-    background:var(--panel); font-size:11.5px; font-weight:800; letter-spacing:.04em; white-space:nowrap;
+    position:relative; height:44px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); font-size:11px; font-weight:800; letter-spacing:.04em; white-space:nowrap;
+    border-bottom:3px solid #35334A;
   }
   .pad:active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
-  .pads .dbtn.rec{flex:1; min-width:110px; height:40px}
+  .pad i{position:absolute; top:3px; right:6px; font-style:normal; font-size:8.5px; color:var(--muted); font-family:var(--mono)}
+  .pad:active i{color:var(--accent-ink)}
+  .pad.custom{border-style:dashed; color:var(--muted)}
+  .pad.custom.loaded{border-style:solid; border-bottom-color:var(--deckB); color:var(--ink)}
+  .pads .dbtn.rec{height:44px}
 
   /* ---------- LIVE: library ---------- */
   .livelib-head{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center}
@@ -511,7 +528,60 @@ const PADS={
     o.frequency.setValueAtTime(900,t);
     o.frequency.exponentialRampToValueAtTime(65,t+0.6);
     o.connect(g); o.start(t); o.stop(t+0.7); },
+  laser(){ const ctx=audio.ctx, {g,t}=padGain(0.55, 0.3);
+    for(let r=0;r<3;r++){ const o=ctx.createOscillator(); o.type="square";
+      o.frequency.setValueAtTime(1500,t+r*0.16);
+      o.frequency.exponentialRampToValueAtTime(180,t+r*0.16+0.13);
+      o.connect(g); o.start(t+r*0.16); o.stop(t+r*0.16+0.14); } },
+  riser(){ const ctx=audio.ctx, {g,t}=padGain(1.3, 0.5);
+    const len=1.25, buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*len),ctx.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*(i/ch.length);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=1.2;
+    bp.frequency.setValueAtTime(300,t); bp.frequency.exponentialRampToValueAtTime(6000,t+len);
+    src.connect(bp); bp.connect(g); src.start(t); },
+  boom(){ const ctx=audio.ctx, {g,t}=padGain(1.1, 0.8); const o=ctx.createOscillator(); o.type="sine";
+    o.frequency.setValueAtTime(120,t);
+    o.frequency.exponentialRampToValueAtTime(38,t+0.5);
+    o.connect(g); o.start(t); o.stop(t+1.1); },
+  ding(){ const ctx=audio.ctx, {g,t}=padGain(1.2, 0.3);
+    for(const f of [880,1760,2637]){ const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=f;
+      const og=ctx.createGain(); og.gain.setValueAtTime(1/(f/880),t); og.gain.exponentialRampToValueAtTime(0.001,t+1.1);
+      o.connect(og); og.connect(g); o.start(t); o.stop(t+1.2); } },
 };
+const BUILTIN_PADS=[
+  {id:"airhorn", label:"AIR HORN", key:"Z"},
+  {id:"siren", label:"SIREN", key:"X"},
+  {id:"applause", label:"APPLAUSE", key:"C"},
+  {id:"rewind", label:"REWIND", key:"V"},
+  {id:"laser", label:"LASER", key:"B"},
+  {id:"riser", label:"RISER", key:"N"},
+  {id:"boom", label:"BOOM", key:"M"},
+  {id:"ding", label:"DING", key:"K"},
+];
+const customPads=[null,null,null,null];   // {label, buffer} — in-memory clips
+let padTarget=null;
+function playCustom(i){
+  const c=customPads[i]; if(!c) return;
+  if(!state.soundOn){ toast("Turn SOUND on first"); return; }
+  if(!ensureAudio()) return;
+  if(audio.ctx.state==="suspended") audio.ctx.resume();
+  const {g,t}=padGain(Math.max(0.3,c.buffer.duration), 0.9);
+  const src=audio.ctx.createBufferSource(); src.buffer=c.buffer;
+  src.connect(g); src.start(t);
+}
+async function loadCustomPad(i, file){
+  try{
+    ensureAudio();
+    let ctx=audio.ctx;
+    if(!ctx){ const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext; ctx=new OC(1,44100,44100); }
+    const ab=await ctx.decodeAudioData((await file.arrayBuffer()).slice(0));
+    if(ab.duration>30){ toast("Clips up to 30 seconds — trim it down"); return; }
+    customPads[i]={label:file.name.replace(/\.[^.]+$/,"").slice(0,12).toUpperCase(), buffer:ab};
+    toast("Pad loaded: "+customPads[i].label);
+    render();
+  }catch(e){ toast("Couldn't decode that clip"); }
+}
 function playPad(name){
   if(!state.soundOn){ toast("Turn SOUND on first"); return; }
   if(!ensureAudio() || !PADS[name]) return;
@@ -676,6 +746,8 @@ function sendLightNet(){
     .onair{flex:none}
     .mixer{row-gap:8px}
     .mixer .dbtn{width:auto; flex:1 1 auto}
+    .chstrips{order:6; flex:1 1 100%}
+    .eqrow.master{order:7}
     .xfade-wrap{flex:1 1 100%; order:5}
     .xfade-wrap input{height:30px}
     .jog{width:140px; height:140px}
@@ -710,7 +782,7 @@ function sendLightNet(){
   <header class="top">
     <div class="brand">
       <div class="wordmark">Salt<em>.</em></div>
-      <div class="tagline">Know every track before it drops. · v0.6 preview</div>
+      <div class="tagline">Know every track before it drops. · v0.7 preview</div>
     </div>
     <button class="helpbtn" data-help aria-label="Quick guide">?</button>
     <div class="modes" role="group" aria-label="Event mode" id="modeGroup"></div>
@@ -725,6 +797,7 @@ function sendLightNet(){
 
 <div id="toast" role="status" aria-live="polite"></div>
 <input id="fileInput" type="file" multiple accept="audio/*,.m3u,.m3u8,.xml,.crate" hidden>
+<input id="padFileInput" type="file" accept="audio/*" hidden>
 </div>
 
 <script>
@@ -865,6 +938,8 @@ const state = {
   decks:{A:deckInit(), B:deckInit()}, xfade:50, automix:false, soundOn:false,
   requestsOpen:true, requests:[], queue:[], played:[], notes:loadNotes(),
   room:"MAIN",
+  chEq:{A:{hi:0,mid:0,lo:0}, B:{hi:0,mid:0,lo:0}},
+  chVol:{A:1, B:1}, masterVol:0.85, pfl:{A:false, B:false},
   lights:{program:"auto", intensity:0.8,
     wled:{ip:"", on:false, status:"not connected"},
     lifx:{token:"", on:false, status:"not connected"},
@@ -909,6 +984,9 @@ function loadSession(){
     state.cleanOnly=!!p.cleanOnly;
     state.compatOnly=!!p.compatOnly;
     state.automix=!!p.automix;
+    if(p.chVol){ state.chVol.A=Math.max(0,Math.min(1,+p.chVol.A||1)); state.chVol.B=Math.max(0,Math.min(1,+p.chVol.B||1)); }
+    if(typeof p.masterVol==="number") state.masterVol=Math.max(0,Math.min(1,p.masterVol));
+    if(p.chEq){ for(const dk of ["A","B"]) if(p.chEq[dk]) for(const b of ["hi","mid","lo"]) state.chEq[dk][b]=Math.max(-1,Math.min(1,+p.chEq[dk][b]||0)); }
     if(p.lights){
       if(["auto","pulse","wash","strobe","off"].includes(p.lights.program)) state.lights.program=p.lights.program;
       if(typeof p.lights.intensity==="number") state.lights.intensity=Math.max(0,Math.min(1,p.lights.intensity));
@@ -922,6 +1000,7 @@ function saveSession(){
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       mode:state.mode, queue:state.queue, played:state.played,
       libSort:state.libSort, crate:state.crate, cleanOnly:state.cleanOnly, compatOnly:state.compatOnly, automix:state.automix,
+      chEq:state.chEq, chVol:state.chVol, masterVol:state.masterVol,
       lights:{program:state.lights.program, intensity:state.lights.intensity,
         wled:{ip:state.lights.wled.ip, on:state.lights.wled.on},
         lifx:{token:state.lights.lifx.token, on:state.lights.lifx.on}},
@@ -1150,11 +1229,16 @@ function ensureAudio(){
       const ctx=audio.ctx;
       const gain=ctx.createGain(); gain.gain.value=0;
       const filter=ctx.createBiquadFilter(); filter.type="lowpass"; filter.frequency.value=18000; filter.Q.value=0.8;
+      const eqLo=ctx.createBiquadFilter(); eqLo.type="lowshelf"; eqLo.frequency.value=250;
+      const eqMid=ctx.createBiquadFilter(); eqMid.type="peaking"; eqMid.frequency.value=1200; eqMid.Q.value=0.8;
+      const eqHi=ctx.createBiquadFilter(); eqHi.type="highshelf"; eqHi.frequency.value=3800;
       const delay=ctx.createDelay(1.5), fb=ctx.createGain(); fb.gain.value=0;
-      filter.connect(gain);
-      filter.connect(delay); delay.connect(fb); fb.connect(delay); fb.connect(gain);
+      filter.connect(eqLo);
+      filter.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(eqLo);
+      eqLo.connect(eqMid); eqMid.connect(eqHi); eqHi.connect(gain);
       gain.connect(audio.master);
-      audio.decks[dk]={gain, filter, delay, fb, next:0, beat:0, src:null};
+      audio.decks[dk]={gain, filter, eqLo, eqMid, eqHi, delay, fb, next:0, beat:0, src:null};
+      applyEq(dk);
     }
   }catch(e){ audio.ctx=null; return false; }
   return true;
@@ -1222,6 +1306,20 @@ function scheduleDeck(dk){
   }
   a.delay.delayTime.value=Math.min(1.4, spb*0.75);
 }
+/* channel EQ: slider -1..1 → full-kill at the bottom, +9 dB boost at the top */
+function applyEq(dk){
+  if(!audio.ctx) return;
+  const a=audio.decks[dk]; if(!a) return;
+  const e=state.chEq[dk], t=audio.ctx.currentTime;
+  const db=v=> v<0 ? v*26 : v*9;
+  a.eqLo.gain.setTargetAtTime(db(e.lo), t, 0.03);
+  a.eqMid.gain.setTargetAtTime(db(e.mid), t, 0.03);
+  a.eqHi.gain.setTargetAtTime(db(e.hi), t, 0.03);
+}
+function setMaster(){
+  if(audio.master && audio.ctx)
+    audio.master.gain.setTargetAtTime(state.soundOn?state.masterVol:0, audio.ctx.currentTime, 0.05);
+}
 function applyFx(dk){
   if(!audio.ctx) return;
   const a=audio.decks[dk], d=state.decks[dk], t=audio.ctx.currentTime;
@@ -1241,7 +1339,7 @@ function toggleSound(){
     state.soundOn=false;
     toast("Sound off");
   }
-  if(audio.master) audio.master.gain.setTargetAtTime(state.soundOn?0.85:0, audio.ctx.currentTime, 0.05);
+  setMaster();
   render();
 }
 
@@ -1388,7 +1486,7 @@ async function importFiles(files){
   if(audioAdded && !state.soundOn && ensureAudio()){
     if(audio.ctx.state==="suspended") audio.ctx.resume();
     state.soundOn=true;
-    if(audio.master) audio.master.gain.setTargetAtTime(0.85, audio.ctx.currentTime, 0.05);
+    setMaster();
   }
   const bits=[];
   if(audioAdded) bits.push(audioAdded+" audio file"+(audioAdded>1?"s":"")+" analyzed (real BPM + waveform)");
@@ -1625,7 +1723,7 @@ function updateAlert(){
 function updateVU(){
   for(const dk of ["A","B"]){
     const d=state.decks[dk], s=song(d.songId);
-    const weight = (dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50)) * (d.censoring?0:1);
+    const weight = (dk==="A" ? Math.min(1,(100-state.xfade)/50) : Math.min(1,state.xfade/50)) * state.chVol[dk] * (d.censoring?0:1);
     if(audio.ctx && audio.decks[dk]){
       audio.decks[dk].gain.gain.setTargetAtTime(
         (s&&d.playing?0.9:0)*weight, audio.ctx.currentTime, d.censoring?0.015:0.06);
@@ -1818,7 +1916,60 @@ const PADS={
     o.frequency.setValueAtTime(900,t);
     o.frequency.exponentialRampToValueAtTime(65,t+0.6);
     o.connect(g); o.start(t); o.stop(t+0.7); },
+  laser(){ const ctx=audio.ctx, {g,t}=padGain(0.55, 0.3);
+    for(let r=0;r<3;r++){ const o=ctx.createOscillator(); o.type="square";
+      o.frequency.setValueAtTime(1500,t+r*0.16);
+      o.frequency.exponentialRampToValueAtTime(180,t+r*0.16+0.13);
+      o.connect(g); o.start(t+r*0.16); o.stop(t+r*0.16+0.14); } },
+  riser(){ const ctx=audio.ctx, {g,t}=padGain(1.3, 0.5);
+    const len=1.25, buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*len),ctx.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*(i/ch.length);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=1.2;
+    bp.frequency.setValueAtTime(300,t); bp.frequency.exponentialRampToValueAtTime(6000,t+len);
+    src.connect(bp); bp.connect(g); src.start(t); },
+  boom(){ const ctx=audio.ctx, {g,t}=padGain(1.1, 0.8); const o=ctx.createOscillator(); o.type="sine";
+    o.frequency.setValueAtTime(120,t);
+    o.frequency.exponentialRampToValueAtTime(38,t+0.5);
+    o.connect(g); o.start(t); o.stop(t+1.1); },
+  ding(){ const ctx=audio.ctx, {g,t}=padGain(1.2, 0.3);
+    for(const f of [880,1760,2637]){ const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=f;
+      const og=ctx.createGain(); og.gain.setValueAtTime(1/(f/880),t); og.gain.exponentialRampToValueAtTime(0.001,t+1.1);
+      o.connect(og); og.connect(g); o.start(t); o.stop(t+1.2); } },
 };
+const BUILTIN_PADS=[
+  {id:"airhorn", label:"AIR HORN", key:"Z"},
+  {id:"siren", label:"SIREN", key:"X"},
+  {id:"applause", label:"APPLAUSE", key:"C"},
+  {id:"rewind", label:"REWIND", key:"V"},
+  {id:"laser", label:"LASER", key:"B"},
+  {id:"riser", label:"RISER", key:"N"},
+  {id:"boom", label:"BOOM", key:"M"},
+  {id:"ding", label:"DING", key:"K"},
+];
+const customPads=[null,null,null,null];   // {label, buffer} — in-memory clips
+let padTarget=null;
+function playCustom(i){
+  const c=customPads[i]; if(!c) return;
+  if(!state.soundOn){ toast("Turn SOUND on first"); return; }
+  if(!ensureAudio()) return;
+  if(audio.ctx.state==="suspended") audio.ctx.resume();
+  const {g,t}=padGain(Math.max(0.3,c.buffer.duration), 0.9);
+  const src=audio.ctx.createBufferSource(); src.buffer=c.buffer;
+  src.connect(g); src.start(t);
+}
+async function loadCustomPad(i, file){
+  try{
+    ensureAudio();
+    let ctx=audio.ctx;
+    if(!ctx){ const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext; ctx=new OC(1,44100,44100); }
+    const ab=await ctx.decodeAudioData((await file.arrayBuffer()).slice(0));
+    if(ab.duration>30){ toast("Clips up to 30 seconds — trim it down"); return; }
+    customPads[i]={label:file.name.replace(/\.[^.]+$/,"").slice(0,12).toUpperCase(), buffer:ab};
+    toast("Pad loaded: "+customPads[i].label);
+    render();
+  }catch(e){ toast("Couldn't decode that clip"); }
+}
 function playPad(name){
   if(!state.soundOn){ toast("Turn SOUND on first"); return; }
   if(!ensureAudio() || !PADS[name]) return;
@@ -2105,6 +2256,16 @@ function viewLive(){
     <div class="live-decks">
       ${deckHtml("A")}
       <div class="mixer">
+        <div class="chstrips">
+          ${["A","B"].map(dk=>`<div class="chstrip">
+            <div class="ch-head"><span class="ch-lab" style="color:var(--deck${dk})">CH ${dk}</span>
+              <button class="pfl" data-pfl="${dk}" aria-pressed="${state.pfl[dk]}" title="Headphone cue — pre-listen this channel (visual in the web preview)">🎧</button></div>
+            ${["hi","mid","lo"].map(band=>`<label class="eqrow"><span>${band==="mid"?"MID":band.toUpperCase()}</span>
+              <input type="range" min="-1" max="1" step="0.05" value="${state.chEq[dk][band]}" data-eq="${dk}:${band}" aria-label="${band} EQ channel ${dk}" title="Channel ${dk} ${band} EQ — full left = kill"></label>`).join("")}
+            <label class="eqrow vol"><span>VOL</span>
+              <input type="range" min="0" max="1" step="0.02" value="${state.chVol[dk]}" data-chvol="${dk}" aria-label="Channel ${dk} volume"></label>
+          </div>`).join("")}
+        </div>
         <div class="vu-pair">
           <div class="vu a" aria-hidden="true"><i id="vu-A"></i></div>
           <div class="vu b" aria-hidden="true"><i id="vu-B"></i></div>
@@ -2113,6 +2274,8 @@ function viewLive(){
           <input type="range" id="xfade" min="0" max="100" value="${state.xfade}" aria-label="Crossfader">
           <div class="xfade-lab"><span>A</span><span>B</span></div>
         </div>
+        <label class="eqrow master"><span>MAIN</span>
+          <input type="range" min="0" max="1" step="0.02" value="${state.masterVol}" id="masterVol" aria-label="Master volume"></label>
         <div class="onair" id="onairLabel"></div>
         <button class="dbtn snd" data-sound aria-pressed="${state.soundOn}" title="Synthesized preview beat that follows each deck's BPM and key">SOUND</button>
         <button class="dbtn amx" data-automix aria-pressed="${state.automix}" title="Hands-free: syncs, starts and blends the next track as the current one ends">AUTOMIX</button>
@@ -2132,11 +2295,11 @@ function viewLive(){
             <button class="qbtn" data-qdel="${i}" aria-label="Remove from queue">×</button></span>`;}).join("")}
       </div>`:""}
     </div>
-    <div class="pads">
-      <button class="pad" data-pad="airhorn">📯 AIR HORN</button>
-      <button class="pad" data-pad="siren">🚨 SIREN</button>
-      <button class="pad" data-pad="applause">👏 APPLAUSE</button>
-      <button class="pad" data-pad="rewind">⏪ REWIND</button>
+    <div class="pads" aria-label="Soundboard">
+      ${BUILTIN_PADS.map(pd=>`<button class="pad" data-pad="${pd.id}" title="Key: ${pd.key}">${pd.label}<i>${pd.key}</i></button>`).join("")}
+      ${customPads.map((c,i)=>c
+        ? `<button class="pad custom loaded" data-cpad="${i}" title="Your clip — shift-click to clear">${esc(c.label)}<i>CLIP</i></button>`
+        : `<button class="pad custom" data-cpad="${i}" title="Load your own audio clip — drops, tags, jingles">＋ ADD CLIP</button>`).join("")}
       <button class="dbtn rec" data-rec aria-pressed="${!!recorder}" title="Record the master output to an audio file">${recorder?"■ STOP & SAVE":"● REC SET"}</button>
     </div>
     <div class="livelib-head">
@@ -2253,7 +2416,8 @@ function openHelp(){
       <li><b>🤖 Automix + Suggest</b><span>Need a bathroom break? <b>AUTOMIX</b> syncs, starts and blends the next track (queue first, then best match) as the current one runs out. <b>SUGGEST</b> loads the smartest next track in one tap — key/BPM-matched, room-safe, not played yet.</span></li>
       <li><b>🎼 Sections</b><span>Every track is auto-segmented into Intro / Verse / Chorus / Drop / Break / Outro from its energy — labels on the deck waveform, bands on the overview — so you always know where you are and where to mix out.</span></li>
       <li><b>💡 Lights</b><span>The Lights tab runs a beat-synced show that follows the on-air track's BPM, energy and color — fullscreen it onto a projector, or stream it to real WLED fixtures / LIFX bulbs with their free APIs.</span></li>
-      <li><b>🎛 Sampler + REC</b><span>Air horn, siren, applause, rewind pads — and ● REC records your actual master output to an audio file.</span></li>
+      <li><b>🎛 Soundboard + REC</b><span>Twelve pads: eight built-in (air horn, siren, applause, rewind, laser, riser, boom, ding — keys <span class="kbd">Z</span>–<span class="kbd">K</span>) plus four <b>＋ ADD CLIP</b> slots for your own drops and tags (shift-click clears). ● REC records the actual master output to a file.</span></li>
+      <li><b>🎚 Mixer strip</b><span>Per-channel 3-band EQ (slam a slider left for a full kill), channel faders, 🎧 cue buttons and a MAIN volume — the battle-mixer layout your hands already know.</span></li>
       <li><b>🤫 Censor</b><span>Hold <b>CENSOR</b> on a deck to duck a dirty word the radar warned you about — the Serato censor move, wired to actual lyric intelligence.</span></li>
       <li><b>🎚 Deck tools</b><span>Spinning platters you can grab and scratch to scrub, hot cues (set / jump / shift-clear), 4–16 beat loops, «4/4» beat jumps, ECHO and FILT effects, KLOCK keylock, pitch fader — the Serato muscle memory works here.</span></li>
       <li><b>📀 Your music</b><span>Hit <b>＋ Import</b> in the library: audio files get real BPM detection and true waveforms and play on the decks (scratch, FX and all); Serato .crate, Rekordbox .xml and .m3u playlists import with their metadata — Rekordbox brings real BPM and key.</span></li>
@@ -2524,6 +2688,18 @@ document.addEventListener("click", e=>{
     if(el.hasAttribute("data-suggest")){ doSuggest(); return; }
     if(el.hasAttribute("data-sound")){ toggleSound(); return; }
     if(d.pad){ playPad(d.pad); return; }
+    if(d.cpad!==undefined){
+      const i=+d.cpad;
+      if(e.shiftKey && customPads[i]){ customPads[i]=null; toast("Pad cleared"); render(); return; }
+      if(customPads[i]){ playCustom(i); return; }
+      padTarget=i;
+      const fi=$("#padFileInput"); if(fi) fi.click();
+      return;
+    }
+    if(d.pfl){ state.pfl[d.pfl]=!state.pfl[d.pfl];
+      el.setAttribute("aria-pressed", state.pfl[d.pfl]?"true":"false");
+      toast(`Cue ${d.pfl} ${state.pfl[d.pfl]?"in":"out of"} the headphones (audible routing needs the desktop build)`);
+      return; }
     if(d.lprog){ state.lights.program=d.lprog; saveSession(); render(); return; }
     if(el.hasAttribute("data-projector")){
       const cv=$("#rigCanvas");
@@ -2609,6 +2785,8 @@ document.addEventListener("keydown", e=>{
   if(e.key===" "){ e.preventDefault(); const oa=onAir(); if(oa) togglePlay(oa); return; }
   if(e.key==="1"){ togglePlay("A"); return; }
   if(e.key==="2"){ togglePlay("B"); return; }
+  const pad=BUILTIN_PADS.find(pd=>pd.key.toLowerCase()===e.key.toLowerCase());
+  if(pad){ playPad(pad.id); return; }
 });
 document.addEventListener("submit", e=>{
   const f=e.target.closest("form.note-add"); if(!f) return;
@@ -2644,6 +2822,18 @@ document.addEventListener("input", e=>{
     return;
   }
   if(t.id==="xfade"){ state.xfade=+t.value; updateVU(); return; }
+  if(t.dataset && t.dataset.eq){
+    const [dk,band]=t.dataset.eq.split(":");
+    state.chEq[dk][band]=+t.value;
+    applyEq(dk); saveSession();
+    return;
+  }
+  if(t.dataset && t.dataset.chvol){
+    state.chVol[t.dataset.chvol]=+t.value;
+    updateVU(); saveSession();
+    return;
+  }
+  if(t.id==="masterVol"){ state.masterVol=+t.value; setMaster(); saveSession(); return; }
   if(t.id==="lightsIntensity"){ state.lights.intensity=+t.value; saveSession(); return; }
   if(t.dataset && t.dataset.lightfield==="wled"){ state.lights.wled.ip=t.value.trim().slice(0,60); saveSession(); return; }
   if(t.dataset && t.dataset.lightfield==="lifx"){ state.lights.lifx.token=t.value.trim().slice(0,120); saveSession(); return; }

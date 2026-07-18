@@ -43,9 +43,13 @@ A booth tool for working DJs: know every track before it drops.
   projector, and streams to real fixtures via the free WLED (LAN) and LIFX
   Cloud APIs. Hue is documented as desktop-companion territory (its local
   API blocks browsers).
-- **Censor, sampler, set recording** — hold CENSOR to duck flagged lyrics,
-  four synthesized sampler pads (air horn / siren / applause / rewind), and
+- **Censor, soundboard, set recording** — hold CENSOR to duck flagged
+  lyrics; a 12-pad soundboard (eight built-in sounds with keyboard triggers
+  plus four ADD CLIP slots for the DJ's own drops/tags, decoded in-browser);
   REC captures the actual master output to a downloadable audio file.
+- **Battle-mixer strip** — per-channel 3-band EQ with full-kill (real biquad
+  shelves/peaking on the audio chain), channel faders, headphone-cue
+  buttons, crossfader, and master volume.
 - **Emcee suite** — pronunciations, timeline (first item pinned to the Live
   screen), shoutouts, do-not-play list, and an automatic set log with one-tap export.
 
