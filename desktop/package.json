@@ -1,0 +1,35 @@
+{
+  "name": "salt-desktop",
+  "productName": "Salt",
+  "version": "1.0.0",
+  "description": "Salt — DJ Set Intelligence, native desktop app",
+  "author": "Salt",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "co.eb28.salt",
+    "productName": "Salt",
+    "files": ["main.js", "server.js", "app/**/*", "node_modules/**/*"],
+    "directories": { "output": "release", "buildResources": "build" },
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }, "zip"],
+      "icon": "build/icon.png"
+    },
+    "win": { "target": ["nsis"], "icon": "build/icon.png" },
+    "linux": { "target": ["AppImage"], "icon": "build/icon.png", "category": "Audio" }
+  }
+}

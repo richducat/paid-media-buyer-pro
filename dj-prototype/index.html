@@ -2789,7 +2789,10 @@ function viewMix(){
 
 /* ---------- requests view ---------- */
 function guestUrl(){
-  const base = serverMode ? location.origin+GUEST_PATH : DEPLOYED_GUEST_URL;
+  // Desktop app injects the laptop's LAN address so guests on the same wifi
+  // can reach the request page; otherwise use the deployed/same-origin URL.
+  const base = (typeof window!=="undefined" && window.__SALT_GUEST_BASE) ? window.__SALT_GUEST_BASE
+             : serverMode ? location.origin+GUEST_PATH : DEPLOYED_GUEST_URL;
   return state.room==="MAIN" ? base : base+"?room="+state.room;
 }
 function viewRequests(){
