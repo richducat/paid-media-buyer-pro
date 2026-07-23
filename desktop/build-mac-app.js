@@ -33,28 +33,43 @@ if (fs.existsSync(path.join(ROOT, "node_modules"))) {
 const launcher = `#!/bin/bash
 # Salt launcher. Prefers the bundled local server (real LAN guest requests) when
 # node is installed; otherwise opens the fully-working standalone app file.
+# Opens as a chromeless "app window" (Chrome/Brave/Edge) so it looks native,
+# and falls back to the default browser when none is present.
 HERE="$(cd "$(dirname "$0")/../Resources" && pwd)"
 SRV="$HERE/server"
 PORT=4599
 FILE="$SRV/app/demo/salt.html"
+PROFILE="$HOME/Library/Application Support/Salt/window"
+
+# Open URL/file in a standalone app window if a Chromium-based browser exists;
+# otherwise hand it to the default browser. Returns 0 either way.
+open_app() {
+  local url="$1" b
+  for b in "Google Chrome" "Brave Browser" "Microsoft Edge" "Chromium"; do
+    if open -Ra "$b" >/dev/null 2>&1; then
+      open -na "$b" --args --app="$url" --user-data-dir="$PROFILE" >/dev/null 2>&1 && return 0
+    fi
+  done
+  open "$url"
+}
 
 open_when_ready() {
   for i in $(seq 1 20); do
     if curl -s -o /dev/null "http://127.0.0.1:$PORT/demo/salt.html" 2>/dev/null; then
-      open "http://127.0.0.1:$PORT/demo/salt.html"
+      open_app "http://127.0.0.1:$PORT/demo/salt.html"
       return
     fi
     sleep 0.3
   done
-  open "$FILE"   # server never came up -> standalone fallback
+  open_app "file://$FILE"   # server never came up -> standalone fallback
 }
 
 if command -v node >/dev/null 2>&1; then
-  cd "$SRV" || { open "$FILE"; exit 0; }
+  cd "$SRV" || { open_app "file://$FILE"; exit 0; }
   open_when_ready &
   exec node server.js "$PORT"   # stays in foreground: Dock icon + Quit stops the server
 else
-  open "$FILE"                   # no node: standalone file (all DJ features work)
+  open_app "file://$FILE"       # no node: standalone file (all DJ features work)
 fi
 `;
 fs.writeFileSync(path.join(MACOS, "Salt"), launcher, { mode: 0o755 });
@@ -111,5 +126,45 @@ try {
 } catch (e) {
   console.warn("icon skipped:", e.message);
 }
+
+// ---- START-HERE.txt (travels next to the app in the zip) ----
+const startHere = `SALT — Mac app
+==============
+
+1. Drag  Salt.app  into your Applications folder (or leave it here).
+
+2. Double-click Salt.
+
+   First time only: because this app isn't signed with a paid Apple
+   Developer certificate yet, macOS may say it "cannot be opened."
+   Do ONE of these:
+
+   - Right-click Salt.app  ->  Open  ->  Open   (older macOS), OR
+   - Open Terminal, paste this one line, press Return, then open Salt:
+
+        xattr -cr /Applications/Salt.app
+
+     (if you kept Salt somewhere else, drag it onto the Terminal window
+      after typing "xattr -cr " to fill in the correct path)
+
+That's it. Salt opens in its own app window (no browser tabs or address
+bar) with every feature working — mixing decks, BPM + key detection,
+"mixes well with," explicit-lyric flags, emcee notes, soundboard, light
+show, request queue, invoicing.
+
+Live guest song requests (the QR code / phone link):
+  If Node.js is installed on this Mac, Salt automatically runs a tiny
+  local request server on your wifi, and the QR code in the Requests tab
+  points guests' phones straight at your laptop — no internet needed.
+  If Node isn't installed, Salt still opens fully; the request queue just
+  runs in demo mode. To enable real requests, install Node from
+  https://nodejs.org (LTS), then reopen Salt.
+
+The native window uses Chrome / Brave / Edge if installed (opens with no
+browser chrome, in its own Salt profile). Without one, it opens in your
+default browser. Nothing here needs the internet, a login, or hosting.
+Quitting Salt (Cmd-Q) stops the local request server.
+`;
+fs.writeFileSync(path.join(OUT, "START-HERE.txt"), startHere);
 
 console.log("Built", APP);
