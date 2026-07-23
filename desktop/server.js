@@ -141,12 +141,13 @@ function serveStatic(req, res, url) {
 
 let PORT = 0;
 function start(port) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const url = new URL(req.url, "http://x");
       if (url.pathname.startsWith("/api/")) return api(req, res, url);
       return serveStatic(req, res, url);
     });
+    server.on("error", reject); // e.g. EADDRINUSE when a second copy launches
     server.listen(port || 0, "0.0.0.0", () => {
       PORT = server.address().port;
       resolve({ port: PORT, lan: lanIp() });
@@ -155,4 +156,8 @@ function start(port) {
 }
 
 module.exports = { start };
-if (require.main === module) start(Number(process.argv[2]) || 4599).then((i) => console.log("Salt local server on", i));
+if (require.main === module) {
+  start(Number(process.argv[2]) || 4599)
+    .then((i) => console.log("Salt local server on", i))
+    .catch((e) => { console.error("Salt server not started (port busy?):", (e && e.code) || e); process.exit(0); });
+}

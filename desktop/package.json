@@ -22,14 +22,42 @@
   "build": {
     "appId": "co.eb28.salt",
     "productName": "Salt",
-    "files": ["main.js", "server.js", "app/**/*", "node_modules/**/*"],
-    "directories": { "output": "release", "buildResources": "build" },
+    "files": [
+      "main.js",
+      "server.js",
+      "app/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
     "mac": {
       "category": "public.app-category.music",
-      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }, "zip"],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        "zip"
+      ],
       "icon": "build/icon.png"
     },
-    "win": { "target": ["nsis"], "icon": "build/icon.png" },
-    "linux": { "target": ["AppImage"], "icon": "build/icon.png", "category": "Audio" }
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png",
+      "category": "Audio"
+    }
   }
 }
